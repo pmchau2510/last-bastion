@@ -1699,12 +1699,16 @@ const MP = {
 
   // Detect server URL: same host, port 3000 (or use ws:// if deployed)
   getWsUrl() {
-    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = location.hostname;
-    // If opened as file://, fallback to localhost
-    if (location.protocol === 'file:') return 'ws://localhost:3000';
-    return `${proto}//${host}${location.port && location.port!=='80'&&location.port!=='443' ? ':'+location.port : ''}`;
-  },
+  // mở trực tiếp file index.html
+  if (location.protocol === 'file:') {
+    return 'ws://localhost:3000';
+  }
+
+  // deploy online
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+
+  return `${proto}//${location.host}`;
+},
 
   open() {
     document.getElementById('mp-overlay').classList.remove('hidden');
