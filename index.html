@@ -285,6 +285,7 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 .qc-btn:active{transform:scale(.95)}
 #qc-toggle{position:absolute;bottom:200px;right:10px;z-index:36;background:#1a1d30;border:1px solid #2a2d45;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;pointer-events:auto}
 #qc-toggle.hidden{display:none}
+#reconnect-toast.hidden{display:none!important}
 
 /* ===== TOWER PANEL ===== */
 #tower-panel{position:fixed;z-index:55;background:#0d1020;border:1px solid #2a3060;border-radius:13px;padding:12px 14px;min-width:170px;pointer-events:auto;box-shadow:0 4px 20px #00000088}
@@ -1280,6 +1281,7 @@ const Game = {
     document.getElementById('game-hud').classList.remove('hidden');
     document.getElementById('game-bottom').classList.remove('hidden');
     document.getElementById('game-canvas').style.display = 'block';
+    document.getElementById('reconnect-toast')?.classList.add('hidden');
     const ggBtn=document.getElementById('give-gold-btn');
     if(ggBtn) ggBtn.classList.toggle('hidden',!isMP||mpPlayers.length<2);
 
