@@ -164,6 +164,7 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 .ll:active:not(.used){transform:scale(.95)}
 .ll-icon{font-size:16px;display:block;margin-bottom:1px;line-height:1.2}
 .ll-name{font-size:8px;color:#3a3858;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ll-count{font-size:9px;color:#5a5878;margin-top:1px}
 .ll-0 .ll-icon{color:#5a8aff}
 .ll-1 .ll-icon{color:#e05a2b}
 .ll-2 .ll-icon{color:#9b5aee}
@@ -396,6 +397,7 @@ body{position:fixed;width:100%;height:100%}
     <button class="hud-start-wave hidden" id="start-wave-btn" onclick="Game.startWaveNow()">▶ Bắt đầu</button>
     <button class="hud-pause" onclick="Game.pause()">⏸</button>
     <button class="hud-pause" id="mute-btn" onclick="const m=SFX.toggle();this.textContent=m?'🔇':'🔊'" style="margin-left:4px">🔊</button>
+    <button class="hud-pause hidden" id="give-gold-btn" onclick="Game.showGiveDonateMenu()" style="margin-left:4px;font-size:11px" title="Cho vàng cho đồng đội">💰</button>
   </div>
   <div class="hud-quota">
     <div class="quota-lbl">🚪 Quota</div>
@@ -488,6 +490,24 @@ body{position:fixed;width:100%;height:100%}
   </div>
 </div>
 
+<!-- NATION PICKER MODAL -->
+<div class="modal-overlay hidden" id="nation-modal">
+  <div class="modal" style="max-width:360px;padding:20px">
+    <span class="modal-icon">🌍</span>
+    <div class="modal-title" style="font-size:18px;margin-bottom:4px">Chọn Nation</div>
+    <div class="modal-desc" style="margin-bottom:14px;font-size:12px">Mỗi nation có bộ tháp độc quyền riêng</div>
+    <div id="nation-choices" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+    <button class="modal-btn mbt-primary" id="nation-confirm-btn" onclick="NationPicker.confirm()" style="width:100%">✓ Xác nhận</button>
+  </div>
+</div>
+
+<!-- RECONNECT TOAST -->
+<div id="reconnect-toast" class="hidden" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#0a1a30;border-bottom:1px solid #2a4870;padding:10px 16px;display:flex;align-items:center;gap:10px;justify-content:center">
+  <span style="color:#60b8ff;font-size:13px">🔄 Bạn đã ngắt kết nối khỏi phòng <strong id="rc-code"></strong></span>
+  <button onclick="ReconnectHelper.doReconnect()" style="background:#1a4870;color:#80c8ff;border:1px solid #2a6890;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer">Vào lại</button>
+  <button onclick="ReconnectHelper.dismiss()" style="background:none;color:#4a5878;border:none;font-size:16px;cursor:pointer;padding:4px">✕</button>
+</div>
+
 <!-- MULTIPLAYER OVERLAY -->
 <div id="mp-overlay" class="hidden">
   <!-- Card: Tạo / Vào phòng -->
@@ -495,7 +515,11 @@ body{position:fixed;width:100%;height:100%}
     <div class="mp-title">🌐 Nhiều người chơi</div>
     <input class="mp-input mp-name-input" id="mp-name" placeholder="Nhập tên của bạn" maxlength="16" autocomplete="off" autocorrect="off" spellcheck="false">
     <div class="mp-sep"></div>
-    <button class="mp-btn mp-btn-create" onclick="MP.create()">🏠 Tạo phòng mới</button>
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <input class="mp-input" id="mp-admin-pw" type="password" placeholder="Mật khẩu admin" maxlength="20" autocomplete="off" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter')MP.checkAdminPw()">
+      <button class="mp-btn" onclick="MP.checkAdminPw()" style="margin:0;padding:8px 12px;flex:0">🔓</button>
+    </div>
+    <button class="mp-btn mp-btn-create hidden" id="mp-create-btn" onclick="MP.create()">🏠 Tạo phòng mới</button>
     <div style="text-align:center;font-size:11px;color:#3a3858;margin:4px 0 8px">— hoặc nhập mã để vào phòng —</div>
     <input class="mp-input" id="mp-code" placeholder="Mã phòng (6 ký tự)" maxlength="6" autocomplete="off" autocorrect="off" spellcheck="false" style="text-transform:uppercase;letter-spacing:.2em;text-align:center">
     <button class="mp-btn mp-btn-join" onclick="MP.join()">🚪 Vào phòng</button>
@@ -518,6 +542,11 @@ body{position:fixed;width:100%;height:100%}
       <select class="mp-input" id="lobby-map-sel" onchange="MP.changeMap()" style="margin-bottom:8px;cursor:pointer"></select>
       <select class="mp-input" id="lobby-mode-sel" onchange="MP.changeMode()" style="margin-bottom:8px;cursor:pointer"></select>
       <button class="mp-btn mp-btn-create" id="lobby-start-btn" onclick="MP.startGame()">🚀 Bắt đầu</button>
+    </div>
+    <!-- Nation selector (both host and guest) -->
+    <div id="lobby-nation-row" style="margin-bottom:8px">
+      <div style="font-size:11px;color:#4a3868;margin-bottom:5px;letter-spacing:.05em">NATION CỦA BẠN</div>
+      <div id="lobby-nation-btns" style="display:flex;gap:6px"></div>
     </div>
     <!-- Guest controls -->
     <div id="lobby-guest-controls" class="hidden">
@@ -560,57 +589,100 @@ body{position:fixed;width:100%;height:100%}
 // ============================================================
 const MAPS_DATA = [
   { id:0, name:'Ironhold Pass', diff:2, size:'36×24', gates:2, weather:'Ngẫu nhiên',
-    tip:'Hẻm núi hẹp — đặt tháp 2 bên đường để bắn chéo. Map dễ nhất để luyện tập.',
+    tip:'Hẻm núi hẹp — đặt tháp giữa 2 làn đường để bắn chéo. Map dễ nhất để luyện tập.',
     suggest:'Cung + Đại Bác',
     tags:['Hẻm núi','Đá cao','2 cổng'],
     bgColor:'#0c1810', pathColor:'#3a2a10', pathLight:'#5a3e18',
-    pathFn: W => [{x:0,y:65},{x:55,y:65},{x:85,y:98},{x:85,y:128},{x:130,y:128},{x:175,y:95},{x:215,y:70},{x:270,y:52},{x:W-8,y:52}]
+    pathFns: [
+      W => [{x:0,y:42},{x:70,y:42},{x:100,y:72},{x:145,y:72},{x:175,y:42},{x:215,y:72},{x:260,y:42},{x:W-8,y:55}],
+      W => [{x:0,y:110},{x:60,y:110},{x:90,y:85},{x:130,y:85},{x:165,y:115},{x:200,y:115},{x:245,y:85},{x:W-8,y:95}]
+    ]
   },
   { id:1, name:'Sylvan Crossing', diff:3, size:'40×28', gates:3, weather:'Mưa / Bão tuyết',
-    tip:'Rừng che khuất tầm nhìn. Tốt nhất dùng Sét + Băng để kiểm soát đám đông.',
+    tip:'Rừng che khuất tầm nhìn. Quái chia 2 làn — phải bố trí tháp che đồng thời cả hai.',
     suggest:'Băng + Sét',
-    tags:['Rừng che','3 cổng','Giao lộ'],
+    tags:['Rừng che','2 làn','Giao lộ'],
     bgColor:'#081410', pathColor:'#2a1c0c', pathLight:'#3c2810',
-    pathFn: W => [{x:0,y:48},{x:65,y:48},{x:95,y:78},{x:135,y:78},{x:165,y:105},{x:200,y:105},{x:230,y:72},{x:W-8,y:58}]
+    pathFns: [
+      W => [{x:0,y:35},{x:75,y:35},{x:105,y:65},{x:105,y:100},{x:145,y:100},{x:180,y:65},{x:220,y:65},{x:260,y:40},{x:W-8,y:50}],
+      W => [{x:0,y:120},{x:55,y:120},{x:85,y:90},{x:125,y:90},{x:155,y:120},{x:195,y:120},{x:235,y:90},{x:W-8,y:100}]
+    ]
   },
   { id:2, name:'Tidal Docks', diff:3, size:'42×28', gates:4, weather:'Giông / Nắng',
-    tip:'Thủy triều dâng mỗi 10 round làm thu hẹp bản đồ. Cần điều chỉnh tháp liên tục.',
+    tip:'Thủy triều chia làn liên tục. Dùng Băng kiểm soát luồng, Đại Bác xử lý cụm đông.',
     suggest:'Đại Bác + Lửa',
-    tags:['Thủy triều','4 cổng','Biển + đất'],
+    tags:['2 làn','Biển + đất','Thủy triều'],
     bgColor:'#08101c', pathColor:'#28180c', pathLight:'#382810',
-    pathFn: W => [{x:0,y:42},{x:70,y:42},{x:100,y:72},{x:145,y:95},{x:190,y:95},{x:220,y:62},{x:W-8,y:55}]
+    pathFns: [
+      W => [{x:0,y:30},{x:65,y:30},{x:95,y:60},{x:95,y:98},{x:140,y:98},{x:175,y:65},{x:220,y:65},{x:265,y:95},{x:W-8,y:80}],
+      W => [{x:0,y:120},{x:50,y:120},{x:80,y:90},{x:120,y:90},{x:150,y:118},{x:190,y:118},{x:235,y:90},{x:W-8,y:100}]
+    ]
   },
   { id:3, name:'Ashfield Ruins', diff:4, size:'44×30', gates:3, weather:'Nắng to cố định',
-    tip:'Đất nham thạch — Tháp Lửa đặt trên ô núi lửa lên thẳng Cấp 4!',
+    tip:'Đường ngoằn ngoèo dài — đặt tháp sớm. Lửa mạnh trên nền nham thạch.',
     suggest:'Lửa tập trung',
-    tags:['Nham thạch','3 cổng','Ô Cấp 4 ẩn'],
+    tags:['Nham thạch','2 làn','Đường dài'],
     bgColor:'#180808', pathColor:'#2a1204', pathLight:'#3a1808',
-    pathFn: W => [{x:0,y:60},{x:50,y:60},{x:75,y:90},{x:75,y:120},{x:120,y:120},{x:155,y:90},{x:155,y:48},{x:W-8,y:60}]
+    pathFns: [
+      W => [{x:0,y:50},{x:60,y:50},{x:85,y:82},{x:85,y:118},{x:128,y:118},{x:160,y:82},{x:160,y:48},{x:210,y:48},{x:260,y:75},{x:W-8,y:65}],
+      W => [{x:0,y:130},{x:55,y:130},{x:90,y:100},{x:130,y:100},{x:158,y:130},{x:198,y:130},{x:230,y:100},{x:W-8,y:112}]
+    ]
   },
   { id:4, name:'Crimson Rift', diff:4, size:'46×30', gates:5, weather:'Nhật thực định kỳ',
-    tip:'Quái nhanh hơn 30%. 5 cổng đổ về — cần Trinity Core để xử lý.',
-    suggest:'AoE + Trinity Core',
-    tags:['5 cổng','Quái tốc cao','Rift portal'],
+    tip:'3 làn đổ về đồng thời. Cần phối hợp team để phủ đủ diện tích.',
+    suggest:'AoE + Sét chain',
+    tags:['3 làn','Chaos','Rift portal'],
     bgColor:'#100810', pathColor:'#280e18', pathLight:'#381528',
-    pathFn: W => [{x:0,y:50},{x:60,y:50},{x:90,y:80},{x:130,y:80},{x:165,y:55},{x:W-8,y:55}]
+    pathFns: [
+      W => [{x:0,y:32},{x:70,y:32},{x:100,y:60},{x:145,y:60},{x:178,y:32},{x:220,y:60},{x:262,y:32},{x:W-8,y:48}],
+      W => [{x:0,y:90},{x:60,y:90},{x:92,y:118},{x:132,y:118},{x:165,y:88},{x:205,y:88},{x:248,y:115},{x:W-8,y:100}],
+      W => [{x:0,y:138},{x:52,y:138},{x:82,y:112},{x:118,y:112},{x:148,y:138},{x:188,y:138},{x:W-8,y:125}]
+    ]
   },
   { id:5, name:'Void Nexus', diff:5, size:'48×32', gates:6, weather:'Chaos',
-    tip:'Bản đồ tối hoàn toàn. Chỉ mở sau khi thắng cả 5 map trước.',
+    tip:'Bản đồ tối hoàn toàn với 2 làn. Chỉ mở sau khi thắng cả 5 map trước.',
     suggest:'Cần cả 4 hero',
-    tags:['🔒 Khóa','Map tối','6 cổng'],
+    tags:['🔒 Khóa','Map tối','2 làn'],
     locked: true,
     bgColor:'#050508', pathColor:'#181020', pathLight:'#201828',
-    pathFn: W => [{x:0,y:65},{x:80,y:65},{x:W-8,y:65}]
+    pathFns: [
+      W => [{x:0,y:55},{x:70,y:55},{x:100,y:85},{x:145,y:85},{x:178,y:55},{x:218,y:55},{x:255,y:88},{x:W-8,y:75}],
+      W => [{x:0,y:118},{x:60,y:118},{x:90,y:90},{x:128,y:90},{x:158,y:118},{x:195,y:118},{x:235,y:85},{x:W-8,y:100}]
+    ]
   }
 ];
 
 const TOWERS_DATA = [
   { id:0, name:'Cung',       icon:'🏹', cost:50,  dmg:12, range:80,  rate:800,  color:'#7acf40', desc:'Bắn nhanh, tầm xa, đơn mục tiêu' },
   { id:1, name:'Đại Bác',   icon:'💣', cost:100, dmg:45, range:70,  rate:2000, color:'#c87828', desc:'AoE diện rộng, reload chậm' },
-  { id:2, name:'Băng',      icon:'❄️', cost:80,  dmg:8,  range:75,  rate:1200, color:'#5ab8f8', desc:'Làm chậm quái 40%, tầm trung' },
+  { id:2, name:'Băng',      icon:'❄️', cost:80,  dmg:8,  range:75,  rate:1200, color:'#5ab8f8', desc:'Làm chậm quái 75%, tầm trung' },
   { id:3, name:'Sét',       icon:'⚡', cost:120, dmg:30, range:85,  rate:1500, color:'#c880ff', desc:'Chain sang 2 mục tiêu gần nhất' },
   { id:4, name:'Lửa',       icon:'🔥', cost:90,  dmg:18, range:65,  rate:1000, color:'#ff6820', desc:'DoT, diệt đám đông hiệu quả' },
-  { id:5, name:'T.Nhiên',   icon:'🌿', cost:150, dmg:0,  range:0,   rate:0,    color:'#50c850', desc:'Tạo +8 vàng/round, không bắn' }
+  { id:5, name:'T.Nhiên',   icon:'🌿', cost:150, dmg:0,  range:0,   rate:0,    color:'#50c850', desc:'Tạo +8 vàng/round, không bắn' },
+  // Nation-exclusive towers
+  { id:6, name:'Ballista',  icon:'🎯', cost:130, dmg:38, range:110, rate:2500, color:'#d08030', desc:'Tầm siêu xa, xuyên giáp (Ironhold)' },
+  { id:7, name:'Băng Đền',  icon:'🔮', cost:110, dmg:3,  range:85,  rate:1000, color:'#5ab8f8', desc:'Làm chậm AoE mọi quái trong tầm (Glacien)' },
+  { id:8, name:'Magma',     icon:'🌋', cost:100, dmg:25, range:65,  rate:900,  color:'#ff4400', desc:'Chuỗi lửa 3 mục tiêu (Emberon)' }
+];
+
+// Tower upgrade constants (5 levels)
+const TOWER_MAX_LEVEL = 5;
+const UPGRADE_COST_MULTS = [0, .5, .8, 1.5, 2.5]; // cost to go from lvl N to N+1 (index = current lvl)
+const UPGRADE_DMG_MULTS  = [1, 1.4, 2.1, 3.2, 5.0];
+const UPGRADE_RANGE_MULTS= [1, 1.15, 1.35, 1.55, 1.8];
+const UPGRADE_SCALE      = [1, 1.2, 1.45, 1.7, 2.0];
+
+// Per-player colors (host=0, guest1=1, guest2=2, guest3=3)
+const PLAYER_COLORS = ['#a060ff','#40a0ff','#40c060','#e06060'];
+
+// Admin password for room creation
+const ADMIN_PASSWORD = 'BASTION';
+
+// Nation system: 3 factions, each with different tower sets (id 0-5 are common/shared, 6/7/8 are exclusive)
+const NATIONS_DATA = [
+  { id:0, name:'Ironhold', icon:'⚔️', color:'#d08030', towers:[0,1,3,5,6], desc:'Pháo thủ tầm xa · Ballista xuyên giáp' },
+  { id:1, name:'Glacien',  icon:'❄️', color:'#5ab8f8', towers:[0,2,3,5,7], desc:'Kiểm soát băng giá · Băng Đền AoE slow' },
+  { id:2, name:'Emberon',  icon:'🔥', color:'#ff4400', towers:[0,1,4,5,8], desc:'Công kích ồ ạt · Magma chuỗi lửa' }
 ];
 
 const ENEMY_TYPES = [
@@ -644,7 +716,7 @@ const WEATHERS = [
 // Special events at specific rounds
 const ROUND_EVENTS = {
   3:  {name:'Xung kích!',   icon:'⚡', tag:'horde',  desc:'Quân số gấp đôi — nhưng yếu hơn',  countMult:1.8, hpMult:.82},
-  7:  {name:'Tập kích đêm', icon:'🌑', tag:'night',  desc:'Quái nhanh hơn +20%',               spdMult:1.2,   dark:true},
+  7:  {name:'Tập kích đêm', icon:'🌑', tag:'night',  desc:'Quân số +50% trong bóng tối',        countMult:1.5, dark:true},
   12: {name:'Máu tái sinh', icon:'💚', tag:'regen',  desc:'Quái tự hồi phục HP',               regen:true},
   17: {name:'Cuồng phong!', icon:'🔥', tag:'assault',desc:'Tất cả loại quái — đại quân',       countMult:1.6, allTypes:true},
 };
@@ -786,7 +858,7 @@ const MapRenderer = {
   draw(cv, mapData, W, H, animated) {
     const c = cv.getContext('2d');
     const t0 = Date.now();
-    const path = mapData.pathFn(W);
+    const path = (mapData.pathFns||[mapData.pathFn])[0](W);
     const enemies = [{t:.1},{t:.25},{t:.42},{t:.58},{t:.74}];
 
     function ptOn(t) {
@@ -934,10 +1006,12 @@ const ModeSelect = {
   },
   sel(i) { this.cur=i; STATE.modeIdx=i; this.render(); },
   start() {
-    MapRenderer.stopAnim();
-    App.showScreen('game-canvas');
-    document.getElementById('game-canvas').style.display='block';
-    Game.init(STATE.mapIdx, STATE.modeIdx, STATE.isTutorial);
+    NationPicker.open(nationIdx => {
+      MapRenderer.stopAnim();
+      App.showScreen('game-canvas');
+      document.getElementById('game-canvas').style.display='block';
+      Game.init(STATE.mapIdx, STATE.modeIdx, STATE.isTutorial, false, 0, [], nationIdx);
+    });
   }
 };
 
@@ -991,6 +1065,106 @@ const Lobby = {
       const cv=document.getElementById('lobby-map-cv');
       if(cv){cv.width=52;cv.height=34;MapRenderer.draw(cv,MAPS_DATA[STATE.mapIdx],52,34,false);}
     },60);
+  }
+};
+
+// ============================================================
+//  NATION PICKER
+// ============================================================
+const NationPicker = {
+  _cb: null,
+  selected: 0,
+
+  open(callback) {
+    this._cb = callback;
+    this.selected = 0;
+    this._render();
+    document.getElementById('nation-modal').classList.remove('hidden');
+  },
+
+  _render() {
+    const el = document.getElementById('nation-choices');
+    if(!el) return;
+    el.innerHTML = NATIONS_DATA.map((n,i)=>`
+      <div onclick="NationPicker.select(${i})" style="cursor:pointer;padding:10px 14px;border-radius:10px;border:1.5px solid ${this.selected===i?n.color:'#2a2d45'};background:${this.selected===i?n.color+'18':'#0a0c18'};display:flex;align-items:center;gap:10px;transition:all .15s">
+        <span style="font-size:22px">${n.icon}</span>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600;color:${this.selected===i?n.color:'#9090b0'}">${n.name}</div>
+          <div style="font-size:10px;color:#5a5878;margin-top:2px">${n.desc}</div>
+          <div style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap">
+            ${n.towers.map(id=>TOWERS_DATA[id]).map(t=>`<span style="font-size:9px;padding:2px 5px;border-radius:4px;background:#1a1f35;color:#6a6898">${t.icon} ${t.name}</span>`).join('')}
+          </div>
+        </div>
+        ${this.selected===i?`<span style="color:${n.color};font-size:16px">✓</span>`:''}
+      </div>`).join('');
+  },
+
+  select(i) {
+    this.selected = i;
+    this._render();
+  },
+
+  confirm() {
+    document.getElementById('nation-modal').classList.add('hidden');
+    if(this._cb) { this._cb(this.selected); this._cb=null; }
+  }
+};
+
+// ============================================================
+//  RECONNECT HELPER
+// ============================================================
+const ReconnectHelper = {
+  KEY: 'lb_session',
+
+  save(code, name, playerIdx, nationIdx) {
+    localStorage.setItem(this.KEY, JSON.stringify({code, name, playerIdx, nationIdx}));
+  },
+
+  clear() {
+    localStorage.removeItem(this.KEY);
+  },
+
+  load() {
+    try { return JSON.parse(localStorage.getItem(this.KEY)); } catch { return null; }
+  },
+
+  loadNation() {
+    const s = this.load();
+    return s ? (s.nationIdx||0) : 0;
+  },
+
+  checkOnLoad() {
+    const s = this.load();
+    if(!s || !s.code) return;
+    const toast = document.getElementById('reconnect-toast');
+    const codeEl = document.getElementById('rc-code');
+    if(toast && codeEl) {
+      codeEl.textContent = s.code;
+      toast.classList.remove('hidden');
+    }
+  },
+
+  doReconnect() {
+    const s = this.load();
+    if(!s) return;
+    this.dismiss();
+    App.goMultiplayer();
+    // Pre-fill name and code
+    setTimeout(()=>{
+      const nameEl = document.getElementById('mp-name');
+      const codeEl2 = document.getElementById('mp-code');
+      if(nameEl) nameEl.value = s.name;
+      if(codeEl2) codeEl2.value = s.code;
+      MP.myName = s.name;
+      MP.myNation = s.nationIdx||0;
+      MP.join();
+    }, 100);
+  },
+
+  dismiss() {
+    const toast = document.getElementById('reconnect-toast');
+    if(toast) toast.classList.add('hidden');
+    this.clear();
   }
 };
 
@@ -1063,7 +1237,7 @@ const Game = {
   leakCount: 0, leakQuota: 5,
   selectedTower: -1,
   selectedPlacedTower: null,
-  lifelinesUsed: [false,false,false],
+  lifelinesUsed: [0,0,0],
   paused: false,
   weather: 5, weatherTimer: 0,
   lastTime: 0,
@@ -1073,9 +1247,10 @@ const Game = {
   bgCanvas: null, bgCtx: null, bgDirty: true,
   _resizeHandler: null,
 
-  init(mapIdx, modeIdx, isTutorial, isMP=false, mpIdx=0, mpPlayers=[]) {
+  init(mapIdx, modeIdx, isTutorial, isMP=false, mpIdx=0, mpPlayers=[], nationIdx=0) {
     this.isMP=isMP; this.isHostMP=isMP&&mpIdx===0; this.isGuestMP=isMP&&mpIdx!==0;
     this.mpPlayerIdx=mpIdx; this.mpPlayers=mpPlayers;
+    this.nationIdx=nationIdx;
     this.cv = document.getElementById('game-canvas');
     this.ctx = this.cv.getContext('2d');
     this.mapData = MAPS_DATA[mapIdx];
@@ -1105,6 +1280,8 @@ const Game = {
     document.getElementById('game-hud').classList.remove('hidden');
     document.getElementById('game-bottom').classList.remove('hidden');
     document.getElementById('game-canvas').style.display = 'block';
+    const ggBtn=document.getElementById('give-gold-btn');
+    if(ggBtn) ggBtn.classList.toggle('hidden',!isMP||mpPlayers.length<2);
 
     this.buildTowerGrid();
     this.buildLifelines();
@@ -1134,12 +1311,14 @@ const Game = {
     this.roundEvent = {};
     this.spawnQueue = [];
     this.spawnTimer = 0;
-    this.gold = [200,150,200,200][this.modeIdx];
+    const startGold = [200,150,200,200][this.modeIdx];
+    this.gold = startGold;
+    this.playerGold = Array(4).fill(startGold);
     this.crystalHP = 100;
     this.maxCrystalHP = 100;
     this.round = 0;
     this.leakCount = 0;
-    this.lifelinesUsed = [false,false,false];
+    this.lifelinesUsed = [0,0,0]; // counts (max 2 per lifeline)
     this.selectedTower = -1;
     this.weather = 5;
     this.weatherTimer = 180;
@@ -1158,22 +1337,24 @@ const Game = {
     this.cv.width = this.W * dpr;
     this.cv.height = this.H * dpr;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // compute path
+    // compute paths (multi-path support)
     const topH = 95;
     const botH = 148;
     const mapH = this.H - topH - botH;
     const mapY = topH;
-    const pts = this.mapData.pathFn(this.W);
-    const rawMaxY = Math.max(...pts.map(p=>p.y));
-    const rawMinY = Math.min(...pts.map(p=>p.y));
+    const allRaw = this.mapData.pathFns.map(fn => fn(this.W));
+    const allPts = allRaw.flat();
+    const rawMaxY = Math.max(...allPts.map(p=>p.y));
+    const rawMinY = Math.min(...allPts.map(p=>p.y));
     const scaleY = (mapH - 20) / Math.max(rawMaxY - rawMinY, 10);
     const offY = mapY + 10 - rawMinY * scaleY;
-    this.path = pts.map(p=>({ x: p.x, y: p.y * scaleY + offY }));
+    this.paths = allRaw.map(pts => pts.map(p=>({ x: p.x, y: p.y * scaleY + offY })));
+    this.path = this.paths[0]; // backward-compat alias
     this.bgDirty = true;
   },
 
-  ptOnPath(t) {
-    const path = this.path;
+  ptOnPath(t, pi=0) {
+    const path = (this.paths && this.paths[pi]) || this.path;
     const tot = path.length - 1;
     const seg = t * tot;
     const i = Math.min(Math.floor(seg), tot-1);
@@ -1198,24 +1379,28 @@ const Game = {
     const allT=[0,1,2,3,4,5,6];
     const typePool = ev.allTypes ? allT : data.types;
 
+    const numPaths = this.paths ? this.paths.length : 1;
     if(isBoss) {
       const boss = {...BOSS_TYPES[Math.min(data.bossIdx, BOSS_TYPES.length-1)]};
       boss.hp *= hpM;
       boss.maxHp = boss.hp;
       boss.t = 0; boss.spd = boss.spd * spdM; boss.slow = 1;
-      boss.x = this.path[0].x; boss.y = this.path[0].y;
+      boss.pathIdx = 0;
+      boss.x = this.paths[0][0].x; boss.y = this.paths[0][0].y;
       boss.isBoss = true; boss.spawnId = Math.random()*1000;
       boss._id = `r${this.round}_boss`;
       this.spawnQueue.push({enemy: boss, delay: 60});
     }
     for(let g=0; g<data.gates; g++) {
+      const pathIdx = g % numPaths;
       for(let e=0; e<perG; e++) {
         const typeIdx = typePool[Math.floor(Math.random()*typePool.length)];
         const base = {...ENEMY_TYPES[typeIdx]};
         base.hp = base.hp * hpM;
         base.maxHp = base.hp;
         base.t = 0; base.spd = base.spd * spdM; base.slow = 1;
-        base.x = this.path[0].x; base.y = this.path[0].y;
+        base.pathIdx = pathIdx;
+        base.x = this.paths[pathIdx][0].x; base.y = this.paths[pathIdx][0].y;
         base.typeId = typeIdx; base.spawnId = Math.random()*1000;
         base._id = `r${this.round}_g${g}_e${e}`;
         this.spawnQueue.push({enemy: base, delay: 30 + g*15 + e*([90,70,55,40,30][Math.min(this.round-1,4)])});
@@ -1356,8 +1541,9 @@ const Game = {
     for(let i=this.enemies.length-1;i>=0;i--) {
       const en = this.enemies[i];
       const spd = en.spd * en.slow * fps60 * .01;
-      en.t = Math.min(en.t + spd / this.path.length, 1);
-      const pt = this.ptOnPath(en.t);
+      const ePath = (this.paths && this.paths[en.pathIdx||0]) || this.path;
+      en.t = Math.min(en.t + spd / ePath.length, 1);
+      const pt = this.ptOnPath(en.t, en.pathIdx||0);
       en.x = pt.x; en.y = pt.y;
       if(en.slow < 1) en.slow = Math.min(1, en.slow + .02*fps60);
 
@@ -1392,9 +1578,27 @@ const Game = {
       if(tw.typeId === 5) { // nature tower
         tw.goldTimer = (tw.goldTimer||0) - fps60;
         if(tw.goldTimer <= 0) {
-          if(!tw.remote) { this.gold += 8; this.updateHUD(); } // remote towers don't give local gold
+          const ownerI = tw.ownerIdx != null ? tw.ownerIdx : 0;
+          this.playerGold[ownerI] = (this.playerGold[ownerI]||0) + 8;
+          if(ownerI === this.mpPlayerIdx) { this.gold = this.playerGold[ownerI]; this.updateHUD(); }
+          else if(!this.isMP) { this.gold += 8; this.updateHUD(); }
           tw.goldTimer=3600;
         }
+        return;
+      }
+      if(tw.typeId === 7) { // frost shrine — AoE slow all enemies in range
+        tw.cooldown = (tw.cooldown||0) - fps60;
+        if(tw.cooldown > 0) return;
+        const lvl7=tw.level||1;
+        const range7 = Math.round(85 * UPGRADE_RANGE_MULTS[lvl7-1]);
+        const inRange7 = this.enemies.filter(en=>Math.hypot(en.x-tw.x,en.y-tw.y)<range7);
+        if(inRange7.length) {
+          inRange7.forEach(en=>{ if(en.slow>0.3) en.slow=0.3; });
+          tw.flash=0.8;
+          if(Math.random()<0.3) SFX.towerShoot(7);
+          this.spawnParticles(tw.x,tw.y,'#5ab8f8',6);
+        }
+        tw.cooldown=60;
         return;
       }
       const tData = TOWERS_DATA[tw.typeId];
@@ -1403,8 +1607,8 @@ const Game = {
       tw.cooldown = (tw.cooldown||0) - fps60;
       if(tw.cooldown > 0) return;
       const lvl=tw.level||1;
-      const range = Math.round(tData.range*[1,1.15,1.35][lvl-1]);
-      const dmgMult=[1,1.4,2.1][lvl-1];
+      const range = Math.round(tData.range*UPGRADE_RANGE_MULTS[lvl-1]);
+      const dmgMult=UPGRADE_DMG_MULTS[lvl-1];
       const targets = this.enemies.filter(en=>Math.hypot(en.x-tw.x,en.y-tw.y)<=range);
       if(!targets.length) return;
       targets.sort((a,b)=>b.t-a.t);
@@ -1417,7 +1621,7 @@ const Game = {
         angle: tw.angle,
         targetEnemy:target, typeId:tw.typeId, dmg,
         vx:0, vy:0, life:1,
-        trail:[], chainTargets:tw.typeId===3?targets.slice(1,3):[]
+        trail:[], chainTargets:(tw.typeId===3||tw.typeId===8)?targets.slice(1,3):[]
       });
       tw.cooldown = tData.rate / 16.7;
       if(Math.random()<0.4) SFX.towerShoot(tw.typeId);
@@ -1433,7 +1637,7 @@ const Game = {
       if(!target || !this.enemies.includes(target)) { this.projectiles.splice(i,1); continue; }
       const dx = target.x - p.x, dy = target.y - p.y;
       const dist = Math.hypot(dx,dy);
-      const spd = p.typeId===1?4:p.typeId===0?7:p.typeId===4?5:6;
+      const spd = p.typeId===1?4:p.typeId===0||p.typeId===6?7:p.typeId===4||p.typeId===8?5:6;
       if(dist < spd+2) {
         // hit sound (throttled: 1 per 3 frames per type)
         if(!this._hitCooldown) this._hitCooldown={};
@@ -1450,7 +1654,7 @@ const Game = {
           this.addShake(2);
         } else if(p.typeId === 2) { // ice slow
           this.damageEnemy(target, p.dmg);
-          target.slow = .5;
+          target.slow = .25; // strong 75% slow
           this.spawnParticles(target.x,target.y,'#60c8ff',8);
         } else if(p.typeId === 3) { // lightning chain
           this.damageEnemy(target,p.dmg);
@@ -1459,9 +1663,16 @@ const Game = {
         } else if(p.typeId === 4) { // fire DoT
           this.damageEnemy(target, p.dmg);
           this.spawnParticles(target.x,target.y,'#ff6820',6);
+        } else if(p.typeId === 6) { // ballista — armor pierce bonus
+          this.damageEnemy(target, p.dmg * (target.armored ? 1.8 : 1));
+          this.spawnParticles(target.x,target.y,'#d08030',6);
+        } else if(p.typeId === 8) { // magma — chain fire 3 targets
+          this.damageEnemy(target,p.dmg);
+          this.spawnParticles(target.x,target.y,'#ff4400',8);
+          p.chainTargets.forEach(ct=>{ if(this.enemies.includes(ct)) { this.damageEnemy(ct,p.dmg*.6); this.spawnParticles(ct.x,ct.y,'#ff6820',4); } });
         } else {
           this.damageEnemy(target, p.dmg);
-          this.spawnParticles(target.x,target.y,TOWERS_DATA[p.typeId].color,5);
+          this.spawnParticles(target.x,target.y,TOWERS_DATA[p.typeId]?.color||'#aaa',5);
         }
         this.projectiles.splice(i,1);
         continue;
@@ -1498,8 +1709,8 @@ const Game = {
     // check wave done
     if(this.gamePhase==='wave' && this.spawnQueue.length===0 && this.enemies.length===0) {
       if(this.round >= 20 && this.modeIdx!==2) { this.win(); return; }
-      // next round
-      const gap = 120;
+      // next round (short pause before auto-advancing)
+      const gap = 18;
       this.gamePhase = 'waiting';
       setTimeout(()=>this.startRound(), gap*16.7);
     }
@@ -1521,8 +1732,10 @@ const Game = {
       SFX.enemyDie(!!en.isBoss, en.typeId||0);
       if(en.isBoss) { this.addShake(6); this.spawnParticles(en.x,en.y,en.color,20); }
       else this.spawnParticles(en.x,en.y,en.color,8);
-      this.gold += en.reward || 10;
-      if(en.isBoss) this.gold += 50;
+      const reward = (en.reward || 10) + (en.isBoss ? 50 : 0);
+      // each player earns the reward independently
+      for(let gi=0;gi<this.playerGold.length;gi++) this.playerGold[gi]=(this.playerGold[gi]||0)+reward;
+      this.gold = this.playerGold[this.mpPlayerIdx];
       if(Math.random()<0.3) SFX.earnGold();
       this.updateHUD();
       const idx = this.enemies.indexOf(en);
@@ -1545,7 +1758,8 @@ const Game = {
     this.bgCanvas.height = H*dpr;
     const c = this.bgCtx;
     c.setTransform(dpr,0,0,dpr,0,0);
-    const path = this.path;
+    const paths = this.paths || [this.path];
+    const path = paths[0]; // primary path for decorations
     const rng = (seed)=>{ let s=seed; return ()=>{s=Math.sin(s)*43758.5453123;return s-Math.floor(s);}; };
 
     // ── Ground tiles (varied size + subtle noise) ──
@@ -1564,8 +1778,8 @@ const Game = {
     const gr=rng(42+this.mapData.id||42);
     for(let i=0;i<80;i++){
       const gx=gr()*W, gy=gr()*H;
-      // skip if on path
-      if(this.path.some(pt=>Math.hypot(pt.x-gx,pt.y-gy)<20)) continue;
+      // skip if on any path
+      if(paths.some(pp=>pp.some(pt=>Math.hypot(pt.x-gx,pt.y-gy)<20))) continue;
       const gCol=`rgba(${Math.floor(30+gr()*20)},${Math.floor(50+gr()*30)},${Math.floor(10+gr()*20)},${0.3+gr()*.3})`;
       c.strokeStyle=gCol; c.lineWidth=1;
       for(let b=0;b<3;b++){
@@ -1578,7 +1792,7 @@ const Game = {
     const fr=rng(99+this.mapData.id||99);
     for(let i=0;i<30;i++){
       const fx=fr()*W, fy=fr()*H;
-      if(this.path.some(pt=>Math.hypot(pt.x-fx,pt.y-fy)<22)) continue;
+      if(paths.some(pp=>pp.some(pt=>Math.hypot(pt.x-fx,pt.y-fy)<22))) continue;
       const petal=`hsl(${Math.floor(180+fr()*180)},70%,60%)`;
       c.fillStyle=petal;
       for(let p2=0;p2<5;p2++){
@@ -1588,43 +1802,48 @@ const Game = {
       c.fillStyle='#f5e040'; c.beginPath(); c.arc(fx,fy,1.5,0,Math.PI*2); c.fill();
     }
 
-    // ── Path shadow (wide soft edge) ──
-    c.save();
-    c.shadowColor='rgba(0,0,0,0.6)'; c.shadowBlur=18;
-    c.strokeStyle='rgba(0,0,0,0.01)'; c.lineWidth=30; c.lineJoin='round'; c.lineCap='round';
-    c.beginPath(); c.moveTo(path[0].x,path[0].y); path.slice(1).forEach(p3=>c.lineTo(p3.x,p3.y)); c.stroke();
-    c.restore();
-
-    // ── Path layers ──
-    // Dark base
-    c.strokeStyle=this.mapData.pathColor; c.lineWidth=28; c.lineJoin='round'; c.lineCap='round';
-    c.beginPath(); c.moveTo(path[0].x,path[0].y); path.slice(1).forEach(p3=>c.lineTo(p3.x,p3.y)); c.stroke();
-    // Mid tone
-    c.strokeStyle=this.mapData.pathLight; c.lineWidth=18;
-    c.beginPath(); c.moveTo(path[0].x,path[0].y); path.slice(1).forEach(p3=>c.lineTo(p3.x,p3.y)); c.stroke();
-    // Highlight center strip
     const highCol = this.mapData.pathLight.replace('#','');
     const hr2=(parseInt(highCol,16)>>16)&255, hg=(parseInt(highCol,16)>>8)&255, hb=parseInt(highCol,16)&255;
-    c.strokeStyle=`rgb(${Math.min(hr2+15,255)},${Math.min(hg+10,255)},${Math.min(hb+5,255)})`; c.lineWidth=7;
-    c.beginPath(); c.moveTo(path[0].x,path[0].y); path.slice(1).forEach(p3=>c.lineTo(p3.x,p3.y)); c.stroke();
+    const highlightColor=`rgb(${Math.min(hr2+15,255)},${Math.min(hg+10,255)},${Math.min(hb+5,255)})`;
 
-    // ── Path edge dots (pebbles) ──
+    // ── Draw all paths ──
+    paths.forEach((pp, pi) => {
+      // Path shadow
+      c.save();
+      c.shadowColor='rgba(0,0,0,0.6)'; c.shadowBlur=18;
+      c.strokeStyle='rgba(0,0,0,0.01)'; c.lineWidth=30; c.lineJoin='round'; c.lineCap='round';
+      c.beginPath(); c.moveTo(pp[0].x,pp[0].y); pp.slice(1).forEach(p3=>c.lineTo(p3.x,p3.y)); c.stroke();
+      c.restore();
+      // Dark base
+      c.strokeStyle=this.mapData.pathColor; c.lineWidth=28; c.lineJoin='round'; c.lineCap='round';
+      c.beginPath(); c.moveTo(pp[0].x,pp[0].y); pp.slice(1).forEach(p3=>c.lineTo(p3.x,p3.y)); c.stroke();
+      // Mid tone
+      c.strokeStyle=this.mapData.pathLight; c.lineWidth=18;
+      c.beginPath(); c.moveTo(pp[0].x,pp[0].y); pp.slice(1).forEach(p3=>c.lineTo(p3.x,p3.y)); c.stroke();
+      // Highlight center strip
+      c.strokeStyle=highlightColor; c.lineWidth=7;
+      c.beginPath(); c.moveTo(pp[0].x,pp[0].y); pp.slice(1).forEach(p3=>c.lineTo(p3.x,p3.y)); c.stroke();
+    });
+
+    // ── Path edge dots (pebbles) on all paths ──
     const pr=rng(77+this.mapData.id||77);
-    for(let seg=0;seg<path.length-1;seg++){
-      const p1=path[seg], p2=path[seg+1];
-      const segLen=Math.hypot(p2.x-p1.x,p2.y-p1.y);
-      const nx=(-(p2.y-p1.y)/segLen), ny=((p2.x-p1.x)/segLen);
-      for(let d=0;d<segLen;d+=18){
-        const t2=d/segLen;
-        const mx=p1.x+(p2.x-p1.x)*t2, my=p1.y+(p2.y-p1.y)*t2;
-        [-16,16].forEach(off=>{
-          if(pr()>0.45) return;
-          const rx=mx+nx*off+(pr()-.5)*5, ry=my+ny*off+(pr()-.5)*5;
-          c.fillStyle=`rgba(${Math.floor(50+pr()*30)},${Math.floor(60+pr()*30)},${Math.floor(70+pr()*20)},0.7)`;
-          c.beginPath(); c.ellipse(rx,ry,pr()*4+2,pr()*2+1,pr()*Math.PI,0,Math.PI*2); c.fill();
-        });
+    paths.forEach(pp => {
+      for(let seg=0;seg<pp.length-1;seg++){
+        const p1=pp[seg], p2=pp[seg+1];
+        const segLen=Math.hypot(p2.x-p1.x,p2.y-p1.y);
+        const nx=(-(p2.y-p1.y)/segLen), ny=((p2.x-p1.x)/segLen);
+        for(let d=0;d<segLen;d+=18){
+          const t2=d/segLen;
+          const mx=p1.x+(p2.x-p1.x)*t2, my=p1.y+(p2.y-p1.y)*t2;
+          [-16,16].forEach(off=>{
+            if(pr()>0.45) return;
+            const rx=mx+nx*off+(pr()-.5)*5, ry=my+ny*off+(pr()-.5)*5;
+            c.fillStyle=`rgba(${Math.floor(50+pr()*30)},${Math.floor(60+pr()*30)},${Math.floor(70+pr()*20)},0.7)`;
+            c.beginPath(); c.ellipse(rx,ry,pr()*4+2,pr()*2+1,pr()*Math.PI,0,Math.PI*2); c.fill();
+          });
+        }
       }
-    }
+    });
 
     // ── Decorative rocks (off-path) ──
     const rockR=rng(55+this.mapData.id||55);
@@ -1644,15 +1863,17 @@ const Game = {
       });
     });
 
-    // ── Spawn portal ──
-    const sx=path[0].x, sy=path[0].y;
-    c.fillStyle='#200808'; c.beginPath(); c.arc(sx,sy,14,0,Math.PI*2); c.fill();
-    c.strokeStyle='#e05a2b'; c.lineWidth=2; c.beginPath(); c.arc(sx,sy,14,0,Math.PI*2); c.stroke();
-    c.strokeStyle='#ff8050'; c.lineWidth=1; c.setLineDash([4,3]);
-    c.beginPath(); c.arc(sx,sy,18,0,Math.PI*2); c.stroke();
-    c.setLineDash([]);
-    c.fillStyle='#ff8050'; c.font='bold 10px sans-serif'; c.textAlign='center';
-    c.fillText('⚠', sx, sy+4);
+    // ── Spawn portals (one per path) ──
+    paths.forEach((pp, pi) => {
+      const sx=pp[0].x, sy=pp[0].y;
+      c.fillStyle='#200808'; c.beginPath(); c.arc(sx,sy,14,0,Math.PI*2); c.fill();
+      c.strokeStyle='#e05a2b'; c.lineWidth=2; c.beginPath(); c.arc(sx,sy,14,0,Math.PI*2); c.stroke();
+      c.strokeStyle='#ff8050'; c.lineWidth=1; c.setLineDash([4,3]);
+      c.beginPath(); c.arc(sx,sy,18,0,Math.PI*2); c.stroke();
+      c.setLineDash([]);
+      c.fillStyle='#ff8050'; c.font='bold 9px sans-serif'; c.textAlign='center';
+      c.fillText(pi===0?'⚠':'⚠', sx, sy+3);
+    });
 
     // ── Gate zone ──
     const gateX=W-60;
@@ -1807,7 +2028,7 @@ const Game = {
     const lvl = tw.level||1;
     const flash = tw.flash||0;
     const now = this.lastTime/1000;
-    const s = [1, 1.25, 1.5][lvl-1];
+    const s = UPGRADE_SCALE[lvl-1] || 1;
 
     // shadow
     c.fillStyle='rgba(0,0,0,.35)';
@@ -1818,7 +2039,9 @@ const Game = {
     // scale whole tower from its center so lvl2/3 look physically larger
     c.translate(x,y); c.scale(s,s); c.translate(-x,-y);
 
-    switch(typeId) {
+    // nation-exclusive towers reuse base visuals (6→0, 7→2, 8→4) with a tinted overlay
+    const drawTypeId = {6:0, 7:2, 8:4}[typeId] ?? typeId;
+    switch(drawTypeId) {
       case 0: { // Cung — wooden watch tower
         const woodD='#5a3010', woodL='#7a4818', platformC='#8a5020';
         const bCol=lvl>=2?'#c8a030':col;
@@ -2034,17 +2257,40 @@ const Game = {
       }
     }
 
+    // nation tower color badge overlay (small colored dot on top of tower)
+    if(typeId >= 6) {
+      const ntCol = TOWERS_DATA[typeId]?.color || '#fff';
+      c.fillStyle = ntCol; c.globalAlpha=0.85;
+      c.beginPath(); c.arc(x,y-18*s,3*s,0,Math.PI*2); c.fill();
+      c.strokeStyle='rgba(0,0,0,.5)';c.lineWidth=.8;c.stroke();
+      c.globalAlpha=1;
+    }
+    // Frost Shrine aura ring
+    if(typeId === 7) {
+      const auraR = Math.round(85 * UPGRADE_RANGE_MULTS[(tw.level||1)-1]);
+      const pulse7 = 0.05 + Math.sin(now*2)*.04 + (tw.flash||0)*.12;
+      c.strokeStyle=`rgba(90,184,248,${pulse7})`; c.lineWidth=1.2; c.setLineDash([4,4]);
+      c.beginPath(); c.arc(x,y,auraR/s,0,Math.PI*2); c.stroke();
+      c.setLineDash([]);
+    }
     c.shadowBlur=0;
     c.restore();
 
-    // level indicator dots
+    // level indicator dots (supports 5 levels)
     if(lvl>1){
-      const dotColors=['','#60c8ff','#f5c842'];
+      const dotColors=['','','#60c8ff','#f5c842','#ff8030','#e040ff'];
+      const spread = (lvl-1)*4;
       for(let l=0;l<lvl;l++){
         c.fillStyle=dotColors[lvl]||'#60c8ff';
-        c.beginPath();c.arc(x-4+l*4,y+18,2.5,0,Math.PI*2);c.fill();
+        c.beginPath();c.arc(x-spread/2+l*4,y+18,2.5,0,Math.PI*2);c.fill();
         c.strokeStyle='#06080f';c.lineWidth=.5;c.stroke();
       }
+    }
+    // player ownership color badge (top-right corner)
+    if(this.isMP && tw.ownerIdx != null) {
+      c.fillStyle = PLAYER_COLORS[tw.ownerIdx % PLAYER_COLORS.length];
+      c.beginPath(); c.arc(x+9*s, y-9*s, 4, 0, Math.PI*2); c.fill();
+      c.strokeStyle='rgba(0,0,0,.5)'; c.lineWidth=1; c.stroke();
     }
   },
 
@@ -2167,6 +2413,45 @@ const Game = {
         c.fillStyle='#ffffa0'; c.globalAlpha=0.8;
         c.beginPath(); c.arc(p.x,p.y,1.2,0,Math.PI*2); c.fill();
         c.globalAlpha=1;
+        break;
+      }
+      case 6: { // Ballista — large bolt (like arrow but bigger, steel colored)
+        const ang6=p.angle||Math.atan2((p.targetEnemy?.y||p.ty)-p.y,(p.targetEnemy?.x||p.tx)-p.x);
+        c.save(); c.translate(p.x,p.y); c.rotate(ang6);
+        p.trail.forEach((pt,i)=>{c.globalAlpha=(i/p.trail.length)*.25;c.fillStyle='#d08030';c.fillRect(-p.trail.length*.4+i*.4,-.4,0.8,0.8);});
+        c.globalAlpha=1;
+        c.strokeStyle='#808090'; c.lineWidth=2.5;
+        c.beginPath(); c.moveTo(-12,0); c.lineTo(7,0); c.stroke();
+        c.fillStyle='#d08030';
+        c.beginPath(); c.moveTo(7,0); c.lineTo(0,-3); c.lineTo(0,3); c.closePath(); c.fill();
+        c.restore();
+        break;
+      }
+      case 8: { // Magma — chain fire blob (like lightning but molten)
+        if(!p.targetEnemy||!this.enemies.includes(p.targetEnemy)) break;
+        const tx8=p.targetEnemy.x, ty8=p.targetEnemy.y;
+        c.save();
+        c.shadowColor='#ff4400'; c.shadowBlur=6;
+        c.strokeStyle='#ff8030'; c.lineWidth=2;
+        c.beginPath(); c.moveTo(p.x,p.y);
+        const steps8=5;
+        for(let s8=1;s8<=steps8;s8++){
+          const t8=s8/steps8;
+          const mx8=p.x+(tx8-p.x)*t8+(s8<steps8?(Math.random()-.5)*12:0);
+          const my8=p.y+(ty8-p.y)*t8+(s8<steps8?(Math.random()-.5)*12:0);
+          c.lineTo(mx8,my8);
+        }
+        c.stroke();
+        if(p.chainTargets){
+          p.chainTargets.forEach(ct=>{ if(!this.enemies.includes(ct)) return;
+            c.strokeStyle='rgba(255,100,0,0.5)'; c.lineWidth=1.5; c.shadowBlur=3;
+            c.beginPath(); c.moveTo(p.targetEnemy.x,p.targetEnemy.y);
+            const ctx8=ct.x, cty8=ct.y;
+            for(let s8=1;s8<=4;s8++){const t3=s8/4;c.lineTo(p.targetEnemy.x+(ctx8-p.targetEnemy.x)*t3+(s8<4?(Math.random()-.5)*8:0),p.targetEnemy.y+(cty8-p.targetEnemy.y)*t3+(s8<4?(Math.random()-.5)*8:0));}
+            c.stroke();
+          });
+        }
+        c.restore();
         break;
       }
       default: { // Nature (won't have projectile but fallback)
@@ -2416,16 +2701,18 @@ const Game = {
     // place tower
     if(this.selectedTower>=0) {
       const tData=TOWERS_DATA[this.selectedTower];
-      if(this.gold < tData.cost) { this.flashLowGold(); return; }
+      const myGold = this.isMP ? this.playerGold[this.mpPlayerIdx] : this.gold;
+      if(myGold < tData.cost) { this.flashLowGold(); return; }
       const tooClose=this.towers.some(tw=>Math.hypot(tw.x-tx,tw.y-ty)<22);
-      const onPath=this.path.some(pt=>Math.hypot(pt.x-tx,pt.y-ty)<18);
+      const onPath=(this.paths||[this.path]).some(pp=>pp.some(pt=>Math.hypot(pt.x-tx,pt.y-ty)<18));
       if(tooClose||onPath) return;
       if(this.isGuestMP) {
         MP.sendInput('place_tower', {x:tx, y:ty, typeId:this.selectedTower});
         SFX.placeTower(this.selectedTower);
       } else {
-        this.gold -= tData.cost;
-        this.towers.push({x:tx,y:ty,typeId:this.selectedTower,cooldown:0,goldTimer:3600,angle:0,flash:0});
+        this.playerGold[this.mpPlayerIdx] = (this.playerGold[this.mpPlayerIdx]||0) - tData.cost;
+        this.gold = this.playerGold[this.mpPlayerIdx];
+        this.towers.push({x:tx,y:ty,typeId:this.selectedTower,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:this.mpPlayerIdx});
         SFX.placeTower(this.selectedTower);
         this.spawnParticles(tx,ty,tData.color,6);
         this.updateHUD();
@@ -2439,9 +2726,12 @@ const Game = {
     if(this.modeIdx===1) return;
     const baseCost=TOWERS_DATA[tw.typeId].cost;
     const lvl=tw.level||1;
-    const totalSpent=baseCost*(1+(lvl>1?0.5:0)+(lvl>2?0.8:0));
+    let totalSpent=baseCost;
+    for(let l=1;l<lvl;l++) totalSpent+=Math.floor(baseCost*UPGRADE_COST_MULTS[l]);
     const refund=Math.floor(totalSpent*.6);
-    this.gold+=refund;
+    const ownerI = tw.ownerIdx != null ? tw.ownerIdx : this.mpPlayerIdx;
+    this.playerGold[ownerI] = (this.playerGold[ownerI]||0) + refund;
+    if(ownerI===this.mpPlayerIdx) this.gold=this.playerGold[ownerI];
     const idx=this.towers.indexOf(tw);
     if(idx>=0) this.towers.splice(idx,1);
     SFX.sellTower();
@@ -2453,32 +2743,35 @@ const Game = {
   showTowerPanel(tw, tapX, tapY) {
     const tData=TOWERS_DATA[tw.typeId];
     const lvl=tw.level||1;
-    const dmgMult=[1,1.4,2.1][lvl-1];
-    const rangeMult=[1,1.15,1.35][lvl-1];
+    const dmgMult=UPGRADE_DMG_MULTS[lvl-1];
+    const rangeMult=UPGRADE_RANGE_MULTS[lvl-1];
+    const isOwner=!this.isMP||(tw.ownerIdx==null)||(tw.ownerIdx===this.mpPlayerIdx);
     document.getElementById('tpan-icon').textContent=tData.icon;
-    document.getElementById('tpan-name').textContent=tData.name;
-    document.getElementById('tpan-level').textContent=`Cấp ${lvl}/3`;
+    document.getElementById('tpan-name').innerHTML=tData.name+(this.isMP&&tw.ownerIdx!=null?` <span style="color:${PLAYER_COLORS[tw.ownerIdx%4]};font-size:10px">●P${tw.ownerIdx+1}</span>`:'');
+    document.getElementById('tpan-level').textContent=`Cấp ${lvl}/${TOWER_MAX_LEVEL}`;
+    let totalSpent=tData.cost; for(let l=1;l<lvl;l++) totalSpent+=Math.floor(tData.cost*UPGRADE_COST_MULTS[l]);
+    const sellVal=Math.floor(totalSpent*.6);
     document.getElementById('tpan-stats').innerHTML=
       `🗡 DMG: ${Math.round(tData.dmg*dmgMult)} &nbsp;|&nbsp; 🎯 Range: ${Math.round(tData.range*rangeMult)}<br>`+
-      `⚡ Rate: ${tData.rate||'-'}ms &nbsp;|&nbsp; 💰 Đã dùng: ${tData.cost}`;
+      `⚡ Rate: ${tData.rate||'-'}ms &nbsp;|&nbsp; 💰 Đã dùng: ${totalSpent}`;
     const upgradeBtn=document.getElementById('tpan-upgrade-btn');
     const sellBtn=document.getElementById('tpan-sell-btn');
-    const baseCost=tData.cost;
-    const totalSpent=baseCost*(1+(lvl>1?0.5:0)+(lvl>2?0.8:0));
-    const sellVal=Math.floor(totalSpent*.6);
     sellBtn.innerHTML=`💰 Bán — nhận <i class="gc"></i>${sellVal}`;
-    sellBtn.style.display=(this.modeIdx===1)?'none':'block';
-    if(lvl<3) {
-      const upCost=Math.floor(baseCost*[0.5,0.8][lvl-1]);
+    sellBtn.style.display=(this.modeIdx===1||!isOwner)?'none':'block';
+    if(!isOwner) {
+      upgradeBtn.textContent='🔒 Tháp của P'+(tw.ownerIdx+1);
+      upgradeBtn.disabled=true;
+    } else if(lvl<TOWER_MAX_LEVEL) {
+      const upCost=Math.floor(tData.cost*UPGRADE_COST_MULTS[lvl]);
+      const myGold=this.isMP?this.playerGold[this.mpPlayerIdx]:this.gold;
       upgradeBtn.innerHTML=`⬆ Cấp ${lvl+1} — <i class="gc"></i>${upCost}`;
-      upgradeBtn.disabled=(this.gold<upCost);
+      upgradeBtn.disabled=(myGold<upCost);
     } else {
       upgradeBtn.textContent='✅ Cấp tối đa';
       upgradeBtn.disabled=true;
     }
     const panel=document.getElementById('tower-panel');
     panel.style.display='block';
-    // position: above tap point, clamped to viewport
     const pw=panel.offsetWidth||180, ph=panel.offsetHeight||140;
     let px=tapX-(pw/2), py=tapY-ph-20;
     px=Math.max(6,Math.min(px, this.W-pw-6));
@@ -2496,12 +2789,16 @@ const Game = {
     const tw=this.selectedPlacedTower;
     if(!tw||!this.towers.includes(tw)) { this.closeTowerPanel(); return; }
     const lvl=tw.level||1;
-    if(lvl>=3) return;
+    if(lvl>=TOWER_MAX_LEVEL) return;
+    // ownership check
+    if(this.isMP && tw.ownerIdx!=null && tw.ownerIdx!==this.mpPlayerIdx) return;
     const baseCost=TOWERS_DATA[tw.typeId].cost;
-    const upCost=Math.floor(baseCost*[0.5,0.8][lvl-1]);
-    if(this.gold<upCost) { this.flashLowGold(); return; }
+    const upCost=Math.floor(baseCost*UPGRADE_COST_MULTS[lvl]);
+    const myGold=this.isMP?this.playerGold[this.mpPlayerIdx]:this.gold;
+    if(myGold<upCost) { this.flashLowGold(); return; }
     if(this.isGuestMP) { MP.sendInput('upgrade_tower', {x:tw.x, y:tw.y}); SFX.placeTower(tw.typeId); this.closeTowerPanel(); return; }
-    this.gold-=upCost;
+    this.playerGold[this.mpPlayerIdx]=(this.playerGold[this.mpPlayerIdx]||0)-upCost;
+    this.gold=this.playerGold[this.mpPlayerIdx];
     tw.level=(lvl+1);
     SFX.placeTower(tw.typeId);
     this.spawnParticles(tw.x,tw.y,TOWERS_DATA[tw.typeId].color,10);
@@ -2512,6 +2809,8 @@ const Game = {
   sellSelectedTower() {
     const tw=this.selectedPlacedTower;
     if(!tw) return;
+    // ownership check
+    if(this.isMP && tw.ownerIdx!=null && tw.ownerIdx!==this.mpPlayerIdx) return;
     this.closeTowerPanel();
     if(this.isGuestMP) { MP.sendInput('sell_tower', {x:tw.x, y:tw.y}); SFX.sellTower(); return; }
     this.sellTower(tw);
@@ -2536,9 +2835,9 @@ const Game = {
     SFX.uiClick();
   },
 
-  selectTower(idx) {
-    this.selectedTower = this.selectedTower===idx ? -1 : idx;
-    document.querySelectorAll('.tp').forEach((t,i)=>t.classList.toggle('selected',i===idx&&this.selectedTower>=0));
+  selectTower(id) {
+    this.selectedTower = this.selectedTower===id ? -1 : id;
+    document.querySelectorAll('.tp').forEach(t=>t.classList.toggle('selected', t.id===`tp-${id}`&&this.selectedTower>=0));
     if(this.selectedTower>=0) { this.selectedPlacedTower=null; this.closeTowerPanel(); }
   },
 
@@ -2561,11 +2860,14 @@ const Game = {
   },
 
   useLifeline(idx) {
-    if(this.lifelinesUsed[idx]) return;
-    if(this.isGuestMP) { MP.sendInput('use_lifeline', {idx}); SFX.lifeline(idx); return; }
-    this.lifelinesUsed[idx]=true;
+    if(this.isGuestMP) { SFX.uiClick(); return; } // only host can use lifelines
+    if(this.lifelinesUsed[idx] >= 2) return;
+    this.lifelinesUsed[idx]++;
     const el=document.querySelectorAll('.ll')[idx];
-    if(el) el.classList.add('used');
+    if(el) {
+      const cntEl=el.querySelector('.ll-count'); if(cntEl) cntEl.textContent=`${2-this.lifelinesUsed[idx]}/2`;
+      if(this.lifelinesUsed[idx]>=2) el.classList.add('used');
+    }
     SFX.lifeline(idx);
     if(idx===0) { // iron shield
       this.crystalShield=true;
@@ -2582,9 +2884,10 @@ const Game = {
   },
 
   buildTowerGrid() {
-    const grid=document.getElementById('tower-grid');
-    grid.innerHTML=TOWERS_DATA.map((t,i)=>`
-      <div class="tp" id="tp-${i}" onclick="Game.selectTower(${i})">
+    const nation = NATIONS_DATA[this.nationIdx||0];
+    const grid = document.getElementById('tower-grid');
+    grid.innerHTML = TOWERS_DATA.filter(t=>nation.towers.includes(t.id)).map(t=>`
+      <div class="tp" id="tp-${t.id}" onclick="Game.selectTower(${t.id})">
         <div class="tp-icon">${t.icon}</div>
         <div class="tp-name">${t.name}</div>
         <div class="tp-cost"><i class="gc"></i>${t.cost}</div>
@@ -2595,19 +2898,23 @@ const Game = {
     const row=document.getElementById('lifeline-row');
     const ll=[{icon:'🔰',name:'Iron Shield',cls:'ll-0'},{icon:'💥',name:'Napalm',cls:'ll-1'},{icon:'🌀',name:'Time Warp',cls:'ll-2'}];
     row.innerHTML=ll.map((l,i)=>`
-      <div class="ll ${l.cls}" onclick="Game.useLifeline(${i})">
+      <div class="ll ${l.cls}" onclick="Game.useLifeline(${i})" title="${this.isGuestMP?'Chỉ Host mới dùng được':'Chiêu thức đặc biệt (2 lần/trận)'}">
         <div class="ll-icon">${l.icon}</div>
         <div class="ll-name">${l.name}</div>
+        <div class="ll-count">2/2</div>
       </div>`).join('');
   },
 
   updateHUD() {
     document.getElementById('hud-round').textContent=this.round;
-    document.getElementById('hud-gold').textContent=this.gold;
+    const displayGold = this.isMP ? (this.playerGold[this.mpPlayerIdx]||0) : this.gold;
+    document.getElementById('hud-gold').textContent=displayGold;
     document.getElementById('hud-hp').textContent=this.crystalHP;
-    // disable unaffordable towers
-    document.querySelectorAll('.tp').forEach((el,i)=>{
-      el.classList.toggle('disabled',TOWERS_DATA[i].cost>this.gold);
+    // disable unaffordable towers (use element id="tp-N" to get tower data by id)
+    document.querySelectorAll('.tp').forEach(el=>{
+      const id=parseInt(el.id.replace('tp-',''));
+      const t=TOWERS_DATA[id];
+      if(t) el.classList.toggle('disabled', t.cost>displayGold);
     });
   },
 
@@ -2637,6 +2944,7 @@ const Game = {
   resume() { this.paused=false; document.getElementById('pause-modal').classList.add('hidden'); },
   quit() {
     this.paused=false; this.gamePhase='done';
+    ReconnectHelper.clear();
     SFX.stopMusic();
     cancelAnimationFrame(this.animHandle);
     this.closeTowerPanel();
@@ -2656,10 +2964,16 @@ const Game = {
     document.getElementById('lose-modal').classList.add('hidden');
     cancelAnimationFrame(this.animHandle);
     this.closeTowerPanel();
-    Game.init(STATE.mapIdx, STATE.modeIdx, false);
+    // For solo: re-open nation picker; for MP: just restart with same nation
+    if(this.isMP) {
+      Game.init(STATE.mapIdx, STATE.modeIdx, false, this.isMP, this.mpPlayerIdx, this.mpPlayers, this.nationIdx||0);
+    } else {
+      NationPicker.open(n => Game.init(STATE.mapIdx, STATE.modeIdx, false, false, 0, [], n));
+    }
   },
   win() {
     this.gamePhase='done';
+    ReconnectHelper.clear(); // clean end, no need to reconnect
     SFX.stopMusic(); SFX.win();
     if(this.isHostMP) MP.broadcastEvent({type:'game_over',result:'win',crystalHP:this.crystalHP,round:this.round,leakCount:this.leakCount,leakQuota:this.leakQuota});
     document.getElementById('win-desc').textContent=
@@ -2668,11 +2982,53 @@ const Game = {
   },
   lose() {
     this.gamePhase='done';
+    ReconnectHelper.clear(); // clean end, no need to reconnect
     SFX.stopMusic(); SFX.lose();
     if(this.isHostMP) MP.broadcastEvent({type:'game_over',result:'lose',round:this.round});
     document.getElementById('lose-desc').textContent=
       `Tinh Thể đã vỡ tại Round ${this.round}. ${this.round<10?'Hãy xây tháp nhiều hơn ngay từ đầu!':this.round<20?'Bạn đã chơi tốt! Thêm tháp AoE cho giai đoạn giữa.':'Gần thắng rồi! Cải thiện phòng thủ Cửa Tử.'}`;
     document.getElementById('lose-modal').classList.remove('hidden');
+  },
+
+  // ── Per-player gold donation ─────────────────────────────
+  giveGold(toIdx, amount=50) {
+    const myGold=this.playerGold[this.mpPlayerIdx]||0;
+    if(myGold<amount) { this.flashLowGold(); return; }
+    if(this.isGuestMP) {
+      MP.sendInput('give_gold',{toIdx,amount});
+      // optimistic deduct on sender side (host will confirm via state sync)
+      this.playerGold[this.mpPlayerIdx]-=amount;
+      this.gold=this.playerGold[this.mpPlayerIdx];
+      this.updateHUD();
+    } else {
+      this.playerGold[this.mpPlayerIdx]-=amount;
+      this.playerGold[toIdx]=(this.playerGold[toIdx]||0)+amount;
+      this.gold=this.playerGold[this.mpPlayerIdx];
+      this.updateHUD();
+    }
+    this.showGoldToast(`💰 Đã cho P${toIdx+1} ${amount} vàng`);
+  },
+
+  showGoldToast(msg) {
+    const t=document.createElement('div');
+    t.style.cssText='position:fixed;bottom:220px;left:50%;transform:translateX(-50%);background:#1a2a10;border:1px solid #3a6a20;color:#80d840;padding:6px 14px;border-radius:8px;font-size:12px;z-index:99;pointer-events:none';
+    t.textContent=msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(),2500);
+  },
+
+  showGiveDonateMenu() {
+    if(!this.isMP||!this.mpPlayers||this.mpPlayers.length<2) return;
+    const existing=document.getElementById('donate-menu');
+    if(existing){existing.remove();return;}
+    const menu=document.createElement('div');
+    menu.id='donate-menu';
+    menu.style.cssText='position:fixed;bottom:215px;left:10px;background:#0a1020;border:1px solid #2a4060;border-radius:10px;padding:8px;z-index:50';
+    const others=this.mpPlayers.map((_,i)=>i).filter(i=>i!==this.mpPlayerIdx);
+    menu.innerHTML=`<div style="color:#60a8ff;font-size:11px;margin-bottom:6px">Cho 50 vàng cho:</div>`+
+      others.map(i=>`<button onclick="Game.giveGold(${i},50);document.getElementById('donate-menu')?.remove()" style="display:block;width:100%;margin:2px 0;background:#0a2030;border:1px solid #2a5060;color:#80c8ff;padding:4px 10px;border-radius:6px;cursor:pointer">P${i+1}: ${this.mpPlayers[i]?.name||'Player'}</button>`).join('');
+    document.body.appendChild(menu);
+    setTimeout(()=>menu.remove(),5000);
   }
 };
 
@@ -2761,10 +3117,21 @@ const MP = {
     if(this.ws && this.ws.readyState===WebSocket.OPEN) this.ws.send(JSON.stringify(obj));
   },
 
+  checkAdminPw() {
+    const pw=(document.getElementById('mp-admin-pw')?.value||'').trim();
+    if(pw===ADMIN_PASSWORD) {
+      document.getElementById('mp-create-btn')?.classList.remove('hidden');
+      this.setErr('✅ Đã xác nhận — bạn có thể tạo phòng!');
+    } else {
+      this.setErr('❌ Mật khẩu admin không đúng.');
+    }
+  },
+
   create() {
     this.connect(() => {
       this.isHost = true;
-      this.send({ type:'create', name:this.myName, hero:'Kael', map:STATE.mapIdx, mode:STATE.modeIdx });
+      this.myNation = this.myNation || 0;
+      this.send({ type:'create', name:this.myName, hero:'Kael', map:STATE.mapIdx, mode:STATE.modeIdx, nation:this.myNation });
     });
   },
 
@@ -2773,7 +3140,8 @@ const MP = {
     if(code.length!==6) { this.setErr('Mã phòng phải 6 ký tự.'); return; }
     this.connect(() => {
       this.isHost = false;
-      this.send({ type:'join', code, name:this.myName, hero:'Kael' });
+      this.myNation = this.myNation || 0;
+      this.send({ type:'join', code, name:this.myName, hero:'Kael', nation:this.myNation });
     });
   },
 
@@ -2795,18 +3163,39 @@ const MP = {
         this.renderLobbyPlayers();
         this.showChat(`👋 ${msg.info ? '' : 'Một người'}đã rời phòng`);
         break;
-      case 'game_start':
+      case 'game_start': {
         STATE.mapIdx = msg.map;
         STATE.modeIdx = msg.mode;
         this.myIdx = msg.playerIdx;
         this.mpPlayers = msg.players;
         this.totalPlayers = msg.totalPlayers;
+        const myNation = (msg.players[msg.playerIdx]?.nation) || 0;
+        // Save session for reconnect
+        ReconnectHelper.save(msg.code || this.roomCode, this.myName, msg.playerIdx, myNation);
         document.getElementById('mp-overlay').classList.add('hidden');
         MapRenderer.stopAnim();
         App.showScreen('game-canvas');
         document.getElementById('game-canvas').style.display='block';
-        Game.init(msg.map, msg.mode, false, true, msg.playerIdx, msg.players);
+        Game.init(msg.map, msg.mode, false, true, msg.playerIdx, msg.players, myNation);
         document.getElementById('qc-toggle').classList.remove('hidden');
+        break;
+      }
+      case 'reconnected': {
+        this.myIdx = msg.idx;
+        this.roomInfo = msg.info;
+        document.getElementById('mp-overlay').classList.add('hidden');
+        MapRenderer.stopAnim();
+        App.showScreen('game-canvas');
+        document.getElementById('game-canvas').style.display='block';
+        const rcNation = ReconnectHelper.loadNation();
+        const rcPlayers = msg.info.players.map(p=>({name:p.name,hero:p.hero,nation:p.nation||0}));
+        Game.init(msg.info.map||STATE.mapIdx, msg.info.mode||STATE.modeIdx, false, true, msg.idx, rcPlayers, rcNation);
+        document.getElementById('qc-toggle').classList.remove('hidden');
+        this.showChat('🔄 Đã kết nối lại thành công!');
+        break;
+      }
+      case 'player_disconnected':
+        this.showChat(`⚠️ ${msg.name} đã mất kết nối (có thể vào lại trong 10 phút)`);
         break;
       case 'game_event':
         this.applyRemoteEvent(msg.from, msg.event);
@@ -2827,13 +3216,31 @@ const MP = {
   },
 
   showLobby(code) {
+    this.roomCode = code;
     document.getElementById('mp-card-main').classList.add('hidden');
     document.getElementById('mp-card-lobby').classList.remove('hidden');
     document.getElementById('lobby-code-display').textContent = code;
     document.getElementById('lobby-host-controls').classList.toggle('hidden', !this.isHost);
     document.getElementById('lobby-guest-controls').classList.toggle('hidden', this.isHost);
+    this.myNation = 0;
+    this.renderNationPicker();
     this.renderLobbyPlayers();
     this.updateLobbyStatus();
+  },
+
+  renderNationPicker() {
+    const el = document.getElementById('lobby-nation-btns');
+    if(!el) return;
+    el.innerHTML = NATIONS_DATA.map((n,i)=>`
+      <button onclick="MP.selectNation(${i})" id="ln-${i}" style="flex:1;padding:6px 4px;border-radius:8px;border:1.5px solid ${this.myNation===i?n.color:'#2a2d45'};background:${this.myNation===i?n.color+'22':'#0a0c18'};color:${this.myNation===i?n.color:'#4a5878'};font-size:12px;cursor:pointer;transition:all .2s">
+        ${n.icon}<br><span style="font-size:10px">${n.name}</span>
+      </button>`).join('');
+  },
+
+  selectNation(idx) {
+    this.myNation = idx;
+    this.send({type:'set_nation', nation:idx});
+    this.renderNationPicker();
   },
 
   renderLobbyPlayers() {
@@ -2845,9 +3252,10 @@ const MP = {
       const badge = p.isHost ? '<span class="lb-badge lb-host">👑 Host</span>'
         : p.ready ? '<span class="lb-badge lb-ready">✓ Ready</span>'
         : '<span class="lb-badge lb-wait">⏳ Chờ</span>';
+      const nation = NATIONS_DATA[p.nation||0];
       return `<div class="lb-player">
         <div class="lb-av" style="background:${bg};color:${tc}">${p.name[0].toUpperCase()}</div>
-        <div class="lb-info"><div class="lb-name">${p.name}</div><div class="lb-hero">${p.hero}</div></div>
+        <div class="lb-info"><div class="lb-name">${p.name}</div><div class="lb-hero" style="color:${nation.color}">${nation.icon} ${nation.name}</div></div>
         ${badge}
       </div>`;
     }).join('');
@@ -2869,14 +3277,17 @@ const MP = {
   updateLobbyStatus() {
     if(!this.roomInfo) return;
     const n=this.roomInfo.players.length;
-    const readyCount=this.roomInfo.players.filter(p=>p.ready||p.isHost).length;
+    const guests=this.roomInfo.players.filter(p=>!p.isHost);
+    const allReady=guests.length===0||guests.every(p=>p.ready);
     if(this.isHost) {
       const startBtn=document.getElementById('lobby-start-btn');
       if(startBtn) {
-        startBtn.textContent = n<2 ? `🚀 Bắt đầu (cần ít nhất 2 người)` : `🚀 Bắt đầu (${n} người)`;
-        startBtn.style.opacity = n<2 ? '.5' : '1';
+        const canStart=n>=1&&allReady;
+        startBtn.textContent=!allReady?`⏳ Chờ guests sẵn sàng (${guests.filter(p=>p.ready).length}/${guests.length})`:`🚀 Bắt đầu (${n} người)`;
+        startBtn.style.opacity=canStart?'1':'.5';
+        startBtn.disabled=!canStart;
       }
-      document.getElementById('lobby-status').textContent = `${n}/4 người trong phòng`;
+      document.getElementById('lobby-status').textContent=`${n}/4 người trong phòng${!allReady?' — Chờ guests sẵn sàng':''}`;
     }
   },
 
@@ -2893,7 +3304,9 @@ const MP = {
   },
 
   startGame() {
-    if(!this.roomInfo||this.roomInfo.players.length<2) { this.setErr('Cần ít nhất 2 người!'); return; }
+    if(!this.roomInfo) { this.setErr('Phòng trống!'); return; }
+    const guests=this.roomInfo.players.filter(p=>!p.isHost);
+    if(guests.length>0&&!guests.every(p=>p.ready)) { this.setErr('Chờ tất cả người chơi nhấn Sẵn sàng!'); return; }
     this.send({type:'start'});
   },
 
@@ -2976,13 +3389,16 @@ const MP = {
       enemies: Game.enemies.map(en=>({
         _id:en._id, t:en.t, x:en.x, y:en.y, hp:en.hp, maxHp:en.maxHp,
         slow:en.slow||1, isBoss:en.isBoss||false, color:en.color, typeId:en.typeId,
-        radius:en.radius, reward:en.reward, heals:en.heals||false
+        radius:en.radius, reward:en.reward, heals:en.heals||false,
+        pathIdx:en.pathIdx||0
       })),
       towers: Game.towers.map(tw=>({
         x:tw.x, y:tw.y, typeId:tw.typeId, level:tw.level||1,
-        angle:tw.angle||0, flash:tw.flash||0, goldTimer:tw.goldTimer||3600
+        angle:tw.angle||0, flash:tw.flash||0, goldTimer:tw.goldTimer||3600,
+        ownerIdx:tw.ownerIdx!=null?tw.ownerIdx:0
       })),
       gold: Game.gold,
+      playerGold: [...Game.playerGold],
       crystalHP: Game.crystalHP,
       round: Game.round,
       roundTimer: Game.roundTimer,
@@ -3011,10 +3427,11 @@ const MP = {
     Game.enemies = s.enemies.map(se=>{
       const prev=byId[se._id];
       if(prev) { Object.assign(prev,se); return prev; }
-      return {...se,flash:0};
+      return {...se,flash:0,pathIdx:se.pathIdx||0};
     });
-    Game.towers = s.towers.map(tw=>({...tw,cooldown:0}));
-    Game.gold = s.gold;
+    Game.towers = s.towers.map(tw=>({...tw,cooldown:0,ownerIdx:tw.ownerIdx||0}));
+    if(s.playerGold) { Game.playerGold=s.playerGold; Game.gold=s.playerGold[Game.mpPlayerIdx]||0; }
+    else { Game.gold = s.gold; }
     if(s.crystalHP < Game.crystalHP) {
       SFX.crystalHit();
       Game.addShake(4);
@@ -3048,12 +3465,17 @@ const MP = {
       Game.leakCount = s.leakCount;
       Game.leakQuota = s.leakQuota;
     }
-    // lifeline UI sync
+    // lifeline UI sync (count-based)
     if(s.lifelinesUsed) {
-      s.lifelinesUsed.forEach((used,i)=>{
-        if(used&&!Game.lifelinesUsed[i]) {
-          Game.lifelinesUsed[i]=true;
-          const el=document.querySelectorAll('.ll')[i]; if(el) el.classList.add('used');
+      s.lifelinesUsed.forEach((count,i)=>{
+        if(count!==Game.lifelinesUsed[i]) {
+          Game.lifelinesUsed[i]=count;
+          const el=document.querySelectorAll('.ll')[i];
+          if(el) {
+            const remaining=Math.max(0,2-count);
+            const cntEl=el.querySelector('.ll-count'); if(cntEl) cntEl.textContent=`${remaining}/2`;
+            el.classList.toggle('used',count>=2);
+          }
         }
       });
     }
@@ -3066,11 +3488,13 @@ const MP = {
     switch(action) {
       case 'place_tower': {
         const tData=TOWERS_DATA[data.typeId];
-        if(!tData||Game.gold<tData.cost) break;
+        const guestGold=Game.playerGold[fromIdx]||0;
+        if(!tData||guestGold<tData.cost) break;
         if(Game.towers.some(tw=>Math.hypot(tw.x-data.x,tw.y-data.y)<22)) break;
-        if(Game.path.some(pt=>Math.hypot(pt.x-data.x,pt.y-data.y)<18)) break;
-        Game.gold-=tData.cost;
-        Game.towers.push({x:data.x,y:data.y,typeId:data.typeId,cooldown:0,goldTimer:3600,angle:0,flash:0,fromIdx});
+        const paths=Game.paths||[Game.path];
+        if(paths.some(pp=>pp.some(pt=>Math.hypot(pt.x-data.x,pt.y-data.y)<18))) break;
+        Game.playerGold[fromIdx]-=tData.cost;
+        Game.towers.push({x:data.x,y:data.y,typeId:data.typeId,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:fromIdx});
         SFX.placeTower(data.typeId);
         Game.spawnParticles(data.x,data.y,tData.color,6);
         Game.updateHUD();
@@ -3080,9 +3504,11 @@ const MP = {
         if(Game.modeIdx===1) break;
         const tw=Game.towers.find(t=>Math.hypot(t.x-data.x,t.y-data.y)<8);
         if(!tw) break;
+        if(tw.ownerIdx!=null&&tw.ownerIdx!==fromIdx) break; // ownership check
         const bCost=TOWERS_DATA[tw.typeId].cost, lvl=tw.level||1;
-        const spent=bCost*(1+(lvl>1?.5:0)+(lvl>2?.8:0));
-        Game.gold+=Math.floor(spent*.6);
+        let spent=bCost; for(let l=1;l<lvl;l++) spent+=Math.floor(bCost*UPGRADE_COST_MULTS[l]);
+        const refund=Math.floor(spent*.6);
+        Game.playerGold[fromIdx]=(Game.playerGold[fromIdx]||0)+refund;
         const i=Game.towers.indexOf(tw); if(i>=0) Game.towers.splice(i,1);
         SFX.sellTower();
         Game.spawnParticles(data.x,data.y,'#f5c842',8);
@@ -3092,26 +3518,27 @@ const MP = {
       case 'upgrade_tower': {
         const tw=Game.towers.find(t=>Math.hypot(t.x-data.x,t.y-data.y)<8);
         if(!tw) break;
-        const lvl=tw.level||1; if(lvl>=3) break;
-        const upCost=Math.floor(TOWERS_DATA[tw.typeId].cost*[.5,.8][lvl-1]);
-        if(Game.gold<upCost) break;
-        Game.gold-=upCost; tw.level=lvl+1;
+        if(tw.ownerIdx!=null&&tw.ownerIdx!==fromIdx) break; // ownership check
+        const lvl=tw.level||1; if(lvl>=TOWER_MAX_LEVEL) break;
+        const upCost=Math.floor(TOWERS_DATA[tw.typeId].cost*UPGRADE_COST_MULTS[lvl]);
+        const guestGold=Game.playerGold[fromIdx]||0;
+        if(guestGold<upCost) break;
+        Game.playerGold[fromIdx]-=upCost; tw.level=lvl+1;
         SFX.placeTower(tw.typeId);
         Game.spawnParticles(tw.x,tw.y,TOWERS_DATA[tw.typeId].color,10);
         Game.updateHUD();
         break;
       }
-      case 'use_lifeline': {
-        const idx=data.idx;
-        if(Game.lifelinesUsed[idx]) break;
-        Game.lifelinesUsed[idx]=true;
-        SFX.lifeline(idx);
-        if(idx===0) { Game.crystalShield=true; setTimeout(()=>Game.crystalShield=false,10000); Game.spawnParticles(Game.W-14,Game.H/2,'#5a8aff',15); }
-        else if(idx===1) { Game.enemies.forEach(en=>Game.spawnParticles(en.x,en.y,'#ff8800',8)); Game.enemies=[]; Game.spawnParticles(Game.W/2,Game.H/2,'#ff6820',30); }
-        else { Game.enemies.forEach(en=>en.slow=.2); Game.spawnParticles(Game.W/2,Game.H/2,'#c880ff',20); }
+      case 'give_gold': {
+        const amount=data.amount||50;
+        const senderGold=Game.playerGold[fromIdx]||0;
+        if(senderGold<amount) break;
+        Game.playerGold[fromIdx]-=amount;
+        Game.playerGold[data.toIdx]=(Game.playerGold[data.toIdx]||0)+amount;
         Game.updateHUD();
         break;
       }
+      // Note: 'use_lifeline' removed — only host can use lifelines
     }
   },
 
@@ -3238,6 +3665,9 @@ const SFX = {
         this._osc('sine', 550, 0.1, 0.35, null, 0.01, 0.06, 0.5, 0.2);
         this._osc('sine', 880, 0.06, 0.25, null, 0.008, 0.05, 0.4, 0.15);
         break;
+      case 6: return this.placeTower(0); // Ballista → arrow sound
+      case 7: return this.placeTower(2); // Frost Shrine → ice sound
+      case 8: return this.placeTower(4); // Magma → fire sound
       default:
         this._osc('square', 220, 0.12, 0.3, null, 0.002, 0.08, 0.0, 0.04);
     }
@@ -3281,6 +3711,9 @@ const SFX = {
       case 5: // T.Nhiên — ting nhẹ
         this._osc('sine', 660, 0.12, 0.3, null, 0.005, 0.05, 0.5, 0.2);
         break;
+      case 6: return this.towerShoot(0);
+      case 7: return this.towerShoot(2);
+      case 8: return this.towerShoot(4);
     }
   },
 
@@ -3309,6 +3742,9 @@ const SFX = {
         this._noise(0.07, 0.15, 700);
         this._osc('sine', 200, 0.07, 0.12, null, 0.002, 0.04, 0.15, 0.07);
         break;
+      case 6: return this.hit(0);
+      case 7: return this.hit(2);
+      case 8: return this.hit(4);
       default:
         this._noise(0.04, 0.1, 1200);
     }
@@ -3614,6 +4050,9 @@ document.addEventListener('click', e => {
   const el = e.target.closest('button, .btn-primary, .btn-secondary, .map-tab, .mode-card, .tp, .ll, .map-cta, .start-btn, .modal-btn');
   if (el) SFX.uiClick();
 });
+
+// Check for reconnect session on page load
+ReconnectHelper.checkOnLoad();
 
 </script>
 </body>
