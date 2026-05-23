@@ -1,4 +1,4 @@
-# 🏰 Last Bastion 1 — Hướng dẫn chạy
+# 🏰 Last Bastion — Hướng dẫn chạy
 
 ## Chơi đơn (không cần server)
 Chỉ cần mở `index.html` bằng Chrome/Safari — chơi được ngay, không cần cài gì.

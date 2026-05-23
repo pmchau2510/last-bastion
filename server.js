@@ -153,6 +153,22 @@ wss.on('connection', ws => {
         break;
       }
 
+      // ── Host-auth: state snapshot → all guests ──────────────
+      case 'state_sync': {
+        if (!myRoom || myIdx !== 0) break;
+        broadcast(myRoom, { type: 'state_sync', state: msg.state }, ws);
+        break;
+      }
+
+      // ── Host-auth: guest input → host only ──────────────────
+      case 'player_input': {
+        if (!myRoom) break;
+        const hostP = myRoom.players[0];
+        if (hostP && hostP.ws !== ws && hostP.ws.readyState === WebSocket.OPEN)
+          hostP.ws.send(JSON.stringify({ type: 'player_input', from: myIdx, action: msg.action, data: msg.data }));
+        break;
+      }
+
       // ── Chat nhanh ──────────────────────────────────────────
       case 'chat': {
         if (!myRoom) break;

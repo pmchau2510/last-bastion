@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Lock file (optional — include if you want reproducible installs)
+# package-lock.json
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment / secrets
+.env
+.env.local
+.env.*
