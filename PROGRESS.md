@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-24) — last updated (room list + elite gate session)
+## Current State (2026-05-24) — last updated (elite path preview added)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -35,6 +35,11 @@
 - Preview now draws **all paths** (`allPaths.forEach`)
 - Each path gets its own spawn marker labeled A, B, C...
 - Animated enemies walk across all paths proportionally
+- **Elite path** cũng được vẽ trong preview:
+  - Đường đứt khúc màu đỏ đen (`dashed`, tối hơn đường thường)
+  - Marker ★ đỏ thay vì A/B/C
+  - Badge **"R10+"** nhỏ phía trên marker
+  - Quái elite nhỏ di chuyển trên đường (màu + glow theo từng map)
 
 ### Bottom HUD Redesign (landscape mobile)
 - Towers + Lifelines gộp vào **1 hàng ngang** thay vì 2 hàng chồng — tiết kiệm ~55px
@@ -141,7 +146,7 @@
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Entire game (HTML + CSS + JS, ~4200 lines) |
+| `index.html` | Entire game (HTML + CSS + JS, ~4350 lines) |
 | `server.js` | Node.js WebSocket signaling server |
 | `LAST_BASTION_GDD.md` | Game Design Document |
 | `PROGRESS.md` | This file — session context tracker |

@@ -72,6 +72,12 @@ Tất cả map đều được thiết kế lại với **đường đi dài + n
 - `pathIdx = 100` là hằng số đặc biệt → route sang `Game.elitePath`.
 - Màu sắc quái thường: mỗi map có `enemyColors[typeId]` tô màu riêng khi spawn.
 
+**Preview map (MapRenderer):**
+- Vẽ tất cả đường thường (A, B, C...) + **elite path** riêng biệt:
+  - Đường đứt khúc đỏ đen, marker ★, badge "R10+"
+  - Quái elite nhỏ di chuyển trên đường preview (màu/glow theo map)
+- Elite path hiển thị trong cả map select screen lẫn mini-preview trong lobby.
+
 **Thưởng vàng sau mỗi round:**
 - Sau mỗi round thắng: `30 + round × 12` vàng cho tất cả người chơi.
 - Round 1: 42g · Round 10: 150g · Round 20: 270g.
