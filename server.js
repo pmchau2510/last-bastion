@@ -44,6 +44,7 @@ function roomInfo(room, code) {
     code,
     map: room.map,
     mode: room.mode,
+    hasPassword: !!(room.password),
     players: room.players.map((p, i) => ({
       idx: i,
       name: p.name,
@@ -80,11 +81,24 @@ wss.on('connection', ws => {
           map: msg.map ?? 0,
           mode: msg.mode ?? 0,
           started: false,
+          password: msg.password || null,
           players: [{ ws, name: msg.name || 'Player 1', hero: msg.hero || 'Kael', nation: msg.nation || 0, ready: false, disconnected: false }]
         };
         rooms.set(code, room);
         myRoom = room; myCode = code; myIdx = 0;
         ws.send(JSON.stringify({ type: 'created', code, idx: 0, info: roomInfo(room, code) }));
+        break;
+      }
+
+      // ── Danh sách phòng chờ ─────────────────────────────────
+      case 'list_rooms': {
+        const list = [];
+        rooms.forEach((r, c) => {
+          if (!r.started) {
+            list.push({ code: c, map: r.map, mode: r.mode, hasPassword: !!(r.password), playerCount: r.players.length });
+          }
+        });
+        ws.send(JSON.stringify({ type: 'rooms_list', rooms: list }));
         break;
       }
 
@@ -98,6 +112,12 @@ wss.on('connection', ws => {
         const code = (msg.code || '').toUpperCase().trim();
         const room = rooms.get(code);
         if (!room) { ws.send(JSON.stringify({ type: 'error', msg: 'Không tìm thấy phòng.' })); break; }
+
+        // ── Password check ──────────────────────────────────────
+        if (room.password && room.password !== (msg.password || '')) {
+          ws.send(JSON.stringify({ type: 'error', msg: 'Mật khẩu phòng không đúng.' }));
+          break;
+        }
 
         // ── Reconnect: check if a disconnected slot matches this name ──
         if (room.started) {
@@ -172,6 +192,12 @@ wss.on('connection', ws => {
       // ── Host bắt đầu game ───────────────────────────────────
       case 'start': {
         if (!myRoom || myIdx !== 0) break;
+        // All non-host connected players must be ready
+        const notReady = myRoom.players.slice(1).filter(p => !p.disconnected && !p.ready);
+        if (notReady.length > 0) {
+          ws.send(JSON.stringify({ type: 'error', msg: 'Chờ tất cả người chơi nhấn Sẵn sàng!' }));
+          break;
+        }
         myRoom.started = true;
         // Gửi cho tất cả kể cả host
         myRoom.players.forEach((p, i) => {

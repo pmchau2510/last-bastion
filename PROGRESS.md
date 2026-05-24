@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-24) — last updated same session
+## Current State (2026-05-24) — last updated (room list + elite gate session)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -43,6 +43,39 @@
 - `botH` giảm 148→95: map được thêm **~53px chiều cao** hiển thị
 - Nation modal: `max-height:100svh` + `overflow-y:auto` + confirm button `sticky bottom`
 - Landscape CSS: 3 nation card hiển thị ngang hàng (`@media orientation:landscape`)
+
+### Elite Gate (Cổng Đặc Biệt)
+- Từ **Round 10** mỗi map xuất hiện thêm 1 cổng quái đặc biệt (`elitePath`)
+- Quái elite mạnh hơn: `hpMult`, `spdMult`, `rewardMult` riêng theo map
+- Round 10: màn hình rung mạnh (`addShake(18)`), nhạc aura (`SFX.eliteGate()`), thông báo đặc biệt
+- Round 11+: rung nhẹ hơn, thông báo ngắn gọn
+- Số quái elite tăng theo round: `min(3 + floor((round-10)/3), 8)`
+- Mỗi map có thiết kế quái elite riêng:
+  - Map 0 Ironhold: **Lava Titan** 🔥 (đỏ cam, body ellipse + lava cracks)
+  - Map 1 Shadefall: **Shadow Stalker** 👻 (tím đen, phantom + tentacles)
+  - Map 2 Tidegate: **Tide Colossus** 🌊 (xanh dương, armored + water drops)
+  - Map 3 Ashfield: **Cinder Warrior** ⚔ (đỏ tro, knight visor + armor)
+  - Map 4 Voidrift: **Void Reaper** 💀 (đỏ đậm, cloak + scythe)
+  - Map 5 Nexus: **Nexus Horror** 🌀 (tím void, distorted polygon + 3 eyes)
+- `pathIdx=100` đặc biệt → dùng `this.elitePath` (không làm ảnh hưởng round-robin)
+
+### Round Completion Gold Bonus
+- Sau mỗi round thắng: tất cả người chơi nhận vàng thưởng
+- Công thức: `30 + round * 12` vàng (round 1: 42g, round 10: 150g, round 20: 270g)
+- Hiển thị popup `+N 💰 Vàng thưởng vòng` fade-up animation
+- MP: host broadcast `round_bonus` event; guest apply qua `applyRemoteEvent`
+
+### Map-Specific Enemy Color Themes
+- Mỗi map có `enemyColors[typeId]` — override màu quái khi spawn
+- Ironhold: đỏ nâu; Shadefall: tím; Tidegate: xanh; Ashfield: đỏ tro; Voidrift: đỏ tối; Nexus: tím void
+
+### Room List / Lobby Browser
+- Thay thế nhập mã thủ công: nút **"🔍 Xem danh sách phòng chờ"** hiển thị danh sách real-time
+- Server: `list_rooms` → `rooms_list` response (code, map, mode, playerCount, hasPassword)
+- Phòng có mật khẩu: tạo với `mp-room-pw` input, join từ browser → prompt nhập pw
+- Join thẳng bằng mã vẫn giữ, có thêm field "🔒 Mật khẩu phòng (nếu có)"
+- Server-side: validate password trước khi vào, check all-ready trước khi start
+- Host chỉ bắt đầu được khi **tất cả** guest đã nhấn Sẵn sàng (cả client + server check)
 
 ### Enemy Movement Speed Tuning
 - Speed multiplier reduced from `* .01` → `* .006` (chậm ~40%)
@@ -85,6 +118,8 @@
 - Maps define `pathFns: [fn1, fn2, ...]`
 - Each path function takes `W` (canvas width) and returns array of `{x,y}` points
 - `Game.paths[]` holds pre-computed paths; enemies use `enemy.pathIdx`
+- **Elite path**: `pathIdx=100` → routes to `Game.elitePath` (set from `mapData.elitePathFn`)
+- Elite path isolated from `Game.paths[]` to avoid breaking round-robin distribution
 
 ### Tower IDs
 - `TOWERS_DATA[id]` — id === array index (0–8)
@@ -110,6 +145,14 @@
 | `server.js` | Node.js WebSocket signaling server |
 | `LAST_BASTION_GDD.md` | Game Design Document |
 | `PROGRESS.md` | This file — session context tracker |
+
+---
+
+### Room Browser Architecture
+- `MP.showRoomBrowser()` connects WebSocket then calls `refreshRooms()` → sends `list_rooms`
+- Server `list_rooms` returns all non-started rooms; client renders with `handleRoomsList()`
+- `MP.joinFromList(code, hasPassword)` — prompts for password if needed, calls `_joinWithCode()`
+- `MP.backFromBrowser()` closes WS (if not yet in lobby) and returns to main card
 
 ---
 

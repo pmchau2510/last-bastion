@@ -250,6 +250,10 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 /* ===== WAVE ANNOUNCE ===== */
 #wave-announce{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:40;text-align:center;opacity:0;transition:opacity .3s}
 #wave-announce.show{opacity:1}
+/* Elite gate announcement */
+#elite-gate-announce{position:absolute;top:28%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:50;font-family:'Cinzel',serif;font-size:clamp(13px,3.5vw,20px);font-weight:700;color:#ff4040;letter-spacing:.08em;text-shadow:0 0 18px #ff0000,0 0 35px #aa0000;background:#1a000088;border:1px solid #880000;border-radius:10px;padding:8px 20px;white-space:nowrap;opacity:0;transition:opacity .4s}
+#elite-gate-announce.show{opacity:1}
+@keyframes bonusFadeUp{0%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-40px)}}
 .wa-label{font-size:11px;color:#5a5878;letter-spacing:.2em;margin-bottom:4px}
 .wa-num{font-family:'Cinzel',serif;font-size:clamp(28px,8vw,48px);color:#c4a0ff;letter-spacing:.1em}
 .wa-sub{font-size:12px;color:#7a6a98;margin-top:4px}
@@ -343,6 +347,20 @@ body{position:fixed;width:100%;height:100%}
 /* ===== Multiplayer overlay ===== */
 #mp-overlay{position:fixed;inset:0;background:#07090fee;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(20px,env(safe-area-inset-top,20px)) 20px max(20px,env(safe-area-inset-bottom,20px));overflow-y:auto;-webkit-overflow-scrolling:touch}
 #mp-overlay.hidden{display:none}
+/* Room browser */
+#mp-card-rooms{max-height:min(80vh,520px);display:flex;flex-direction:column}
+.room-item{background:#080a15;border:1px solid #1e2235;border-radius:10px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:border-color .2s}
+.room-item:hover{border-color:#3a4080}
+.room-item:active{transform:scale(.98);border-color:#5a5ff0}
+.ri-info{flex:1;min-width:0}
+.ri-name{font-size:13px;color:#c4b8e8;font-weight:600;margin-bottom:2px}
+.ri-meta{font-size:11px;color:#4a5878;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ri-join{background:#185fa5;border:none;border-radius:7px;padding:6px 12px;font-family:'Exo 2',system-ui,sans-serif;font-size:12px;font-weight:600;color:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.ri-join:active{transform:scale(.95)}
+#rooms-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:60px}
+.mp-input-small{width:100%;background:#080a15;border:1px solid #2a2d45;border-radius:10px;padding:9px 13px;font-family:'Exo 2',system-ui,sans-serif;font-size:14px;color:#e8e0f5;margin-bottom:8px;letter-spacing:0;text-transform:none;text-align:left}
+.mp-input-small::placeholder{color:#3a3858}
+.mp-input-small:focus{outline:none;border-color:#7b4fee}
 
 </style>
 </head>
@@ -453,6 +471,9 @@ body{position:fixed;width:100%;height:100%}
   <div class="wa-sub" id="wa-sub">Chuẩn bị...</div>
 </div>
 
+<!-- ELITE GATE ANNOUNCE -->
+<div id="elite-gate-announce"></div>
+
 <!-- TUTORIAL TIP -->
 <div id="tut-tip" class="hidden">
   <div class="tut-step" id="tut-step-lbl">BƯỚC 1 / 8</div>
@@ -530,16 +551,33 @@ body{position:fixed;width:100%;height:100%}
     <div class="mp-title">🌐 Nhiều người chơi</div>
     <input class="mp-input mp-name-input" id="mp-name" placeholder="Nhập tên của bạn" maxlength="16" autocomplete="off" autocorrect="off" spellcheck="false">
     <div class="mp-sep"></div>
+    <button class="mp-btn" style="background:#182050;color:#60a8ff;border:1px solid #2a4080;margin-bottom:10px" onclick="MP.showRoomBrowser()">🔍 Xem danh sách phòng chờ</button>
+    <div style="text-align:center;font-size:11px;color:#3a3858;margin:0 0 8px">— hoặc nhập mã phòng thẳng —</div>
+    <input class="mp-input" id="mp-code" placeholder="Mã phòng (6 ký tự)" maxlength="6" autocomplete="off" autocorrect="off" spellcheck="false" style="text-transform:uppercase;letter-spacing:.2em;text-align:center;margin-bottom:6px">
+    <input class="mp-input-small" id="mp-join-pw" type="password" placeholder="🔒 Mật khẩu phòng (nếu có)" maxlength="20" autocomplete="off">
+    <button class="mp-btn mp-btn-join" onclick="MP.join()">🚪 Vào phòng</button>
+    <div class="mp-sep"></div>
     <div style="display:flex;gap:6px;margin-bottom:6px">
       <input class="mp-input" id="mp-admin-pw" type="password" placeholder="Mật khẩu admin" maxlength="20" autocomplete="off" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter')MP.checkAdminPw()">
       <button class="mp-btn" onclick="MP.checkAdminPw()" style="margin:0;padding:8px 12px;flex:0">🔓</button>
     </div>
-    <button class="mp-btn mp-btn-create hidden" id="mp-create-btn" onclick="MP.create()">🏠 Tạo phòng mới</button>
-    <div style="text-align:center;font-size:11px;color:#3a3858;margin:4px 0 8px">— hoặc nhập mã để vào phòng —</div>
-    <input class="mp-input" id="mp-code" placeholder="Mã phòng (6 ký tự)" maxlength="6" autocomplete="off" autocorrect="off" spellcheck="false" style="text-transform:uppercase;letter-spacing:.2em;text-align:center">
-    <button class="mp-btn mp-btn-join" onclick="MP.join()">🚪 Vào phòng</button>
+    <div id="mp-create-section" class="hidden">
+      <input class="mp-input-small" id="mp-room-pw" type="password" placeholder="🔒 Mật khẩu phòng (tùy chọn)" maxlength="20" autocomplete="off">
+      <button class="mp-btn mp-btn-create" onclick="MP.create()">🏠 Tạo phòng mới</button>
+    </div>
     <div class="mp-err" id="mp-err"></div>
     <button class="mp-btn mp-btn-back" onclick="MP.close()">← Quay lại</button>
+  </div>
+
+  <!-- Card: Danh sách phòng chờ -->
+  <div class="mp-card hidden" id="mp-card-rooms">
+    <div style="display:flex;align-items:center;margin-bottom:10px">
+      <div class="mp-title" style="margin:0;flex:1;text-align:left">🔍 Phòng chờ</div>
+      <button onclick="MP.refreshRooms()" style="background:#0d1020;border:1px solid #2a3060;border-radius:8px;padding:5px 10px;font-family:'Exo 2',system-ui,sans-serif;color:#60a8ff;font-size:12px;cursor:pointer">🔄 Làm mới</button>
+    </div>
+    <div id="rooms-list"></div>
+    <div class="mp-err" id="mp-err-rooms" style="margin-top:6px"></div>
+    <button class="mp-btn mp-btn-back" style="margin-top:6px" onclick="MP.backFromBrowser()">← Quay lại</button>
   </div>
 
   <!-- Card: Lobby (sau khi tạo/vào phòng) -->
@@ -604,65 +642,83 @@ body{position:fixed;width:100%;height:100%}
 // ============================================================
 const MAPS_DATA = [
   { id:0, name:'Ironhold Pass', diff:2, size:'36×24', gates:2, weather:'Ngẫu nhiên',
-    tip:'Hẻm núi hẹp — đặt tháp giữa 2 làn đường để bắn chéo. Map dễ nhất để luyện tập.',
+    tip:'Hẻm núi hẹp — đặt tháp giữa 2 làn để bắn chéo cả hai đường. Lava Titan xuất hiện từ Round 10.',
     suggest:'Cung + Đại Bác',
-    tags:['Hẻm núi','Đá cao','2 cổng'],
-    bgColor:'#0c1810', pathColor:'#3a2a10', pathLight:'#5a3e18',
+    tags:['Hẻm núi','Lò rèn','Cổng Dung Nham'],
+    bgColor:'#0c1008', pathColor:'#3a2a10', pathLight:'#6a4820',
+    enemyColors:['#c04820','#803018','#705830','#504028','#a03820','#c03808','#706050'],
+    eliteEnemy:{name:'Lava Titan',color:'#ff5500',glowColor:'#ffaa00',hpMult:1.9,spdMult:1.3,rewardMult:2.5,radius:10},
+    elitePathFn: W=>[{x:0,y:76},{x:55,y:52},{x:90,y:88},{x:128,y:55},{x:170,y:85},{x:218,y:52},{x:260,y:78},{x:W-8,y:75}],
     pathFns: [
-      W => [{x:0,y:42},{x:70,y:42},{x:100,y:72},{x:145,y:72},{x:175,y:42},{x:215,y:72},{x:260,y:42},{x:W-8,y:55}],
-      W => [{x:0,y:110},{x:60,y:110},{x:90,y:85},{x:130,y:85},{x:165,y:115},{x:200,y:115},{x:245,y:85},{x:W-8,y:95}]
+      W => [{x:0,y:38},{x:65,y:38},{x:100,y:68},{x:148,y:68},{x:180,y:38},{x:218,y:70},{x:262,y:38},{x:W-8,y:52}],
+      W => [{x:0,y:114},{x:58,y:114},{x:88,y:82},{x:130,y:82},{x:162,y:112},{x:202,y:112},{x:248,y:82},{x:W-8,y:98}]
     ]
   },
   { id:1, name:'Sylvan Crossing', diff:3, size:'40×28', gates:3, weather:'Mưa / Bão tuyết',
-    tip:'Rừng che khuất tầm nhìn. Quái chia 2 làn — phải bố trí tháp che đồng thời cả hai.',
+    tip:'Rừng che khuất tầm nhìn. Quái chia 2 làn — bố trí tháp che cả hai. Shadow Stalker từ Round 10.',
     suggest:'Băng + Sét',
-    tags:['Rừng che','2 làn','Giao lộ'],
-    bgColor:'#081410', pathColor:'#2a1c0c', pathLight:'#3c2810',
+    tags:['Rừng tối','2 làn','Cổng Bóng Đêm'],
+    bgColor:'#060e06', pathColor:'#1a1408', pathLight:'#2a2010',
+    enemyColors:['#184820','#301050','#284830','#183828','#102840','#283018','#304830'],
+    eliteEnemy:{name:'Shadow Stalker',color:'#4a10a0',glowColor:'#8830ff',hpMult:1.7,spdMult:1.4,rewardMult:2.5,radius:8},
+    elitePathFn: W=>[{x:0,y:78},{x:48,y:52},{x:82,y:78},{x:118,y:52},{x:152,y:78},{x:188,y:52},{x:228,y:80},{x:268,y:52},{x:W-8,y:75}],
     pathFns: [
-      W => [{x:0,y:35},{x:75,y:35},{x:105,y:65},{x:105,y:100},{x:145,y:100},{x:180,y:65},{x:220,y:65},{x:260,y:40},{x:W-8,y:50}],
-      W => [{x:0,y:120},{x:55,y:120},{x:85,y:90},{x:125,y:90},{x:155,y:120},{x:195,y:120},{x:235,y:90},{x:W-8,y:100}]
+      W => [{x:0,y:32},{x:72,y:32},{x:104,y:62},{x:104,y:98},{x:142,y:98},{x:178,y:62},{x:218,y:62},{x:258,y:38},{x:W-8,y:48}],
+      W => [{x:0,y:122},{x:52,y:122},{x:82,y:92},{x:122,y:92},{x:152,y:122},{x:192,y:122},{x:232,y:92},{x:W-8,y:104}]
     ]
   },
   { id:2, name:'Tidal Docks', diff:3, size:'42×28', gates:4, weather:'Giông / Nắng',
-    tip:'Thủy triều chia làn liên tục. Dùng Băng kiểm soát luồng, Đại Bác xử lý cụm đông.',
-    suggest:'Đại Bác + Lửa',
-    tags:['2 làn','Biển + đất','Thủy triều'],
-    bgColor:'#08101c', pathColor:'#28180c', pathLight:'#382810',
+    tip:'Thủy triều chia làn liên tục. Dùng Băng + Đại Bác. Tide Colossus nổi lên từ Round 10.',
+    suggest:'Đại Bác + Băng',
+    tags:['Biển sâu','2 làn','Cổng Hải Dương'],
+    bgColor:'#040c18', pathColor:'#181408', pathLight:'#281e10',
+    enemyColors:['#1840a0','#0a3870','#2a5878','#1a4858','#083060','#1a5878','#284870'],
+    eliteEnemy:{name:'Tide Colossus',color:'#0060c0',glowColor:'#00ccff',hpMult:2.0,spdMult:1.2,rewardMult:2.5,radius:11},
+    elitePathFn: W=>[{x:0,y:75},{x:58,y:50},{x:92,y:78},{x:128,y:50},{x:165,y:78},{x:208,y:50},{x:252,y:78},{x:W-8,y:68}],
     pathFns: [
-      W => [{x:0,y:30},{x:65,y:30},{x:95,y:60},{x:95,y:98},{x:140,y:98},{x:175,y:65},{x:220,y:65},{x:265,y:95},{x:W-8,y:80}],
-      W => [{x:0,y:120},{x:50,y:120},{x:80,y:90},{x:120,y:90},{x:150,y:118},{x:190,y:118},{x:235,y:90},{x:W-8,y:100}]
+      W => [{x:0,y:28},{x:62,y:28},{x:94,y:58},{x:94,y:96},{x:138,y:96},{x:174,y:62},{x:218,y:62},{x:262,y:94},{x:W-8,y:78}],
+      W => [{x:0,y:122},{x:48,y:122},{x:78,y:92},{x:118,y:92},{x:148,y:120},{x:188,y:120},{x:232,y:90},{x:W-8,y:104}]
     ]
   },
   { id:3, name:'Ashfield Ruins', diff:4, size:'44×30', gates:3, weather:'Nắng to cố định',
-    tip:'Đường ngoằn ngoèo dài — đặt tháp sớm. Lửa mạnh trên nền nham thạch.',
-    suggest:'Lửa tập trung',
-    tags:['Nham thạch','2 làn','Đường dài'],
-    bgColor:'#180808', pathColor:'#2a1204', pathLight:'#3a1808',
+    tip:'Đường ngoằn ngoèo dài — đặt tháp sớm. Lửa mạnh. Cinder Warrior từ tàn tích từ Round 10.',
+    suggest:'Lửa + T.Nhiên',
+    tags:['Tàn tích','Đường dài','Cổng Tro Tàn'],
+    bgColor:'#120604', pathColor:'#281004', pathLight:'#3c1808',
+    enemyColors:['#783020','#502018','#584838','#482818','#502820','#602820','#485838'],
+    eliteEnemy:{name:'Cinder Warrior',color:'#c03000',glowColor:'#ff5500',hpMult:1.8,spdMult:1.15,rewardMult:2.5,radius:10},
+    elitePathFn: W=>[{x:0,y:90},{x:52,y:65},{x:82,y:100},{x:115,y:65},{x:148,y:100},{x:185,y:65},{x:218,y:100},{x:258,y:70},{x:W-8,y:88}],
     pathFns: [
-      W => [{x:0,y:50},{x:60,y:50},{x:85,y:82},{x:85,y:118},{x:128,y:118},{x:160,y:82},{x:160,y:48},{x:210,y:48},{x:260,y:75},{x:W-8,y:65}],
-      W => [{x:0,y:130},{x:55,y:130},{x:90,y:100},{x:130,y:100},{x:158,y:130},{x:198,y:130},{x:230,y:100},{x:W-8,y:112}]
+      W => [{x:0,y:48},{x:58,y:48},{x:84,y:80},{x:84,y:116},{x:126,y:116},{x:158,y:80},{x:158,y:46},{x:208,y:46},{x:258,y:74},{x:W-8,y:62}],
+      W => [{x:0,y:132},{x:52,y:132},{x:88,y:102},{x:128,y:102},{x:156,y:132},{x:196,y:132},{x:228,y:102},{x:W-8,y:116}]
     ]
   },
   { id:4, name:'Crimson Rift', diff:4, size:'46×30', gates:5, weather:'Nhật thực định kỳ',
-    tip:'3 làn đổ về đồng thời. Cần phối hợp team để phủ đủ diện tích.',
+    tip:'3 làn đổ về đồng thời — cần phối hợp team. Void Reaper từ cổng thứ 4 ở Round 10.',
     suggest:'AoE + Sét chain',
-    tags:['3 làn','Chaos','Rift portal'],
-    bgColor:'#100810', pathColor:'#280e18', pathLight:'#381528',
+    tags:['3 làn','Hỗn loạn','Cổng Hư Không'],
+    bgColor:'#0c0408', pathColor:'#240a14', pathLight:'#341220',
+    enemyColors:['#880830','#601050','#584058','#301840','#200840','#800030','#483060'],
+    eliteEnemy:{name:'Void Reaper',color:'#cc0040',glowColor:'#ff2080',hpMult:2.0,spdMult:1.35,rewardMult:3.0,radius:9},
+    elitePathFn: W=>[{x:0,y:60},{x:58,y:90},{x:94,y:52},{x:138,y:90},{x:174,y:52},{x:214,y:90},{x:252,y:58},{x:W-8,y:75}],
     pathFns: [
-      W => [{x:0,y:32},{x:70,y:32},{x:100,y:60},{x:145,y:60},{x:178,y:32},{x:220,y:60},{x:262,y:32},{x:W-8,y:48}],
-      W => [{x:0,y:90},{x:60,y:90},{x:92,y:118},{x:132,y:118},{x:165,y:88},{x:205,y:88},{x:248,y:115},{x:W-8,y:100}],
-      W => [{x:0,y:138},{x:52,y:138},{x:82,y:112},{x:118,y:112},{x:148,y:138},{x:188,y:138},{x:W-8,y:125}]
+      W => [{x:0,y:30},{x:68,y:30},{x:98,y:58},{x:142,y:58},{x:176,y:30},{x:218,y:58},{x:260,y:30},{x:W-8,y:46}],
+      W => [{x:0,y:92},{x:58,y:92},{x:90,y:120},{x:130,y:120},{x:162,y:88},{x:202,y:88},{x:246,y:118},{x:W-8,y:102}],
+      W => [{x:0,y:140},{x:50,y:140},{x:80,y:114},{x:116,y:114},{x:146,y:140},{x:186,y:140},{x:W-8,y:128}]
     ]
   },
   { id:5, name:'Void Nexus', diff:5, size:'48×32', gates:6, weather:'Chaos',
-    tip:'Bản đồ tối hoàn toàn với 2 làn. Chỉ mở sau khi thắng cả 5 map trước.',
+    tip:'Bản đồ tối hoàn toàn. Chỉ mở sau khi thắng 5 map. Nexus Horror xuất hiện ở Round 10.',
     suggest:'Cần cả 4 hero',
-    tags:['🔒 Khóa','Map tối','2 làn'],
+    tags:['🔒 Khóa','Bóng tối','Cổng Vực Thẳm'],
     locked: true,
-    bgColor:'#050508', pathColor:'#181020', pathLight:'#201828',
+    bgColor:'#020204', pathColor:'#100818', pathLight:'#181028',
+    enemyColors:['#280850','#180838','#302850','#180440','#100428','#300858','#201040'],
+    eliteEnemy:{name:'Nexus Horror',color:'#6000c0',glowColor:'#aa44ff',hpMult:2.2,spdMult:1.3,rewardMult:3.0,radius:11},
+    elitePathFn: W=>[{x:0,y:88},{x:52,y:58},{x:85,y:90},{x:120,y:58},{x:155,y:90},{x:192,y:58},{x:232,y:90},{x:W-8,y:75}],
     pathFns: [
-      W => [{x:0,y:55},{x:70,y:55},{x:100,y:85},{x:145,y:85},{x:178,y:55},{x:218,y:55},{x:255,y:88},{x:W-8,y:75}],
-      W => [{x:0,y:118},{x:60,y:118},{x:90,y:90},{x:128,y:90},{x:158,y:118},{x:195,y:118},{x:235,y:85},{x:W-8,y:100}]
+      W => [{x:0,y:52},{x:68,y:52},{x:98,y:82},{x:142,y:82},{x:175,y:52},{x:215,y:52},{x:252,y:86},{x:W-8,y:72}],
+      W => [{x:0,y:120},{x:58,y:120},{x:88,y:92},{x:126,y:92},{x:156,y:120},{x:192,y:120},{x:232,y:88},{x:W-8,y:104}]
     ]
   }
 ];
@@ -922,6 +978,41 @@ const MapRenderer = {
         c.fillStyle='#fff'; c.font='bold 7px sans-serif'; c.textAlign='center';
         c.fillText(spawnLabels[pi]||String(pi+1), pts[0].x+7, pts[0].y+2.5);
       });
+
+      // Elite path (unlocked at round 10)
+      if(mapData.elitePathFn) {
+        const epts = mapData.elitePathFn(W);
+        const ecol = mapData.eliteEnemy?.color || '#cc2020';
+        const eglow = mapData.eliteEnemy?.glowColor || '#ff4400';
+        // dark base road
+        c.strokeStyle='#3a0000'; c.lineWidth=18; c.lineJoin='round'; c.lineCap='round'; c.setLineDash([]);
+        c.beginPath(); c.moveTo(epts[0].x,epts[0].y); epts.slice(1).forEach(p=>c.lineTo(p.x,p.y)); c.stroke();
+        // red dashed overlay
+        c.strokeStyle=ecol; c.lineWidth=9; c.setLineDash([7,5]);
+        c.beginPath(); c.moveTo(epts[0].x,epts[0].y); epts.slice(1).forEach(p=>c.lineTo(p.x,p.y)); c.stroke();
+        c.setLineDash([]);
+        // spawn marker (star)
+        c.fillStyle=ecol; c.beginPath(); c.arc(epts[0].x+7,epts[0].y,6,0,Math.PI*2); c.fill();
+        c.fillStyle='#fff'; c.font='bold 8px sans-serif'; c.textAlign='center';
+        c.fillText('★', epts[0].x+7, epts[0].y+2.8);
+        // R10+ badge
+        c.fillStyle='#55000099';
+        c.beginPath(); c.roundRect?c.roundRect(epts[0].x,epts[0].y-20,22,9,3):c.fillRect(epts[0].x,epts[0].y-20,22,9); c.fill();
+        c.fillStyle='#ffaaaa'; c.font='bold 6px sans-serif'; c.textAlign='center';
+        c.fillText('R10+', epts[0].x+11, epts[0].y-13.5);
+        // animated elite enemy preview
+        if(animated) {
+          const prog = ((now*.035)+.15)%1;
+          const pt = ptOnPath(prog, epts);
+          const bob = Math.sin(now*3.5)*1.5;
+          c.shadowColor=eglow; c.shadowBlur=10;
+          c.fillStyle=ecol;
+          c.beginPath(); c.arc(pt.x,pt.y+bob,5,0,Math.PI*2); c.fill();
+          c.shadowBlur=0;
+          c.fillStyle='#181820'; c.fillRect(pt.x-6,pt.y+bob-11,12,2.5);
+          c.fillStyle=ecol; c.fillRect(pt.x-6,pt.y+bob-11,12,2.5);
+        }
+      }
 
       // gate zone
       const gx = W-38;
@@ -1371,11 +1462,17 @@ const Game = {
     const offY = mapY + 10 - rawMinY * scaleY;
     this.paths = allRaw.map(pts => pts.map(p=>({ x: p.x, y: p.y * scaleY + offY })));
     this.path = this.paths[0]; // backward-compat alias
+    // Elite path uses same scale/offset so it fits within the same Y space
+    if(this.mapData.elitePathFn) {
+      this.elitePath = this.mapData.elitePathFn(this.W).map(p=>({ x: p.x, y: p.y * scaleY + offY }));
+    } else {
+      this.elitePath = null;
+    }
     this.bgDirty = true;
   },
 
   ptOnPath(t, pi=0) {
-    const path = (this.paths && this.paths[pi]) || this.path;
+    const path = (pi===100) ? (this.elitePath||this.path) : ((this.paths&&this.paths[pi])||this.path);
     const tot = path.length - 1;
     const seg = t * tot;
     const i = Math.min(Math.floor(seg), tot-1);
@@ -1423,6 +1520,11 @@ const Game = {
         allEnemies.push(base);
       }
     }
+    // Apply map-specific enemy color tints
+    const mapColors = this.mapData.enemyColors;
+    allEnemies.forEach(en => {
+      if(mapColors && mapColors[en.typeId] != null) en.color = mapColors[en.typeId];
+    });
     // Round-robin distribute across ALL available paths (fixes single-gate multi-path bug)
     allEnemies.forEach((en, i) => {
       const pathIdx = i % numPaths;
@@ -1437,6 +1539,48 @@ const Game = {
       const delay = i === 0 ? 30 : posInWave === 0 ? WAVE_GAP : WITHIN_STAGGER;
       this.spawnQueue.push({enemy: en, delay});
     });
+
+    // Elite gate: appears from round 10+ if map has an elite path
+    if(this.round >= 10 && this.elitePath && this.mapData.eliteEnemy) {
+      const eed = this.mapData.eliteEnemy;
+      const eliteCount = Math.min(3 + Math.floor((this.round - 10) / 3), 8);
+      for(let e=0; e<eliteCount; e++) {
+        const base = {...ENEMY_TYPES[6]}; // base on Behemoth
+        base.hp = base.hp * hpM * eed.hpMult;
+        base.maxHp = base.hp;
+        base.t = 0; base.spd = base.spd * spdM * eed.spdMult; base.slow = 1;
+        base.pathIdx = 100; // elite path marker
+        base.elite = true;
+        base.color = eed.color; base.glowColor = eed.glowColor;
+        base.radius = eed.radius || 9;
+        base.reward = Math.round((ENEMY_TYPES[6].reward) * eed.rewardMult);
+        base.typeId = 99; base.spawnId = Math.random()*1000;
+        base._id = `r${this.round}_elite_${e}`;
+        base.x = this.elitePath[0].x; base.y = this.elitePath[0].y;
+        // Elite enemies spawn after main wave first batch, staggered
+        const eliteDelay = e === 0 ? 90 : WAVE_GAP;
+        this.spawnQueue.push({enemy: base, delay: eliteDelay});
+      }
+      // First time gate appears (round 10): dramatic announcement
+      if(this.round === 10) {
+        setTimeout(() => {
+          const el = document.getElementById('elite-gate-announce');
+          if(el) { el.textContent = `⚠ ${this.mapData.eliteEnemy.name.toUpperCase()} — CỔNG TỐI THỨC TỈNH!`; el.classList.add('show'); }
+          this.addShake(18);
+          SFX.eliteGate();
+          setTimeout(() => document.getElementById('elite-gate-announce')?.classList.remove('show'), 4500);
+        }, 800);
+      } else {
+        // Subsequent rounds: smaller warning
+        setTimeout(() => {
+          const el = document.getElementById('elite-gate-announce');
+          if(el) { el.textContent = `⚠ ${this.mapData.eliteEnemy.name} xuất hiện!`; el.classList.add('show'); }
+          this.addShake(8);
+          SFX.eliteGate(true);
+          setTimeout(() => document.getElementById('elite-gate-announce')?.classList.remove('show'), 2500);
+        }, 600);
+      }
+    }
 
     // weather
     this.weatherTimer--;
@@ -1572,9 +1716,9 @@ const Game = {
     for(let i=this.enemies.length-1;i>=0;i--) {
       const en = this.enemies[i];
       const spd = en.spd * en.slow * fps60 * .006;
-      const ePath = (this.paths && this.paths[en.pathIdx||0]) || this.path;
+      const ePath = en.elite ? (this.elitePath||this.path) : ((this.paths&&this.paths[en.pathIdx||0])||this.path);
       en.t = Math.min(en.t + spd / ePath.length, 1);
-      const pt = this.ptOnPath(en.t, en.pathIdx||0);
+      const pt = this.ptOnPath(en.t, en.elite ? 100 : (en.pathIdx||0));
       en.x = pt.x; en.y = pt.y;
       if(en.slow < 1) en.slow = Math.min(1, en.slow + .02*fps60);
 
@@ -1735,7 +1879,15 @@ const Game = {
     // check wave done
     if(this.gamePhase==='wave' && this.spawnQueue.length===0 && this.enemies.length===0) {
       if(this.round >= 20 && this.modeIdx!==2) { this.win(); return; }
-      // next round (short pause before auto-advancing)
+      // Round completion gold bonus (increases with round number)
+      const bonus = 30 + this.round * 12;
+      for(let gi=0; gi<this.playerGold.length; gi++) this.playerGold[gi]=(this.playerGold[gi]||0)+bonus;
+      this.gold = this.playerGold[this.mpPlayerIdx];
+      this.updateHUD();
+      SFX.earnGold();
+      this._showRoundBonus(bonus);
+      if(this.isHostMP) MP.broadcastEvent({type:'round_bonus', bonus});
+      // next round
       const gap = 18;
       this.gamePhase = 'waiting';
       setTimeout(()=>this.startRound(), gap*16.7);
@@ -2496,6 +2648,90 @@ const Game = {
     c.save();
     c.translate(x, y+bob);
 
+    if(en.elite) {
+      // Elite gate enemy — map-specific unique design
+      const mapId = this.mapData?.id ?? 0;
+      const col = en.color || '#ff5500';
+      const glow = en.glowColor || col;
+      const hpRatio = en.hp/en.maxHp;
+      // Outer aura pulse
+      c.globalAlpha = 0.22 + Math.sin(t*4)*0.12;
+      c.fillStyle = glow;
+      c.beginPath(); c.arc(0,0,r*2.3,0,Math.PI*2); c.fill();
+      c.globalAlpha = 1;
+      c.shadowColor = glow; c.shadowBlur = 12;
+      switch(mapId) {
+        case 0: { // Lava Titan — cracked molten rock
+          c.fillStyle='#201008'; c.beginPath(); c.ellipse(0,0,r*1.05,r*1.3,0,0,Math.PI*2); c.fill();
+          c.strokeStyle=col; c.lineWidth=2; // lava cracks
+          for(let i=0;i<6;i++){const a=i/6*Math.PI*2; c.beginPath(); c.moveTo(0,0); c.lineTo(Math.cos(a)*r*.85,Math.sin(a)*r*.85); c.stroke();}
+          // Shoulders
+          c.fillStyle='#382010'; c.beginPath(); c.ellipse(-r*.9,0,r*.45,r*.35,0,0,Math.PI*2); c.fill();
+          c.beginPath(); c.ellipse(r*.9,0,r*.45,r*.35,0,0,Math.PI*2); c.fill();
+          c.fillStyle=glow; // glowing eyes
+          c.beginPath(); c.arc(-r*.3,-r*.25,r*.22,0,Math.PI*2); c.fill();
+          c.beginPath(); c.arc(r*.3,-r*.25,r*.22,0,Math.PI*2); c.fill();
+          break; }
+        case 1: { // Shadow Stalker — dark phantom with tendrils
+          c.fillStyle='#0a0010';
+          c.beginPath(); c.ellipse(0,0,r*.9,r*1.1,Math.sin(t)*0.2,0,Math.PI*2); c.fill();
+          c.strokeStyle=col; c.lineWidth=1.5; // tendrils
+          for(let i=0;i<5;i++){const a=i/5*Math.PI*2+t; const wv=Math.sin(t*3+i)*r*.4; c.beginPath(); c.moveTo(Math.cos(a)*r*.7,Math.sin(a)*r*.7); c.quadraticCurveTo(Math.cos(a+.5)*(r*1.5+wv),Math.sin(a+.5)*(r*1.5+wv),Math.cos(a+1)*r*2.2,Math.sin(a+1)*r*2.2); c.stroke();}
+          c.fillStyle=glow; c.globalAlpha=0.9; // twin eyes
+          c.beginPath(); c.ellipse(-r*.28,-r*.2,r*.2,r*.12,0,0,Math.PI*2); c.fill();
+          c.beginPath(); c.ellipse(r*.28,-r*.2,r*.2,r*.12,0,0,Math.PI*2); c.fill();
+          c.globalAlpha=1; break; }
+        case 2: { // Tide Colossus — armored sea giant
+          c.fillStyle='#002040'; c.beginPath(); this._rr?this._rr(c,-r*.9,-r*1.1,r*1.8,r*2.2,3):c.rect(-r*.9,-r*1.1,r*1.8,r*2.2); c.fill();
+          c.fillStyle='#004880'; c.beginPath(); c.arc(0,-r*.3,r*.75,0,Math.PI*2); c.fill();
+          c.fillStyle=col; c.lineWidth=1.5; c.strokeStyle=glow; // water droplets
+          for(let i=0;i<4;i++){const a=i/4*Math.PI*2+t*.5; c.beginPath(); c.arc(Math.cos(a)*r*1.2,Math.sin(a)*r*1.2,2.5,0,Math.PI*2); c.fillStyle=glow; c.fill();}
+          c.fillStyle='#00ccff'; c.beginPath(); c.arc(-r*.3,-r*.3,r*.18,0,Math.PI*2); c.fill();
+          c.beginPath(); c.arc(r*.3,-r*.3,r*.18,0,Math.PI*2); c.fill();
+          break; }
+        case 3: { // Cinder Warrior — ashen armored knight
+          c.fillStyle='#2a1008'; this._rr?this._rr(c,-r*.85,-r*1.05,r*1.7,r*2.1,2):c.fillRect(-r*.85,-r*1.05,r*1.7,r*2.1); c.fill();
+          c.fillStyle='#401810'; c.beginPath(); c.arc(0,-r*.35,r*.7,Math.PI,Math.PI*2); c.fill(); // visor
+          c.strokeStyle=col; c.lineWidth=2; // armor lines
+          c.beginPath(); c.moveTo(-r*.85,-r*.1); c.lineTo(r*.85,-r*.1); c.stroke();
+          c.beginPath(); c.moveTo(-r*.85,r*.4); c.lineTo(r*.85,r*.4); c.stroke();
+          c.fillStyle=glow; c.globalAlpha=0.85; // ember eyes
+          c.beginPath(); c.arc(-r*.25,-r*.35,r*.16,0,Math.PI*2); c.fill();
+          c.beginPath(); c.arc(r*.25,-r*.35,r*.16,0,Math.PI*2); c.fill();
+          c.globalAlpha=1; break; }
+        case 4: { // Void Reaper — rift demon with scythe
+          c.fillStyle='#1a0010'; c.beginPath(); c.ellipse(0,0,r*.85,r*1.05,0,0,Math.PI*2); c.fill();
+          // Cloak
+          c.strokeStyle=col; c.lineWidth=1.5; c.beginPath(); c.moveTo(-r*.85,r); c.quadraticCurveTo(-r*.3,0,-r*.5,-r*.5); c.quadraticCurveTo(0,-r*1.1,r*.5,-r*.5); c.quadraticCurveTo(r*.3,0,r*.85,r); c.stroke();
+          // Scythe
+          c.strokeStyle=glow; c.lineWidth=2; c.beginPath(); c.moveTo(-r*.3,-r*.5); c.lineTo(r*1.5,-r*1.8); c.stroke();
+          c.beginPath(); c.arc(r*1.5,-r*1.8,r*.35,Math.PI*.5,Math.PI*1.5); c.stroke();
+          c.fillStyle=glow; c.beginPath(); c.arc(-r*.25,-r*.3,r*.2,0,Math.PI*2); c.fill();
+          c.beginPath(); c.arc(r*.25,-r*.3,r*.2,0,Math.PI*2); c.fill();
+          break; }
+        default: { // Nexus Horror — void entity (map 5)
+          // Distorted shape
+          c.fillStyle='#0a0020';
+          c.beginPath(); for(let i=0;i<=8;i++){const a=i/8*Math.PI*2; const dr=r*(0.8+Math.sin(t*3+i)*0.25); c.lineTo?c.lineTo(Math.cos(a)*dr,Math.sin(a)*dr):0;} if(c.lineTo){c.beginPath(); for(let i=0;i<=8;i++){const a=i/8*Math.PI*2; const dr=r*(0.8+Math.sin(t*3+i)*0.25); if(i===0)c.moveTo(Math.cos(a)*dr,Math.sin(a)*dr); else c.lineTo(Math.cos(a)*dr,Math.sin(a)*dr);} c.closePath(); c.fill();}
+          c.strokeStyle=col; c.lineWidth=2; c.beginPath(); c.arc(0,0,r*1.2,0,Math.PI*2); c.stroke();
+          // Multiple eyes
+          const eyeAngles=[-.5,0,.5]; eyeAngles.forEach(ea=>{ c.fillStyle=glow; c.beginPath(); c.arc(Math.cos(ea)*r*.55,Math.sin(ea)*r*.3-r*.1,r*.18,0,Math.PI*2); c.fill(); });
+          break; }
+      }
+      c.shadowBlur = 0;
+      // HP bar
+      c.fillStyle='#181820'; c.fillRect(-r*1.2,-r*1.75,r*2.4,3.5);
+      c.fillStyle=hpRatio>.5?col:hpRatio>.25?'#ff6020':'#ff1010';
+      c.fillRect(-r*1.2,-r*1.75,r*2.4*hpRatio,3.5);
+      c.restore();
+      // Apply ice slow shimmer if slowed
+      if(en.slow < 0.8) {
+        const ctx = c; ctx.save(); ctx.translate(x,y+bob); ctx.strokeStyle='rgba(150,210,255,0.5)'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(0,0,r*1.3,0,Math.PI*2); ctx.stroke(); ctx.restore();
+      }
+      return;
+    }
+
     if(en.isBoss) {
       // Boss: large pulsing circle with dramatic glow
       const bpulse=.92+Math.sin(t*3)*.08;
@@ -2944,6 +3180,14 @@ const Game = {
     });
   },
 
+  _showRoundBonus(bonus) {
+    const el = document.createElement('div');
+    el.style.cssText='position:fixed;left:50%;top:22%;transform:translateX(-50%);background:#1a1000;border:1px solid #f5c842;border-radius:10px;padding:6px 18px;font-size:16px;font-weight:700;color:#f5c842;z-index:80;pointer-events:none;animation:bonusFadeUp .6s ease forwards';
+    el.textContent = `+${bonus} 💰 Vàng thưởng vòng`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1800);
+  },
+
   updateQuotaHUD() {
     const slots=document.getElementById('quota-slots');
     const count=document.getElementById('quota-count');
@@ -3105,7 +3349,9 @@ const MP = {
     document.getElementById('mp-overlay').classList.remove('hidden');
     document.getElementById('mp-card-main').classList.remove('hidden');
     document.getElementById('mp-card-lobby').classList.add('hidden');
+    document.getElementById('mp-card-rooms').classList.add('hidden');
     document.getElementById('mp-err').textContent='';
+    this.roomCode = null;
     // Populate selects
     const ms=document.getElementById('lobby-map-sel');
     if(ms) { ms.innerHTML=MAPS_DATA.map((m,i)=>`<option value="${i}">${m.name}</option>`).join(''); }
@@ -3146,7 +3392,7 @@ const MP = {
   checkAdminPw() {
     const pw=(document.getElementById('mp-admin-pw')?.value||'').trim();
     if(pw===ADMIN_PASSWORD) {
-      document.getElementById('mp-create-btn')?.classList.remove('hidden');
+      document.getElementById('mp-create-section')?.classList.remove('hidden');
       this.setErr('✅ Đã xác nhận — bạn có thể tạo phòng!');
     } else {
       this.setErr('❌ Mật khẩu admin không đúng.');
@@ -3154,20 +3400,24 @@ const MP = {
   },
 
   create() {
+    const roomPw = (document.getElementById('mp-room-pw')?.value||'').trim();
+    this.myName = (document.getElementById('mp-name').value.trim()||'Player');
     this.connect(() => {
       this.isHost = true;
       this.myNation = this.myNation || 0;
-      this.send({ type:'create', name:this.myName, hero:'Kael', map:STATE.mapIdx, mode:STATE.modeIdx, nation:this.myNation });
+      this.send({ type:'create', name:this.myName, hero:'Kael', map:STATE.mapIdx, mode:STATE.modeIdx, nation:this.myNation, password: roomPw||null });
     });
   },
 
   join() {
     const code = (document.getElementById('mp-code').value||'').trim().toUpperCase();
     if(code.length!==6) { this.setErr('Mã phòng phải 6 ký tự.'); return; }
+    const pw = (document.getElementById('mp-join-pw')?.value||'').trim();
+    this.myName = (document.getElementById('mp-name').value.trim()||'Player');
     this.connect(() => {
       this.isHost = false;
       this.myNation = this.myNation || 0;
-      this.send({ type:'join', code, name:this.myName, hero:'Kael', nation:this.myNation });
+      this.send({ type:'join', code, name:this.myName, hero:'Kael', nation:this.myNation, password: pw||undefined });
     });
   },
 
@@ -3235,8 +3485,12 @@ const MP = {
       case 'chat':
         this.showChat(`[${msg.from}] ${msg.text}`);
         break;
+      case 'rooms_list':
+        this.handleRoomsList(msg.rooms);
+        break;
       case 'error':
         this.setErr(msg.msg);
+        if(document.getElementById('mp-err-rooms')) document.getElementById('mp-err-rooms').textContent=msg.msg;
         break;
     }
   },
@@ -3350,6 +3604,68 @@ const MP = {
   leaveRoom() {
     if(this.ws) { this.ws.close(); this.ws=null; }
     document.getElementById('mp-card-lobby').classList.add('hidden');
+    document.getElementById('mp-card-rooms').classList.add('hidden');
+    document.getElementById('mp-card-main').classList.remove('hidden');
+    document.getElementById('mp-err').textContent='';
+  },
+
+  showRoomBrowser() {
+    const name = (document.getElementById('mp-name').value||'').trim();
+    if(!name) { this.setErr('Nhập tên trước khi xem phòng.'); return; }
+    this.myName = name;
+    this.setErr('');
+    document.getElementById('mp-card-main').classList.add('hidden');
+    document.getElementById('mp-card-rooms').classList.remove('hidden');
+    document.getElementById('rooms-list').innerHTML='<div style="text-align:center;color:#3a3858;font-size:13px;padding:20px 0">Đang tải...</div>';
+    document.getElementById('mp-err-rooms').textContent='';
+    this.connect(() => this.refreshRooms());
+  },
+
+  refreshRooms() {
+    this.send({type:'list_rooms'});
+  },
+
+  handleRoomsList(list) {
+    const el = document.getElementById('rooms-list');
+    if(!el) return;
+    if(!list || list.length===0) {
+      el.innerHTML='<div style="text-align:center;color:#3a3858;font-size:13px;padding:20px 0">Không có phòng nào đang chờ</div>';
+      return;
+    }
+    el.innerHTML = list.map(r=>{
+      const mapName = MAPS_DATA[r.map]?.name || `Map ${r.map}`;
+      const modeName = MODES[r.mode]?.name || `Mode ${r.mode}`;
+      const lock = r.hasPassword ? '🔒 ' : '';
+      return `<div class="room-item" onclick="MP.joinFromList('${r.code}',${!!r.hasPassword})">
+        <div class="ri-info">
+          <div class="ri-name">${lock}${r.code}</div>
+          <div class="ri-meta">🗺 ${mapName} · ⚔ ${modeName} · 👥 ${r.playerCount}/4</div>
+        </div>
+        <button class="ri-join" onclick="event.stopPropagation();MP.joinFromList('${r.code}',${!!r.hasPassword})">Vào →</button>
+      </div>`;
+    }).join('');
+  },
+
+  joinFromList(code, hasPassword) {
+    if(hasPassword) {
+      const pw = prompt('Phòng này có mật khẩu. Nhập mật khẩu để vào:');
+      if(pw==null) return;
+      this._joinWithCode(code, pw.trim());
+    } else {
+      this._joinWithCode(code, '');
+    }
+  },
+
+  _joinWithCode(code, password) {
+    this.isHost = false;
+    this.myNation = this.myNation || 0;
+    document.getElementById('mp-card-rooms').classList.add('hidden');
+    this.send({type:'join', code, name:this.myName, hero:'Kael', nation:this.myNation, password: password||undefined});
+  },
+
+  backFromBrowser() {
+    if(this.ws&&!this.roomCode) { this.ws.close(); this.ws=null; }
+    document.getElementById('mp-card-rooms').classList.add('hidden');
     document.getElementById('mp-card-main').classList.remove('hidden');
     document.getElementById('mp-err').textContent='';
   },
@@ -3393,6 +3709,14 @@ const MP = {
             `Đã để lọt ${event.leakCount||Game.leakCount} quái tại Round ${r}. ${r<10?'Hãy xây tháp nhiều hơn ngay từ đầu!':r<20?'Bạn đã chơi tốt! Thêm tháp AoE cho giai đoạn giữa.':'Gần thắng rồi! Cải thiện phòng thủ Cửa Tử.'}`;
           document.getElementById('lose-modal').classList.remove('hidden');
         }
+        break;
+      }
+      case 'round_bonus': {
+        const bonus = event.bonus || 0;
+        for(let gi=0; gi<Game.playerGold.length; gi++) Game.playerGold[gi]=(Game.playerGold[gi]||0)+bonus;
+        Game.gold = Game.playerGold[Game.mpPlayerIdx];
+        Game.updateHUD();
+        Game._showRoundBonus(bonus);
         break;
       }
     }
@@ -3954,6 +4278,24 @@ const SFX = {
     this.resume();
     this._osc('sine', 392, 0.15, 0.25, null, 0.01, 0.08, 0.3, 0.15);
     this._osc('sine', 523, 0.1, 0.2, null, 0.01, 0.06, 0.2, 0.14);
+  },
+
+  // Elite gate arrives — ominous low rumble + scream
+  eliteGate(small=false) {
+    this.resume();
+    if(small) {
+      this._osc('sawtooth', 55, 0.3, 0.5, null, 0.01, 0.1, 0.6, 0.3);
+      this._noise(0.25, 0.3, 200);
+    } else {
+      // Dramatic: low boom + rising tone + shriek
+      this._osc('sine', 40, 0.5, 1.2, null, 0.02, 0.3, 0.4, 0.6);
+      this._noise(0.4, 0.8, 100);
+      setTimeout(() => this._osc('sawtooth', 80, 0.35, 0.6, null, 0.01, 0.2, 0.5, 0.35), 300);
+      setTimeout(() => {
+        [160, 220, 180, 140].forEach((f, i) => setTimeout(() => this._osc('sawtooth', f, 0.25, 0.2, null, 0.005, 0.05, 0.6, 0.15), i * 80));
+      }, 700);
+      setTimeout(() => this._osc('sawtooth', 300, 0.2, 0.4, null, 0.01, 0.1, 0.7, 0.3), 1100);
+    }
   },
 
   // Multiplayer: người vào phòng
