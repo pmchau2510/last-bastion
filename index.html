@@ -1558,7 +1558,7 @@ const Game = {
     // enemies
     for(let i=this.enemies.length-1;i>=0;i--) {
       const en = this.enemies[i];
-      const spd = en.spd * en.slow * fps60 * .01;
+      const spd = en.spd * en.slow * fps60 * .006;
       const ePath = (this.paths && this.paths[en.pathIdx||0]) || this.path;
       en.t = Math.min(en.t + spd / ePath.length, 1);
       const pt = this.ptOnPath(en.t, en.pathIdx||0);
