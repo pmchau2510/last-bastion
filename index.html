@@ -393,7 +393,7 @@ body{position:fixed;width:100%;height:100%}
     </div>
     <div class="hud-res">
       <div class="hud-r hud-gold"><i class="gc"></i><span id="hud-gold">200</span></div>
-      <div class="hud-r hud-crystal">💎 <span id="hud-hp">100</span> HP</div>
+      <div class="hud-r hud-crystal">🛡 <span id="hud-hp">20</span> Mạng</div>
     </div>
     <button class="hud-start-wave hidden" id="start-wave-btn" onclick="Game.startWaveNow()">▶ Bắt đầu</button>
     <button class="hud-pause" onclick="Game.pause()">⏸</button>
@@ -483,7 +483,7 @@ body{position:fixed;width:100%;height:100%}
   <div class="modal">
     <span class="modal-icon">💀</span>
     <div class="modal-title">THẤT BẠI</div>
-    <div class="modal-desc" id="lose-desc">Tinh Thể đã vỡ. Hãy thử lại!</div>
+    <div class="modal-desc" id="lose-desc">Đã để lọt quá nhiều quái. Hãy thử lại!</div>
     <div class="modal-btns">
       <button class="modal-btn mbt-lose" onclick="Game.restart()">🔄 Thử lại</button>
       <button class="modal-btn mbt-secondary" onclick="Game.quit()">↩ Về menu</button>
@@ -859,15 +859,17 @@ const MapRenderer = {
   draw(cv, mapData, W, H, animated) {
     const c = cv.getContext('2d');
     const t0 = Date.now();
-    const path = (mapData.pathFns||[mapData.pathFn])[0](W);
+    const allPaths = (mapData.pathFns||[mapData.pathFn]).map(fn => fn(W));
+    const path = allPaths[0]; // use first path for enemy preview animation
     const enemies = [{t:.1},{t:.25},{t:.42},{t:.58},{t:.74}];
+    const spawnLabels = 'ABCDEFGH';
 
-    function ptOn(t) {
-      const tot = path.length-1;
+    function ptOnPath(t, pts) {
+      const tot = pts.length-1;
       const seg = t * tot;
       const i = Math.min(Math.floor(seg), tot-1);
       const f = seg - i;
-      return { x: path[i].x+(path[i+1].x-path[i].x)*f, y: path[i].y+(path[i+1].y-path[i].y)*f };
+      return { x: pts[i].x+(pts[i+1].x-pts[i].x)*f, y: pts[i].y+(pts[i+1].y-pts[i].y)*f };
     }
 
     function frame() {
@@ -894,16 +896,18 @@ const MapRenderer = {
         c.beginPath(); c.moveTo(tx+sw*.7,ty-17); c.lineTo(tx-4,ty-7); c.lineTo(tx+4,ty-7); c.closePath(); c.fill();
       });
 
-      // path
-      c.strokeStyle=mapData.pathColor; c.lineWidth=20; c.lineJoin='round'; c.lineCap='round';
-      c.beginPath(); c.moveTo(path[0].x,path[0].y); path.slice(1).forEach(p=>c.lineTo(p.x,p.y)); c.stroke();
-      c.strokeStyle=mapData.pathLight; c.lineWidth=12;
-      c.beginPath(); c.moveTo(path[0].x,path[0].y); path.slice(1).forEach(p=>c.lineTo(p.x,p.y)); c.stroke();
+      // draw all paths
+      allPaths.forEach((pts, pi) => {
+        c.strokeStyle=mapData.pathColor; c.lineWidth=20; c.lineJoin='round'; c.lineCap='round';
+        c.beginPath(); c.moveTo(pts[0].x,pts[0].y); pts.slice(1).forEach(p=>c.lineTo(p.x,p.y)); c.stroke();
+        c.strokeStyle=mapData.pathLight; c.lineWidth=12;
+        c.beginPath(); c.moveTo(pts[0].x,pts[0].y); pts.slice(1).forEach(p=>c.lineTo(p.x,p.y)); c.stroke();
 
-      // spawn
-      c.fillStyle='#e05a2b'; c.beginPath(); c.arc(path[0].x+7,path[0].y,6,0,Math.PI*2); c.fill();
-      c.fillStyle='#fff'; c.font='bold 7px sans-serif'; c.textAlign='center';
-      c.fillText('A',path[0].x+7,path[0].y+2.5);
+        // spawn marker per path
+        c.fillStyle='#e05a2b'; c.beginPath(); c.arc(pts[0].x+7,pts[0].y,6,0,Math.PI*2); c.fill();
+        c.fillStyle='#fff'; c.font='bold 7px sans-serif'; c.textAlign='center';
+        c.fillText(spawnLabels[pi]||String(pi+1), pts[0].x+7, pts[0].y+2.5);
+      });
 
       // gate zone
       const gx = W-38;
@@ -925,8 +929,9 @@ const MapRenderer = {
 
       if(animated && enemies) {
         enemies.forEach((en,i)=>{
+          const pts = allPaths[i % allPaths.length];
           const prog=(en.t+now*.05)%1;
-          const pt=ptOn(prog);
+          const pt=ptOnPath(prog, pts);
           const bob=Math.sin(now*4+i)*1.2;
           c.fillStyle=i%2===0?'#b03818':i%3===0?'#5818a0':'#485060';
           c.beginPath(); c.arc(pt.x,pt.y+bob,4,0,Math.PI*2); c.fill();
@@ -1174,12 +1179,12 @@ const ReconnectHelper = {
 // ============================================================
 const TUTORIAL_STEPS = [
   { title:'Bản đồ chiến đấu', desc:'Quái xuất hiện từ Cổng đỏ trái, đi theo đường mòn về Tinh Thể bên phải. Xây tháp dọc đường để chặn chúng!', step:'1/8' },
-  { title:'Vàng và Tinh thể', desc:'💰 Vàng kiếm khi giết quái — dùng xây/nâng cấp tháp ngay trong trận.\n💎 HP Tinh thể — bảo vệ đừng để về 0!', step:'2/8' },
+  { title:'Vàng và Mạng sống', desc:'💰 Vàng kiếm khi giết quái — dùng xây/nâng cấp tháp ngay trong trận.\n🛡 Mạng sống — bạn có 20 mạng cả ván, đừng để quái lọt qua!', step:'2/8' },
   { title:'Cách xây tháp', desc:'Nhấn tháp ở thanh dưới để chọn, sau đó nhấn ô trống trên bản đồ để đặt. Tháp tự bắn trong tầm của nó.', step:'3/8' },
-  { title:'Cửa Tử & Quota', desc:'Mọi quái đổ về 1 điểm cuối — Cửa Tử. Mỗi round có N slot quota: quái lọt vào slot này bị hủy. Khi slot đầy → quái đánh Tinh Thể!', step:'4/8' },
+  { title:'Cửa Tử & Mạng Sống', desc:'Mọi quái đổ về Cửa Tử bên phải. Bạn có 20 mạng (10 ở Hard) cho cả ván — mỗi quái lọt qua tiêu thụ 1 mạng. Hết mạng là thua!', step:'4/8' },
   { title:'Thời tiết thay đổi', desc:'Mỗi 3 round thời tiết đổi — buff hoặc debuff tháp. Giông bão tăng Sét, Nắng to tăng Lửa. Điều chỉnh chiến lược theo thời tiết!', step:'5/8' },
   { title:'3 Lifeline cứu nguy', desc:'⚡ Iron Shield: Tinh Thể bất tử 10s\n💥 Orbital Strike: Xóa toàn bộ quái\n⏸ Time Warp: Làm chậm quái 80%. Mỗi cái dùng 1 lần/ván!', step:'6/8' },
-  { title:'Khi nào thắng/thua?', desc:'✅ THẮNG: Sống sót qua 20 round, Tinh Thể còn HP.\n❌ THUA: HP Tinh Thể về 0, hoặc tổng quái lọt qua > 25 con cả ván (Leak Score).', step:'7/8' },
+  { title:'Khi nào thắng/thua?', desc:'✅ THẮNG: Sống sót qua 20 round không hết mạng.\n❌ THUA: 20 quái lọt qua cả ván (Hard: 10 con). Boss lọt qua tốn 3 mạng!', step:'7/8' },
   { title:'Sẵn sàng chiến đấu!', desc:'Bắt đầu với map Ironhold Pass — dễ nhất. Xây Tháp Cung dọc 2 bên đường, tích vàng mua Đại Bác cho đoạn cuối. Chúc may mắn! 🏰', step:'8/8', last:true }
 ];
 
@@ -1320,6 +1325,7 @@ const Game = {
     this.maxCrystalHP = 100;
     this.round = 0;
     this.leakCount = 0;
+    this.leakQuota = this.modeIdx === 1 ? 10 : 20;
     this.lifelinesUsed = [0,0,0]; // counts (max 2 per lifeline)
     this.selectedTower = -1;
     this.weather = 5;
@@ -1370,9 +1376,6 @@ const Game = {
     const data = ROUND_SPAWN[Math.min(this.round-1, 19)];
     const ev = ROUND_EVENTS[this.round] || {};
     this.roundEvent = ev;
-    this.leakQuota = this.modeIdx === 1 ? 2 : 5;
-    if(this.round > 15) this.leakQuota = Math.max(1, this.leakQuota - 1);
-    if(this.round >= 20) this.leakQuota = 0;
     this.spawnQueue = [];
     const hpM = data.hpMult * (this.modeIdx === 1 ? 1.2 : 1) * (ev.hpMult || 1);
     const spdM = ev.spdMult || 1;
@@ -1393,21 +1396,34 @@ const Game = {
       boss._id = `r${this.round}_boss`;
       this.spawnQueue.push({enemy: boss, delay: 60});
     }
+
+    // Collect all regular enemies, then distribute across paths and batch into waves
+    const allEnemies = [];
     for(let g=0; g<data.gates; g++) {
-      const pathIdx = g % numPaths;
       for(let e=0; e<perG; e++) {
         const typeIdx = typePool[Math.floor(Math.random()*typePool.length)];
         const base = {...ENEMY_TYPES[typeIdx]};
-        base.hp = base.hp * hpM;
-        base.maxHp = base.hp;
+        base.hp = base.hp * hpM; base.maxHp = base.hp;
         base.t = 0; base.spd = base.spd * spdM; base.slow = 1;
-        base.pathIdx = pathIdx;
-        base.x = this.paths[pathIdx][0].x; base.y = this.paths[pathIdx][0].y;
         base.typeId = typeIdx; base.spawnId = Math.random()*1000;
         base._id = `r${this.round}_g${g}_e${e}`;
-        this.spawnQueue.push({enemy: base, delay: 30 + g*15 + e*([90,70,55,40,30][Math.min(this.round-1,4)])});
+        allEnemies.push(base);
       }
     }
+    // Round-robin distribute across ALL available paths (fixes single-gate multi-path bug)
+    allEnemies.forEach((en, i) => {
+      const pathIdx = i % numPaths;
+      en.pathIdx = pathIdx;
+      en.x = this.paths[pathIdx][0].x;
+      en.y = this.paths[pathIdx][0].y;
+    });
+    // Push in batches of WAVE_SIZE with a gap between waves
+    const WAVE_SIZE = 10, WAVE_GAP = 180, WITHIN_STAGGER = 5;
+    allEnemies.forEach((en, i) => {
+      const posInWave = i % WAVE_SIZE;
+      const delay = i === 0 ? 30 : posInWave === 0 ? WAVE_GAP : WITHIN_STAGGER;
+      this.spawnQueue.push({enemy: en, delay});
+    });
 
     // weather
     this.weatherTimer--;
@@ -1550,20 +1566,15 @@ const Game = {
       if(en.slow < 1) en.slow = Math.min(1, en.slow + .02*fps60);
 
       if(en.t >= .99) {
-        // reached gate zone — apply quota
-        if(this.leakCount < this.leakQuota) {
-          this.leakCount++;
-        } else {
-          this.crystalHP = Math.max(0, this.crystalHP - (en.isBoss ? 5 : 1));
-          SFX.crystalHit();
-          this.addShake(en.isBoss ? 8 : 4);
-          if(this.crystalHP <= 30 && this.crystalHP > 0) SFX.crystalLowHP();
-          this.spawnParticles(this.W-20, this.H/2, '#e05a2b', 12);
-          if(this.crystalHP <= 0) { this.enemies.splice(i,1); this.lose(); return; }
-        }
+        // reached gate zone — accumulate global leak count
+        this.leakCount += (en.isBoss ? 3 : 1);
+        SFX.crystalHit();
+        this.addShake(en.isBoss ? 8 : 4);
+        this.spawnParticles(this.W-20, this.H/2, '#e05a2b', 10);
         this.enemies.splice(i,1);
         this.updateHUD();
         this.updateQuotaHUD();
+        if(this.leakCount >= this.leakQuota) { this.lose(); return; }
         continue;
       }
 
@@ -1941,7 +1952,7 @@ const Game = {
     const now=this.lastTime/1000;
     const pulse=.88+Math.sin(now*2)*.12;
     const cx2=W-14, cy2=H/2;
-    const hpRatio=this.crystalHP/this.maxCrystalHP;
+    const hpRatio=Math.max(0, 1 - this.leakCount / Math.max(1, this.leakQuota));
     const crystalColor=hpRatio>.6?'#50b8f0':hpRatio>.3?'#f5a840':'#e05a2b';
     c.fillStyle='#0a3050';
     c.beginPath(); c.moveTo(cx2,cy2-16*pulse); c.lineTo(cx2+10,cy2); c.lineTo(cx2,cy2+16*pulse); c.lineTo(cx2-10,cy2); c.closePath(); c.fill();
@@ -2911,7 +2922,7 @@ const Game = {
     document.getElementById('hud-round').textContent=this.round;
     const displayGold = this.isMP ? (this.playerGold[this.mpPlayerIdx]||0) : this.gold;
     document.getElementById('hud-gold').textContent=displayGold;
-    document.getElementById('hud-hp').textContent=this.crystalHP;
+    document.getElementById('hud-hp').textContent=Math.max(0, this.leakQuota - this.leakCount);
     // disable unaffordable towers (use element id="tp-N" to get tower data by id)
     document.querySelectorAll('.tp').forEach(el=>{
       const id=parseInt(el.id.replace('tp-',''));
@@ -2924,13 +2935,13 @@ const Game = {
     const slots=document.getElementById('quota-slots');
     const count=document.getElementById('quota-count');
     if(!slots) return;
-    slots.innerHTML=Array.from({length:Math.max(this.leakQuota+this.leakCount,this.leakQuota)},(_,i)=>{
-      let cls='empty';
-      if(i<(this.leakQuota-this.leakCount)) cls='ok';
-      else if(i<this.leakQuota) cls='leak';
+    const quota = this.leakQuota;
+    const used = Math.min(this.leakCount, quota);
+    slots.innerHTML=Array.from({length:quota},(_,i)=>{
+      const cls = i < (quota - used) ? 'ok' : 'leak';
       return `<div class="qs ${cls}"></div>`;
     }).join('');
-    count.textContent=`${this.leakCount}/${this.leakQuota}`;
+    count.textContent=`${used}/${quota}`;
   },
 
   updateWeatherHUD() {
@@ -2979,7 +2990,7 @@ const Game = {
     SFX.stopMusic(); SFX.win();
     if(this.isHostMP) MP.broadcastEvent({type:'game_over',result:'win',crystalHP:this.crystalHP,round:this.round,leakCount:this.leakCount,leakQuota:this.leakQuota});
     document.getElementById('win-desc').textContent=
-      `Bạn đã bảo vệ thành công! Tinh Thể còn ${this.crystalHP} HP. ${this.leakCount===0?'Không để một con quái lào lọt qua — hoàn hảo! ⭐⭐⭐':'Hãy thử lại để đạt 3 sao!'}`;
+      `Bạn đã bảo vệ thành công! Còn ${Math.max(0, this.leakQuota - this.leakCount)}/${this.leakQuota} mạng. ${this.leakCount===0?'Không để một con quái lào lọt qua — hoàn hảo! ⭐⭐⭐':'Hãy thử lại để đạt 3 sao!'}`;
     document.getElementById('win-modal').classList.remove('hidden');
   },
   lose() {
@@ -3360,13 +3371,13 @@ const MP = {
           if(event.leakCount!=null) Game.leakCount=event.leakCount;
           if(event.leakQuota!=null) Game.leakQuota=event.leakQuota;
           document.getElementById('win-desc').textContent=
-            `Bạn đã bảo vệ thành công! Tinh Thể còn ${Game.crystalHP} HP. ${Game.leakCount===0?'Không để một con quái lào lọt qua — hoàn hảo! ⭐⭐⭐':'Hãy thử lại để đạt 3 sao!'}`;
+            `Bạn đã bảo vệ thành công! Còn ${Math.max(0,(event.leakQuota||20)-(event.leakCount||0))}/${event.leakQuota||20} mạng. ${Game.leakCount===0?'Không để một con quái lào lọt qua — hoàn hảo! ⭐⭐⭐':'Hãy thử lại để đạt 3 sao!'}`;
           document.getElementById('win-modal').classList.remove('hidden');
         } else {
           SFX.lose();
           const r=event.round||Game.round;
           document.getElementById('lose-desc').textContent=
-            `Tinh Thể đã vỡ tại Round ${r}. ${r<10?'Hãy xây tháp nhiều hơn ngay từ đầu!':r<20?'Bạn đã chơi tốt! Thêm tháp AoE cho giai đoạn giữa.':'Gần thắng rồi! Cải thiện phòng thủ Cửa Tử.'}`;
+            `Đã để lọt ${event.leakCount||Game.leakCount} quái tại Round ${r}. ${r<10?'Hãy xây tháp nhiều hơn ngay từ đầu!':r<20?'Bạn đã chơi tốt! Thêm tháp AoE cho giai đoạn giữa.':'Gần thắng rồi! Cải thiện phòng thủ Cửa Tử.'}`;
           document.getElementById('lose-modal').classList.remove('hidden');
         }
         break;
