@@ -47,6 +47,12 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 .map-tab{flex-shrink:0;padding:10px 14px;font-size:12px;color:#4a3868;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-weight:500}
 .map-tab.active{color:#c4a0ff;border-bottom-color:#7b4fee}
 .map-tab.locked{color:#2a2035;cursor:not-allowed}
+/* Map arrow nav */
+.map-nav{display:flex;align-items:center;gap:6px}
+.map-nav-btn{background:#1a1f35;border:1px solid #2a3050;border-radius:6px;color:#c4a0ff;font-size:18px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:background .15s}
+.map-nav-btn:active{background:#2a3060}
+.map-nav-btn:disabled{opacity:.25;cursor:not-allowed}
+.map-nav-counter{font-size:12px;color:#7b6aa0;min-width:30px;text-align:center}
 .map-preview{width:100%;flex-shrink:0}
 #map-canvas{width:100%;display:block}
 .map-details{padding:12px 14px;flex:1}
@@ -327,7 +333,7 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 /* ===== Collapsible top HUD ===== */
 #hud-rows{overflow:hidden;max-height:120px;transition:max-height .28s ease,opacity .2s ease}
 #hud-rows.hud-collapsed{max-height:0;opacity:0;pointer-events:none}
-#hud-tab{align-self:flex-end;background:#06080fee;border:1px solid #2a3050;border-top:none;border-radius:0 0 8px 8px;padding:1px 10px 3px;font-size:11px;color:#7b4fee;cursor:pointer;pointer-events:auto;user-select:none;margin-right:10px;letter-spacing:.04em;transition:opacity .2s}
+#hud-tab{align-self:flex-end;background:#12163aee;border:1px solid #5a3aaa;border-top:none;border-radius:0 0 8px 8px;padding:2px 12px 4px;font-size:12px;color:#c4a0ff;cursor:pointer;pointer-events:auto;user-select:none;margin-right:10px;letter-spacing:.06em;transition:opacity .2s;font-weight:600;text-shadow:0 0 8px #7b4fee88}
 #hud-tab:active{opacity:.7}
 /* ===== Orientation lock (portrait) ===== */
 #rotate-msg{display:none;position:fixed;inset:0;z-index:9999;background:#07090f;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:30px}
@@ -394,9 +400,12 @@ body{position:fixed;width:100%;height:100%}
   <div class="screen-header">
     <button class="hdr-back" onclick="App.showMenu()">‹</button>
     <div class="hdr-title">CHỌN CHIẾN TRƯỜNG</div>
-    <div class="hdr-step">1 / 2</div>
+    <div class="map-nav">
+      <button class="map-nav-btn" id="map-prev-btn" onclick="MapSelect.prev()">‹</button>
+      <div class="map-nav-counter" id="map-nav-counter">1/5</div>
+      <button class="map-nav-btn" id="map-next-btn" onclick="MapSelect.next()">›</button>
+    </div>
   </div>
-  <div class="map-scroll" id="map-tabs"></div>
   <div class="map-preview"><canvas id="map-canvas" height="130"></canvas></div>
   <div class="map-details" id="map-details"></div>
 </div>
@@ -885,21 +894,35 @@ const MapSelect = {
   animHandle: null,
   init() {
     this.cur = STATE.mapIdx;
-    this.renderTabs();
+    this.renderNav();
     this.renderDetails();
     this.drawMap();
   },
-  renderTabs() {
-    const el = document.getElementById('map-tabs');
-    el.innerHTML = MAPS_DATA.map((m,i) =>
-      `<div class="map-tab ${i===this.cur?'active':''} ${m.locked?'locked':''}"
-       onclick="${m.locked?'':'MapSelect.select('+i+')'}">${m.name}</div>`
-    ).join('');
+  _unlocked() { return MAPS_DATA.map((_,i)=>i).filter(i=>!MAPS_DATA[i].locked); },
+  renderNav() {
+    const unlocked = this._unlocked();
+    const pos = unlocked.indexOf(this.cur);
+    const counter = document.getElementById('map-nav-counter');
+    const prev = document.getElementById('map-prev-btn');
+    const next = document.getElementById('map-next-btn');
+    if(counter) counter.textContent = `${pos+1}/${unlocked.length}`;
+    if(prev) prev.disabled = pos <= 0;
+    if(next) next.disabled = pos >= unlocked.length-1;
+  },
+  prev() {
+    const unlocked = this._unlocked();
+    const pos = unlocked.indexOf(this.cur);
+    if(pos > 0) this.select(unlocked[pos-1]);
+  },
+  next() {
+    const unlocked = this._unlocked();
+    const pos = unlocked.indexOf(this.cur);
+    if(pos < unlocked.length-1) this.select(unlocked[pos+1]);
   },
   select(i) {
     this.cur = i;
     STATE.mapIdx = i;
-    this.renderTabs();
+    this.renderNav();
     this.renderDetails();
     this.drawMap();
   },
