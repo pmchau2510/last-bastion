@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-24)
+## Current State (2026-05-24) — last updated same session
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -35,6 +35,21 @@
 - Preview now draws **all paths** (`allPaths.forEach`)
 - Each path gets its own spawn marker labeled A, B, C...
 - Animated enemies walk across all paths proportionally
+
+### Enemy Movement Speed Tuning
+- Speed multiplier reduced from `* .01` → `* .006` (chậm ~40%)
+- Áp dụng trong công thức: `spd = en.spd * en.slow * fps60 * .006`
+- Thời gian qua map tham khảo (path 8 điểm, 60fps):
+
+| Quái | spd | Thời gian |
+|------|-----|-----------|
+| Swarm Bat | 1.8 | ~12s |
+| Shade Crawler | 1.2 | ~18s |
+| Berserker | 1.0 | ~22s |
+| Stone Golem | 0.7 | ~32s |
+| Behemoth | 0.5 | ~44s |
+
+- Nếu muốn điều chỉnh thêm: tìm dòng `* .006` trong game loop enemies (~line 1561)
 
 ### Nation System (3 factions)
 - **Ironhold ⚔️**: Cung / Đại Bác / Sét / T.Nhiên / Ballista
@@ -87,15 +102,6 @@
 | `server.js` | Node.js WebSocket signaling server |
 | `LAST_BASTION_GDD.md` | Game Design Document |
 | `PROGRESS.md` | This file — session context tracker |
-
----
-
-## GDD Update Needed
-
-The GDD (`LAST_BASTION_GDD.md`) still references the old per-round quota system and crystal HP. These sections need updating:
-- Section on Leak Quota → update to "20 global lives"  
-- Wave spawn section → update to "batch waves of 10"
-- Map preview section → note that preview now shows all paths
 
 ---
 
