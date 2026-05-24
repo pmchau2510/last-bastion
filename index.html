@@ -586,11 +586,7 @@ body{position:fixed;width:100%;height:100%}
     <input class="mp-input-small" id="mp-join-pw" type="password" placeholder="🔒 Mật khẩu phòng (nếu có)" maxlength="20" autocomplete="off">
     <button class="mp-btn mp-btn-join" onclick="MP.join()">🚪 Vào phòng</button>
     <div class="mp-sep"></div>
-    <div style="display:flex;gap:6px;margin-bottom:6px">
-      <input class="mp-input" id="mp-admin-pw" type="password" placeholder="Mật khẩu admin" maxlength="20" autocomplete="off" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter')MP.checkAdminPw()">
-      <button class="mp-btn" onclick="MP.checkAdminPw()" style="margin:0;padding:8px 12px;flex:0">🔓</button>
-    </div>
-    <div id="mp-create-section" class="hidden">
+    <div id="mp-create-section">
       <input class="mp-input-small" id="mp-room-pw" type="password" placeholder="🔒 Mật khẩu phòng (tùy chọn)" maxlength="20" autocomplete="off">
       <button class="mp-btn mp-btn-create" onclick="MP.create()">🏠 Tạo phòng mới</button>
     </div>
@@ -781,9 +777,6 @@ const UPGRADE_ARCHER_RATE= [1, 0.92, 0.82, 0.70, 0.58];
 // Per-player colors (host=0, guest1=1, guest2=2, guest3=3)
 const PLAYER_COLORS = ['#a060ff','#40a0ff','#40c060','#e06060'];
 
-// Admin password for room creation
-const ADMIN_PASSWORD = 'BASTION';
-
 // Nation system: 3 factions, each with different tower sets (id 0-5 are common/shared, 6/7/8 are exclusive)
 const NATIONS_DATA = [
   { id:0, name:'Ironhold', icon:'⚔️', color:'#d08030', towers:[0,1,3,5,6,9], desc:'Pháo thủ tầm xa · Ballista xuyên giáp · Đại Pháo AoE' },
@@ -831,14 +824,22 @@ const ROUND_SPAWN = Array.from({length:20}, (_,ri) => {
   const r = ri + 1;
   const stage = r<=5?0:r<=10?1:r<=15?2:3;
   const isBoss = [5,10,15,20].includes(r);
-  const bossMap = {5:0,10:1,15:2,20:5};
-  const bossIdx = bossMap[r] ?? -1;
+  // bossMap: { round: [bossTypeIdx, ...] } — multiple entries = multiple bosses on different paths
+  const bossMap = {
+    5:  [0],       // 1 boss — Malachar's Puppet (intro boss)
+    10: [1, 0],    // 2 bosses — Void Serpent leads, Puppet on second path
+    15: [2, 3],    // 2 bosses — Iron Colossus + The Twins simultaneously
+    20: [4, 2, 3]  // 3 bosses — Void Colossus + Iron Colossus + The Twins
+  };
+  const bossIdxList = bossMap[r] ?? [-1];
+  const bossIdx = bossIdxList[0]; // legacy compat
+  const bossCount = isBoss ? bossIdxList.length : 0;
   const perGate = [8,11,14,18][stage] + Math.floor(r * 1.0);
   const gates = Math.min(1 + Math.floor(r/7), 3);
   const allT=[0,1,2,3,4,5,6];
   const types = stage===0?[0,1]:stage===1?[0,1,2,3]:stage===2?[0,1,2,3,4,5]:allT;
   const hpMult = 1 + ri * .09;
-  return { round:r, perGate, gates, types, hpMult, isBoss, bossIdx };
+  return { round:r, perGate, gates, types, hpMult, isBoss, bossIdx, bossIdxList, bossCount };
 });
 
 // ============================================================
@@ -1591,15 +1592,22 @@ const Game = {
 
     const numPaths = this.paths ? this.paths.length : 1;
     if(isBoss) {
-      const boss = {...BOSS_TYPES[Math.min(data.bossIdx, BOSS_TYPES.length-1)]};
-      boss.hp *= hpM;
-      boss.maxHp = boss.hp;
-      boss.t = 0; boss.spd = boss.spd * spdM; boss.slow = 1;
-      boss.pathIdx = 0;
-      boss.x = this.paths[0][0].x; boss.y = this.paths[0][0].y;
-      boss.isBoss = true; boss.spawnId = Math.random()*1000;
-      boss._id = `r${this.round}_boss`;
-      this.spawnQueue.push({enemy: boss, delay: 60});
+      // Spawn each boss on a different path (round-robin), staggered 90 frames apart
+      const idxList = data.bossIdxList || [data.bossIdx];
+      idxList.forEach((bIdx, bi) => {
+        const boss = {...BOSS_TYPES[Math.min(bIdx, BOSS_TYPES.length-1)]};
+        // Each extra boss has slightly scaled-down HP so it doesn't feel unfair
+        const bossHpScale = bi === 0 ? 1 : 0.7;
+        boss.hp = boss.hp * hpM * bossHpScale;
+        boss.maxHp = boss.hp;
+        boss.t = 0; boss.spd = boss.spd * spdM; boss.slow = 1;
+        boss.pathIdx = bi % numPaths;
+        const pathPts = this.paths[boss.pathIdx];
+        boss.x = pathPts[0].x; boss.y = pathPts[0].y;
+        boss.isBoss = true; boss.spawnId = Math.random()*1000;
+        boss._id = `r${this.round}_boss${bi}`;
+        this.spawnQueue.push({enemy: boss, delay: bi === 0 ? 60 : 90});
+      });
     }
 
     // Collect all regular enemies, then distribute across paths and batch into waves
@@ -1709,8 +1717,10 @@ const Game = {
     const wa_sub = document.getElementById('wa-sub');
     const ev = ROUND_EVENTS[this.round];
     if(data.isBoss) {
-      const bossName = BOSS_TYPES[Math.min(data.bossIdx,BOSS_TYPES.length-1)]?.name||'BOSS';
-      wa_sub.innerHTML = `⚠️ BOSS — <em>${bossName}</em>`;
+      const idxList = data.bossIdxList || [data.bossIdx];
+      const bossName = BOSS_TYPES[Math.min(idxList[0],BOSS_TYPES.length-1)]?.name||'BOSS';
+      const extraLabel = idxList.length > 1 ? ` <span style="color:#ff8080">×${idxList.length}</span>` : '';
+      wa_sub.innerHTML = `⚠️ BOSS${extraLabel} — <em>${bossName}</em>${idxList.length>1?' + đồng bọn!':''}`;
       wa_sub.className='wa-sub wa-boss';
     } else if(ev) {
       wa_sub.innerHTML = `${ev.icon} <strong>${ev.name}</strong> — ${ev.desc}`;
@@ -3640,16 +3650,6 @@ const MP = {
 
   send(obj) {
     if(this.ws && this.ws.readyState===WebSocket.OPEN) this.ws.send(JSON.stringify(obj));
-  },
-
-  checkAdminPw() {
-    const pw=(document.getElementById('mp-admin-pw')?.value||'').trim();
-    if(pw===ADMIN_PASSWORD) {
-      document.getElementById('mp-create-section')?.classList.remove('hidden');
-      this.setErr('✅ Đã xác nhận — bạn có thể tạo phòng!');
-    } else {
-      this.setErr('❌ Mật khẩu admin không đúng.');
-    }
   },
 
   create() {
