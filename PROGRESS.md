@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-24) — last updated (elite path preview added)
+## Current State (2026-05-24) — last updated (nation-specific projectile visuals)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -82,9 +82,9 @@
 - Server-side: validate password trước khi vào, check all-ready trước khi start
 - Host chỉ bắt đầu được khi **tất cả** guest đã nhấn Sẵn sàng (cả client + server check)
 
-### Enemy Movement Speed Tuning
-- Speed multiplier reduced from `* .01` → `* .006` (chậm ~40%)
-- Áp dụng trong công thức: `spd = en.spd * en.slow * fps60 * .006`
+### Enemy Movement Speed Tuning + Uniform Speed Fix
+- Speed multiplier: `spd = en.spd * en.slow * fps60 * .006`
+- **Arc-length parameterization** (mới): `_buildArcLengths(path)` tính trước cumulative pixel distance cho mỗi path; `ptOnPath(t)` map `t` theo pixel distance thực tế thay vì số điểm → tốc độ đều tuyệt đối trên toàn path, không còn bị nhanh/chậm ở đoạn đầu/cuối
 - Thời gian qua map tham khảo (path 8 điểm, 60fps):
 
 | Quái | spd | Thời gian |
@@ -95,7 +95,18 @@
 | Stone Golem | 0.7 | ~32s |
 | Behemoth | 0.5 | ~44s |
 
-- Nếu muốn điều chỉnh thêm: tìm dòng `* .006` trong game loop enemies (~line 1561)
+- Nếu muốn điều chỉnh thêm: tìm dòng `* .006` trong game loop enemies
+
+### Collapsible Top HUD
+- Nút **"▲ Thu"** ở góc phải HUD trên → thu gọn hud-top + quota + weather bar
+- Khi thu: nút đổi thành **"▼ HUD"** → bấm lại để mở ra
+- CSS: `#hud-rows` dùng `max-height` transition (0 ↔ 120px, 280ms ease)
+- HUD tự mở lại (`hud-collapsed` bị remove) khi bắt đầu game mới
+
+### Landscape-Only Orientation Lock
+- `#rotate-msg`: `position:fixed; z-index:9999` — hiển thị khi `@media(orientation:portrait)`
+- Nội dung: "📱 Xoay ngang điện thoại — Last Bastion chỉ hỗ trợ chế độ ngang"
+- Pure CSS, không cần JS — tự ẩn khi xoay ngang
 
 ### Nation System (3 factions)
 - **Ironhold ⚔️**: Cung / Đại Bác / Sét / T.Nhiên / Ballista
@@ -125,6 +136,7 @@
 - `Game.paths[]` holds pre-computed paths; enemies use `enemy.pathIdx`
 - **Elite path**: `pathIdx=100` → routes to `Game.elitePath` (set from `mapData.elitePathFn`)
 - Elite path isolated from `Game.paths[]` to avoid breaking round-robin distribution
+- **Arc-length**: each path has `._al` (cumulative distances array) and `._len` (total pixels), computed by `_buildArcLengths()` in `resize()`; used in `ptOnPath()` for uniform speed
 
 ### Tower IDs
 - `TOWERS_DATA[id]` — id === array index (0–8)
@@ -152,6 +164,22 @@
 | `PROGRESS.md` | This file — session context tracker |
 
 ---
+
+### Nation-Specific Projectile Visuals
+- Mỗi nation có đạn/phóng chiếu riêng biệt thay vì chung chung
+- Helper `_towerNation(tw)` đọc nation từ `tw.ownerIdx` (MP) hoặc `this.nationIdx` (solo)
+- Field `nation` gắn vào mỗi projectile khi tạo; `drawProjectile()` switch theo cả `typeId` và `p.nation`
+- **Type 0 — Cung/Xạ Thủ (3 quốc gia)**
+  - Ironhold: **Steel Bolt** — thân bolt kim loại xám, đầu hình thoi trắng bạc, 2 cánh nhỏ, trail tia lửa cam
+  - Glacien: **Ice Needle** — mũi kim tinh thể mỏng, 2 đầu nhọn, vòng xoay băng nửa vòng tròn, trail xanh băng
+  - Emberon: **Flame Arrow** — thân tên cháy đen, đầu lửa cam, glow vàng, trail tro đỏ/cam
+- **Type 1 — Đại Bác (2 quốc gia)**
+  - Ironhold: **Iron Cannonball** — quả đạn sắt xám gradient, highlight cam rèn lò, trail khói xám
+  - Emberon: **Lava Bomb** — quả cầu dung nham nổi, cracked texture vàng, outer glow đỏ cam, trail dung nham
+- **Type 3 — Sét (2 quốc gia)**
+  - Ironhold: **Copper Arc** — tia điện amber/cam kiểu rèn lò, đường zíc zắc ngẫu nhiên rộng
+  - Glacien: **Frost Bolt** — tia điện xanh trắng geometric, zigzag đối xứng, chain băng đồng màu
+- Types 2/4/6/8 nation-exclusive → không cần phân nhánh
 
 ### Room Browser Architecture
 - `MP.showRoomBrowser()` connects WebSocket then calls `refreshRooms()` → sends `list_rooms`

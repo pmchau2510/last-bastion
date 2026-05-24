@@ -21,6 +21,7 @@ Last Bastion là game tower defense theo lượt (20 round) được chơi trên
 | Audio | Web Audio API — oscillator synthesis, không cần file âm thanh |
 | Multiplayer | Node.js + `ws` WebSocket, phòng lưu trong RAM |
 | Tương thích | iOS Safari, Android Chrome, Desktop — `pointer-events`, `touch-action`, safe-area inset |
+| Orientation | Chỉ hỗ trợ **landscape** — `@media(orientation:portrait)` hiện overlay yêu cầu xoay ngang |
 | DPR | Canvas scale bằng `ctx.setTransform(dpr,0,0,dpr,0,0)`, bgCanvas `W*dpr × H*dpr` |
 
 ---
@@ -65,7 +66,7 @@ Tất cả map đều được thiết kế lại với **đường đi dài + n
 - `pathFns: [fn1, fn2, ...]` — mảng các hàm tạo path theo chiều rộng màn hình.
 - `resize()` tính Y-range chung cho tất cả paths → scale đồng đều.
 - Enemies được phân phối **round-robin** qua tất cả paths (`i % numPaths`); đảm bảo mọi path đều có quái ngay từ đầu.
-- `ptOnPath(t, pi)` trả về tọa độ trên path `pi`.
+- `ptOnPath(t, pi)` trả về tọa độ trên path `pi` dùng **arc-length parameterization** (tốc độ pixel đều tuyệt đối, không tăng tốc đoạn cuối).
 
 **Cổng Elite (từ Round 10):**
 - Mỗi map có `elitePathFn` — tạo ra đường đi riêng cho quái elite, không ảnh hưởng round-robin.
@@ -132,6 +133,18 @@ Khi bắt đầu game (solo hoặc MP lobby), mỗi người chọn **1 trong 3 
 **Băng Đền** không bắn projectile — thay vào đó liên tục apply slow lên mọi kẻ địch trong vùng mỗi 1s. Aura ring nhìn thấy trên tháp.
 
 **Grid tháp** chỉ hiển thị các tháp thuộc nation đã chọn. Nation không thể đổi sau khi game bắt đầu.
+
+### 7.3 Đạn / Projectile đặc trưng theo Nation
+
+Mỗi nation có hình dạng và màu sắc đạn riêng biệt cho các tháp dùng chung (type 0 và type 3). Tháp độc quyền đã có visual riêng.
+
+| Type | Tháp | Ironhold | Glacien | Emberon |
+|------|------|----------|---------|---------|
+| 0 | Cung | Steel Bolt (kim loại xám, trail tia lửa cam) | Ice Needle (mũi kim tinh thể, vòng xoay băng) | Flame Arrow (đầu lửa cam, trail tro đỏ) |
+| 1 | Đại Bác | Iron Cannonball (gradient xám, highlight cam) | — | Lava Bomb (cầu dung nham nổi, crack vàng, glow đỏ) |
+| 3 | Sét | Copper Arc (tia điện amber/cam, zigzag rộng) | Frost Bolt (tia điện xanh trắng geometric) | — |
+
+*Types 2 (Băng), 4 (Lửa), 6 (Ballista), 8 (Magma): đã nation-exclusive, visual không đổi.*
 
 ---
 
@@ -318,7 +331,16 @@ Quái không ra từng con mà ra theo **đợt** (như các game tower defense 
 
 > Icon tiền là CSS `.gc` (radial-gradient vòng vàng) thay vì emoji 🪙 để tương thích Android cũ.
 
-### 10.2 HUD dưới (landscape mobile optimized)
+### 10.2 HUD trên — Thu gọn
+
+HUD trên (Round/Vàng/Mạng + Quota bar + Thời tiết) có thể **thu gọn** để nhường không gian cho map:
+
+- Nút **"▲ Thu"** ở góc phải HUD → ẩn toàn bộ 3 rows (hud-top + quota + weather)
+- Khi đã thu: nút đổi thành **"▼ HUD"** → bấm để mở lại
+- Animation: `max-height` transition 280ms — mượt, không giật
+- HUD tự mở lại khi bắt đầu game mới
+
+### 10.3 HUD dưới (landscape mobile optimized)
 
 ```
 [K Kael] [L Lyria]                               [✨]
@@ -330,14 +352,14 @@ Quái không ra từng con mà ra theo **đợt** (như các game tower defense 
 - Thiết kế tối ưu cho màn hình ngang điện thoại — `botH = 95px`
 - Nation modal trên landscape: 3 nation card hiển thị ngang hàng, có scroll + sticky confirm
 
-### 10.3 Tương tác tháp đã đặt
+### 10.4 Tương tác tháp đã đặt
 
 1. **Bấm tháp** → hiện Tower Panel (góc gần vị trí bấm).
 2. **Bấm lại cùng tháp** → đóng panel.
 3. **Bấm chỗ khác trên canvas** → đóng panel, bỏ chọn.
 4. Tower Panel gồm: icon, tên, cấp X/3, DMG/Range thực tế, nút **⬆ Nâng cấp** (kèm giá), nút **💰 Bán** (kèm số vàng hoàn lại).
 
-### 10.4 Preview tầm bắn khi đặt
+### 10.5 Preview tầm bắn khi đặt
 
 Khi chọn tháp từ grid (chưa đặt), di chuột/ngón tay trên bản đồ → hiện vòng tròn tầm bắn màu của tháp đó theo con trỏ.
 
