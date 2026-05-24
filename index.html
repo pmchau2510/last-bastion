@@ -144,21 +144,16 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 /* ===== BOTTOM HUD ===== */
 #game-bottom{position:absolute;bottom:0;left:0;width:100%;background:#06080fdd;border-top:1px solid #1a1f35;backdrop-filter:blur(4px)}
 
-/* Hero row — thin strip */
-.hero-row{padding:2px 8px;display:flex;align-items:center;gap:5px;border-bottom:1px solid #12162a}
-.hero-chip{display:flex;align-items:center;gap:3px;background:#111428;border:1px solid #2a2d45;border-radius:7px;padding:3px 6px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.hero-chip.active{border-color:#6b4aee;background:#1e1540}
-.hero-av{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600}
-.hav-k{background:#1a0f30;color:#c4a0ff}
-.hav-l{background:#0a1a40;color:#60a8ff}
-.hero-nm{font-size:9px;color:#7a6a98}
-.skill-btn{margin-left:auto;background:#1c1500;border:1px solid #4a3800;border-radius:7px;padding:3px 8px;font-size:14px;color:#f5c842;cursor:pointer;font-family:'Exo 2',system-ui,sans-serif;font-weight:500;-webkit-tap-highlight-color:transparent;line-height:1}
-.skill-btn:active{transform:scale(.96)}
+/* Bottom HUD collapse tab */
+#bot-tab{width:100%;background:#12163aee;border:none;border-bottom:1px solid #1a1f35;padding:2px 12px;font-size:11px;color:#c4a0ff;cursor:pointer;user-select:none;letter-spacing:.06em;font-weight:600;text-shadow:0 0 8px #7b4fee88;transition:opacity .2s;text-align:left}
+#bot-tab:active{opacity:.7}
+#bot-rows{overflow:hidden;max-height:90px;transition:max-height .28s ease}
+#bot-rows.bot-collapsed{max-height:0}
 
 /* Towers + Lifelines — one shared row */
 .tower-section{padding:3px 6px 4px;display:flex;gap:4px;align-items:stretch}
 .tower-lbl{display:none}
-.tower-grid{flex:6;display:grid;grid-template-columns:repeat(6,1fr);gap:2px}
+.tower-grid{flex:6;display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
 .tp{background:#0e1225;border:1px solid #1e2240;border-radius:7px;padding:4px 1px 3px;text-align:center;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .tp.selected{border-color:#7b4fee;background:#180e38}
 .tp.disabled{opacity:.4;cursor:not-allowed}
@@ -392,7 +387,6 @@ body{position:fixed;width:100%;height:100%}
     <button class="btn-primary" onclick="App.checkFirst()">⚔️ &nbsp;Bắt đầu chiến đấu</button>
     <button class="btn-secondary" onclick="App.startTutorial()">📖 &nbsp;Hướng dẫn chơi</button>
     <button class="btn-secondary" onclick="MP.open()">👥 &nbsp;Nhiều người chơi</button>
-    <button class="btn-secondary" onclick="App.toggleFullscreen()" style="font-size:12px;padding:8px 14px">⛶ &nbsp;Toàn màn hình (ẩn thanh địa chỉ)</button>
   </div>
 </div>
 
@@ -468,21 +462,12 @@ body{position:fixed;width:100%;height:100%}
 
 <!-- GAME HUD BOTTOM -->
 <div id="game-bottom" class="hidden">
-  <div class="hero-row">
-    <div class="hero-chip active" id="hero-kael" onclick="Game.selectHero(0)">
-      <div class="hero-av hav-k">K</div>
-      <div class="hero-nm">Kael</div>
+  <button id="bot-tab" onclick="Game.toggleBottomHUD()">▼ Ẩn</button>
+  <div id="bot-rows">
+    <div class="tower-section">
+      <div class="tower-grid" id="tower-grid"></div>
+      <div class="lifeline-row" id="lifeline-row"></div>
     </div>
-    <div class="hero-chip" id="hero-lyria" onclick="Game.selectHero(1)">
-      <div class="hero-av hav-l">L</div>
-      <div class="hero-nm">Lyria</div>
-    </div>
-    <button class="skill-btn" onclick="Game.useHeroSkill()" title="Kỹ năng hero">✨</button>
-  </div>
-  <div class="tower-section">
-    <div class="tower-lbl">Kéo / nhấn chọn tháp → nhấn ô trên bản đồ để đặt</div>
-    <div class="tower-grid" id="tower-grid"></div>
-    <div class="lifeline-row" id="lifeline-row"></div>
   </div>
 </div>
 
@@ -666,84 +651,90 @@ body{position:fixed;width:100%;height:100%}
 //  DATA
 // ============================================================
 const MAPS_DATA = [
+  // Map 0 — S-curve dual lanes (classic wave pattern)
   { id:0, name:'Ironhold Pass', diff:2, size:'36×24', gates:2, weather:'Ngẫu nhiên',
-    tip:'Hẻm núi hẹp — đặt tháp giữa 2 làn để bắn chéo cả hai đường. Lava Titan xuất hiện từ Round 10.',
+    tip:'Hai làn đường hình chữ S — đặt tháp giữa các đỉnh cong để bắn chéo. Lava Titan từ Round 10.',
     suggest:'Cung + Đại Bác',
     tags:['Hẻm núi','Lò rèn','Cổng Dung Nham'],
     bgColor:'#0c1008', pathColor:'#3a2a10', pathLight:'#6a4820',
     enemyColors:['#c04820','#803018','#705830','#504028','#a03820','#c03808','#706050'],
     eliteEnemy:{name:'Lava Titan',color:'#ff5500',glowColor:'#ffaa00',hpMult:1.9,spdMult:1.3,rewardMult:2.5,radius:10},
-    elitePathFn: W=>[{x:0,y:76},{x:55,y:52},{x:90,y:88},{x:128,y:55},{x:170,y:85},{x:218,y:52},{x:260,y:78},{x:W-8,y:75}],
+    elitePathFn: W=>[{x:0,y:78},{x:52,y:50},{x:95,y:84},{x:140,y:50},{x:182,y:84},{x:228,y:50},{x:268,y:78},{x:W-8,y:62}],
     pathFns: [
-      W => [{x:0,y:38},{x:65,y:38},{x:100,y:68},{x:148,y:68},{x:180,y:38},{x:218,y:70},{x:262,y:38},{x:W-8,y:52}],
-      W => [{x:0,y:114},{x:58,y:114},{x:88,y:82},{x:130,y:82},{x:162,y:112},{x:202,y:112},{x:248,y:82},{x:W-8,y:98}]
+      W => [{x:0,y:15},{x:45,y:15},{x:88,y:68},{x:132,y:68},{x:172,y:15},{x:218,y:68},{x:262,y:15},{x:W-8,y:40}],
+      W => [{x:0,y:135},{x:45,y:135},{x:88,y:82},{x:132,y:82},{x:172,y:135},{x:218,y:82},{x:262,y:135},{x:W-8,y:110}]
     ]
   },
+  // Map 1 — Staircase/U-turn maze (drop-and-cross pattern)
   { id:1, name:'Sylvan Crossing', diff:3, size:'40×28', gates:3, weather:'Mưa / Bão tuyết',
-    tip:'Rừng che khuất tầm nhìn. Quái chia 2 làn — bố trí tháp che cả hai. Shadow Stalker từ Round 10.',
+    tip:'Đường dạng cầu thang — quái rơi xuống hẻm rồi leo lên. Đặt tháp ở các góc chữ L. Shadow Stalker từ Round 10.',
     suggest:'Băng + Sét',
-    tags:['Rừng tối','2 làn','Cổng Bóng Đêm'],
+    tags:['Rừng tối','Cầu thang','Cổng Bóng Đêm'],
     bgColor:'#060e06', pathColor:'#1a1408', pathLight:'#2a2010',
     enemyColors:['#184820','#301050','#284830','#183828','#102840','#283018','#304830'],
     eliteEnemy:{name:'Shadow Stalker',color:'#4a10a0',glowColor:'#8830ff',hpMult:1.7,spdMult:1.4,rewardMult:2.5,radius:8},
-    elitePathFn: W=>[{x:0,y:78},{x:48,y:52},{x:82,y:78},{x:118,y:52},{x:152,y:78},{x:188,y:52},{x:228,y:80},{x:268,y:52},{x:W-8,y:75}],
+    elitePathFn: W=>[{x:0,y:80},{x:52,y:52},{x:92,y:82},{x:135,y:52},{x:175,y:82},{x:218,y:52},{x:260,y:78},{x:W-8,y:62}],
     pathFns: [
-      W => [{x:0,y:32},{x:72,y:32},{x:104,y:62},{x:104,y:98},{x:142,y:98},{x:178,y:62},{x:218,y:62},{x:258,y:38},{x:W-8,y:48}],
-      W => [{x:0,y:122},{x:52,y:122},{x:82,y:92},{x:122,y:92},{x:152,y:122},{x:192,y:122},{x:232,y:92},{x:W-8,y:104}]
+      W => [{x:0,y:18},{x:40,y:18},{x:40,y:75},{x:90,y:75},{x:135,y:18},{x:178,y:18},{x:178,y:75},{x:228,y:75},{x:268,y:18},{x:W-8,y:45}],
+      W => [{x:0,y:138},{x:40,y:138},{x:40,y:82},{x:90,y:82},{x:135,y:138},{x:178,y:138},{x:178,y:82},{x:228,y:82},{x:268,y:138},{x:W-8,y:112}]
     ]
   },
+  // Map 2 — Wide plateau S-curves (long flat sections + sudden drops)
   { id:2, name:'Tidal Docks', diff:3, size:'42×28', gates:4, weather:'Giông / Nắng',
-    tip:'Thủy triều chia làn liên tục. Dùng Băng + Đại Bác. Tide Colossus nổi lên từ Round 10.',
+    tip:'Đường phẳng rồi rơi vào hẻm sâu — canh các điểm rơi để đặt tháp. Tide Colossus từ Round 10.',
     suggest:'Đại Bác + Băng',
-    tags:['Biển sâu','2 làn','Cổng Hải Dương'],
+    tags:['Biển sâu','Hẻm dốc','Cổng Hải Dương'],
     bgColor:'#040c18', pathColor:'#181408', pathLight:'#281e10',
     enemyColors:['#1840a0','#0a3870','#2a5878','#1a4858','#083060','#1a5878','#284870'],
     eliteEnemy:{name:'Tide Colossus',color:'#0060c0',glowColor:'#00ccff',hpMult:2.0,spdMult:1.2,rewardMult:2.5,radius:11},
-    elitePathFn: W=>[{x:0,y:75},{x:58,y:50},{x:92,y:78},{x:128,y:50},{x:165,y:78},{x:208,y:50},{x:252,y:78},{x:W-8,y:68}],
+    elitePathFn: W=>[{x:0,y:80},{x:55,y:50},{x:98,y:84},{x:142,y:50},{x:182,y:84},{x:228,y:50},{x:265,y:80},{x:W-8,y:62}],
     pathFns: [
-      W => [{x:0,y:28},{x:62,y:28},{x:94,y:58},{x:94,y:96},{x:138,y:96},{x:174,y:62},{x:218,y:62},{x:262,y:94},{x:W-8,y:78}],
-      W => [{x:0,y:122},{x:48,y:122},{x:78,y:92},{x:118,y:92},{x:148,y:120},{x:188,y:120},{x:232,y:90},{x:W-8,y:104}]
+      W => [{x:0,y:12},{x:45,y:12},{x:85,y:12},{x:120,y:72},{x:162,y:72},{x:202,y:12},{x:242,y:72},{x:272,y:12},{x:W-8,y:38}],
+      W => [{x:0,y:145},{x:45,y:145},{x:85,y:145},{x:120,y:85},{x:162,y:85},{x:202,y:145},{x:242,y:85},{x:272,y:145},{x:W-8,y:118}]
     ]
   },
+  // Map 3 — Diagonal W/M wave (mirrored peak-valley pattern)
   { id:3, name:'Ashfield Ruins', diff:4, size:'44×30', gates:3, weather:'Nắng to cố định',
-    tip:'Đường ngoằn ngoèo dài — đặt tháp sớm. Lửa mạnh. Cinder Warrior từ tàn tích từ Round 10.',
+    tip:'Đường sóng đôi hình W/M — tháp đặt ở đỉnh sóng để bắn được 2 chiều. Cinder Warrior từ Round 10.',
     suggest:'Lửa + T.Nhiên',
-    tags:['Tàn tích','Đường dài','Cổng Tro Tàn'],
+    tags:['Tàn tích','Sóng đôi','Cổng Tro Tàn'],
     bgColor:'#120604', pathColor:'#281004', pathLight:'#3c1808',
     enemyColors:['#783020','#502018','#584838','#482818','#502820','#602820','#485838'],
     eliteEnemy:{name:'Cinder Warrior',color:'#c03000',glowColor:'#ff5500',hpMult:1.8,spdMult:1.15,rewardMult:2.5,radius:10},
-    elitePathFn: W=>[{x:0,y:90},{x:52,y:65},{x:82,y:100},{x:115,y:65},{x:148,y:100},{x:185,y:65},{x:218,y:100},{x:258,y:70},{x:W-8,y:88}],
+    elitePathFn: W=>[{x:0,y:80},{x:55,y:52},{x:95,y:84},{x:138,y:52},{x:178,y:84},{x:222,y:52},{x:262,y:80},{x:W-8,y:64}],
     pathFns: [
-      W => [{x:0,y:48},{x:58,y:48},{x:84,y:80},{x:84,y:116},{x:126,y:116},{x:158,y:80},{x:158,y:46},{x:208,y:46},{x:258,y:74},{x:W-8,y:62}],
-      W => [{x:0,y:132},{x:52,y:132},{x:88,y:102},{x:128,y:102},{x:156,y:132},{x:196,y:132},{x:228,y:102},{x:W-8,y:116}]
+      W => [{x:0,y:12},{x:38,y:12},{x:75,y:65},{x:118,y:12},{x:158,y:12},{x:198,y:65},{x:242,y:12},{x:278,y:12},{x:W-8,y:30}],
+      W => [{x:0,y:145},{x:38,y:145},{x:75,y:92},{x:118,y:145},{x:158,y:145},{x:198,y:92},{x:242,y:145},{x:278,y:145},{x:W-8,y:128}]
     ]
   },
+  // Map 4 — 3-lane staircase (each lane with unique pattern)
   { id:4, name:'Crimson Rift', diff:4, size:'46×30', gates:5, weather:'Nhật thực định kỳ',
-    tip:'3 làn đổ về đồng thời — cần phối hợp team. Void Reaper từ cổng thứ 4 ở Round 10.',
+    tip:'3 làn riêng biệt — làn trên cầu thang, làn giữa S-curve, làn dưới zigzag. Cần bao phủ toàn bộ. Void Reaper từ Round 10.',
     suggest:'AoE + Sét chain',
-    tags:['3 làn','Hỗn loạn','Cổng Hư Không'],
+    tags:['3 làn','Mê cung','Cổng Hư Không'],
     bgColor:'#0c0408', pathColor:'#240a14', pathLight:'#341220',
     enemyColors:['#880830','#601050','#584058','#301840','#200840','#800030','#483060'],
     eliteEnemy:{name:'Void Reaper',color:'#cc0040',glowColor:'#ff2080',hpMult:2.0,spdMult:1.35,rewardMult:3.0,radius:9},
-    elitePathFn: W=>[{x:0,y:60},{x:58,y:90},{x:94,y:52},{x:138,y:90},{x:174,y:52},{x:214,y:90},{x:252,y:58},{x:W-8,y:75}],
+    elitePathFn: W=>[{x:0,y:52},{x:55,y:30},{x:98,y:55},{x:145,y:30},{x:188,y:55},{x:232,y:30},{x:268,y:50},{x:W-8,y:38}],
     pathFns: [
-      W => [{x:0,y:30},{x:68,y:30},{x:98,y:58},{x:142,y:58},{x:176,y:30},{x:218,y:58},{x:260,y:30},{x:W-8,y:46}],
-      W => [{x:0,y:92},{x:58,y:92},{x:90,y:120},{x:130,y:120},{x:162,y:88},{x:202,y:88},{x:246,y:118},{x:W-8,y:102}],
-      W => [{x:0,y:140},{x:50,y:140},{x:80,y:114},{x:116,y:114},{x:146,y:140},{x:186,y:140},{x:W-8,y:128}]
+      W => [{x:0,y:10},{x:48,y:10},{x:48,y:50},{x:98,y:50},{x:148,y:10},{x:198,y:10},{x:198,y:50},{x:248,y:50},{x:280,y:10},{x:W-8,y:28}],
+      W => [{x:0,y:88},{x:48,y:88},{x:85,y:65},{x:130,y:65},{x:172,y:88},{x:215,y:65},{x:255,y:88},{x:282,y:65},{x:W-8,y:76}],
+      W => [{x:0,y:142},{x:48,y:142},{x:82,y:118},{x:128,y:118},{x:168,y:142},{x:208,y:118},{x:248,y:142},{x:280,y:118},{x:W-8,y:130}]
     ]
   },
+  // Map 5 — Double W-maze (most complex, 5 oscillations per lane)
   { id:5, name:'Void Nexus', diff:5, size:'48×32', gates:6, weather:'Chaos',
-    tip:'Bản đồ tối hoàn toàn. Chỉ mở sau khi thắng 5 map. Nexus Horror xuất hiện ở Round 10.',
-    suggest:'Cần cả 4 hero',
-    tags:['🔒 Khóa','Bóng tối','Cổng Vực Thẳm'],
+    tip:'Đường mê cung hình W kép — cầu thang + đảo chiều liên tục. Phức tạp nhất, cần đặt tháp dày đặc. Nexus Horror từ Round 10.',
+    suggest:'Cần đủ tất cả',
+    tags:['🔒 Khóa','Mê cung W','Cổng Vực Thẳm'],
     locked: true,
     bgColor:'#020204', pathColor:'#100818', pathLight:'#181028',
     enemyColors:['#280850','#180838','#302850','#180440','#100428','#300858','#201040'],
     eliteEnemy:{name:'Nexus Horror',color:'#6000c0',glowColor:'#aa44ff',hpMult:2.2,spdMult:1.3,rewardMult:3.0,radius:11},
-    elitePathFn: W=>[{x:0,y:88},{x:52,y:58},{x:85,y:90},{x:120,y:58},{x:155,y:90},{x:192,y:58},{x:232,y:90},{x:W-8,y:75}],
+    elitePathFn: W=>[{x:0,y:76},{x:52,y:48},{x:92,y:80},{x:135,y:48},{x:175,y:80},{x:220,y:48},{x:262,y:76},{x:W-8,y:60}],
     pathFns: [
-      W => [{x:0,y:52},{x:68,y:52},{x:98,y:82},{x:142,y:82},{x:175,y:52},{x:215,y:52},{x:252,y:86},{x:W-8,y:72}],
-      W => [{x:0,y:120},{x:58,y:120},{x:88,y:92},{x:126,y:92},{x:156,y:120},{x:192,y:120},{x:232,y:88},{x:W-8,y:104}]
+      W => [{x:0,y:12},{x:36,y:12},{x:36,y:58},{x:80,y:58},{x:80,y:12},{x:130,y:12},{x:172,y:58},{x:215,y:12},{x:258,y:58},{x:278,y:12},{x:W-8,y:34}],
+      W => [{x:0,y:145},{x:36,y:145},{x:36,y:98},{x:80,y:98},{x:80,y:145},{x:130,y:145},{x:172,y:98},{x:215,y:145},{x:258,y:98},{x:278,y:145},{x:W-8,y:122}]
     ]
   }
 ];
@@ -760,7 +751,9 @@ const TOWERS_DATA = [
   { id:7, name:'Băng Đền',  icon:'🔮', cost:110, dmg:3,  range:85,  rate:1000, color:'#5ab8f8', desc:'Làm chậm AoE mọi quái trong tầm (Glacien)' },
   { id:8, name:'Magma',     icon:'🌋', cost:100, dmg:25, range:65,  rate:900,  color:'#ff4400', desc:'Chuỗi lửa 3 mục tiêu (Emberon)' },
   // Shared AoE tower
-  { id:9, name:'Đại Pháo',  icon:'🎆', cost:160, dmg:50, range:95,  rate:3200, color:'#e8d040', desc:'Nổ AoE bán kính 55px — sát thương tất cả quái, reload chậm' }
+  { id:9, name:'Đại Pháo',  icon:'🎆', cost:160, dmg:50, range:95,  rate:3200, color:'#e8d040', desc:'Nổ AoE bán kính 55px — sát thương tất cả quái, reload chậm' },
+  // Anti-air tower — each nation gets one, only targets aerial enemies
+  { id:10, name:'Phòng Không', icon:'🦅', cost:140, dmg:35, range:160, rate:1100, color:'#60c0ff', desc:'Chỉ bắn quái bay trên trời — tầm siêu xa (mỗi quốc gia)', antiAir:true }
 ];
 
 // Tower upgrade constants (5 levels)
@@ -779,9 +772,9 @@ const PLAYER_COLORS = ['#a060ff','#40a0ff','#40c060','#e06060'];
 
 // Nation system: 3 factions, each with different tower sets (id 0-5 are common/shared, 6/7/8 are exclusive)
 const NATIONS_DATA = [
-  { id:0, name:'Ironhold', icon:'⚔️', color:'#d08030', towers:[0,1,3,5,6,9], desc:'Pháo thủ tầm xa · Ballista xuyên giáp · Đại Pháo AoE' },
-  { id:1, name:'Glacien',  icon:'❄️', color:'#5ab8f8', towers:[0,2,3,5,7,9], desc:'Kiểm soát băng giá · Băng Đền AoE slow · Đại Pháo AoE' },
-  { id:2, name:'Emberon',  icon:'🔥', color:'#ff4400', towers:[0,1,4,5,8,9], desc:'Công kích ồ ạt · Magma chuỗi lửa · Đại Pháo AoE' }
+  { id:0, name:'Ironhold', icon:'⚔️', color:'#d08030', towers:[0,1,3,5,6,9,10], desc:'Pháo thủ tầm xa · Ballista xuyên giáp · Đại Pháo AoE · Phòng Không' },
+  { id:1, name:'Glacien',  icon:'❄️', color:'#5ab8f8', towers:[0,2,3,5,7,9,10], desc:'Kiểm soát băng giá · Băng Đền AoE slow · Đại Pháo AoE · Phòng Không' },
+  { id:2, name:'Emberon',  icon:'🔥', color:'#ff4400', towers:[0,1,4,5,8,9,10], desc:'Công kích ồ ạt · Magma chuỗi lửa · Đại Pháo AoE · Phòng Không' }
 ];
 
 const ENEMY_TYPES = [
@@ -791,7 +784,10 @@ const ENEMY_TYPES = [
   { id:3, name:'Healer Shaman', color:'#304a18', radius:5,  hp:80,   spd:1.0, reward:15, heals:true },
   { id:4, name:'Phase Wraith',  color:'#203050', radius:5,  hp:100,  spd:1.3, reward:18, phases:true },
   { id:5, name:'Berserker',     color:'#5a2810', radius:6,  hp:140,  spd:1.0, reward:22, berserker:true },
-  { id:6, name:'Behemoth',      color:'#384450', radius:9,  hp:400,  spd:.5,  reward:40, armored:true }
+  { id:6, name:'Behemoth',      color:'#384450', radius:9,  hp:400,  spd:.5,  reward:40, armored:true },
+  // Aerial enemies — only anti-air towers can target these
+  { id:7, name:'Storm Wyvern', color:'#4080c0', radius:5,  hp:90,   spd:1.5, reward:18, aerial:true },
+  { id:8, name:'Siege Drake',  color:'#186040', radius:7,  hp:260,  spd:.85, reward:40, aerial:true }
 ];
 
 const BOSS_TYPES = [
@@ -839,7 +835,9 @@ const ROUND_SPAWN = Array.from({length:20}, (_,ri) => {
   const allT=[0,1,2,3,4,5,6];
   const types = stage===0?[0,1]:stage===1?[0,1,2,3]:stage===2?[0,1,2,3,4,5]:allT;
   const hpMult = 1 + ri * .09;
-  return { round:r, perGate, gates, types, hpMult, isBoss, bossIdx, bossIdxList, bossCount };
+  // Aerial rounds: ~5 rounds per game where flying enemies appear (not boss rounds)
+  const aerial = [4, 8, 11, 14, 18].includes(r);
+  return { round:r, perGate, gates, types, hpMult, isBoss, bossIdx, bossIdxList, bossCount, aerial };
 });
 
 // ============================================================
@@ -894,21 +892,22 @@ const App = {
     Lobby.init();
   },
   toggleFullscreen() {
-    if(!document.fullscreenElement) {
-      (document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen||function(){}).call(document.documentElement);
-      const btn=document.getElementById('fs-btn');
-      if(btn) btn.textContent='✕FS';
+    const inFS = document.fullscreenElement || document.webkitFullscreenElement;
+    const btn = document.getElementById('fs-btn');
+    if(!inFS) {
+      const req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+      if(req) req.call(document.documentElement).catch(()=>{});
     } else {
-      (document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document);
-      const btn=document.getElementById('fs-btn');
-      if(btn) btn.textContent='⛶';
+      const ex = document.exitFullscreen || document.webkitExitFullscreen;
+      if(ex) ex.call(document).catch(()=>{});
     }
-    document.addEventListener('fullscreenchange',()=>{
-      const btn=document.getElementById('fs-btn');
-      if(btn) btn.textContent=document.fullscreenElement?'✕FS':'⛶';
-    },{once:true});
   }
 };
+
+['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{
+  const btn=document.getElementById('fs-btn');
+  if(btn) btn.textContent=(document.fullscreenElement||document.webkitFullscreenElement)?'✕':'⛶';
+}));
 
 // ============================================================
 //  MAP SELECT
@@ -994,18 +993,36 @@ const MapRenderer = {
   draw(cv, mapData, W, H, animated) {
     const c = cv.getContext('2d');
     const t0 = Date.now();
-    const allPaths = (mapData.pathFns||[mapData.pathFn]).map(fn => fn(W));
-    const path = allPaths[0]; // use first path for enemy preview animation
-    const enemies = [{t:.1},{t:.25},{t:.42},{t:.58},{t:.74}];
+    const rawPaths = (mapData.pathFns||[mapData.pathFn]).map(fn => fn(W));
+    const rawEpts = mapData.elitePathFn ? mapData.elitePathFn(W) : null;
     const spawnLabels = 'ABCDEFGH';
 
-    function ptOnPath(t, pts) {
-      const tot = pts.length-1;
-      const seg = t * tot;
-      const i = Math.min(Math.floor(seg), tot-1);
-      const f = seg - i;
+    function buildAL(pts) {
+      const d = [0];
+      for(let i=1;i<pts.length;i++) d.push(d[i-1]+Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y));
+      return d;
+    }
+    function ptOnPath(t, pts, al) {
+      const target = t * al[al.length-1];
+      let i = 0;
+      while(i < pts.length-2 && al[i+1] < target) i++;
+      const segLen = al[i+1] - al[i];
+      const f = segLen > 0 ? (target - al[i]) / segLen : 0;
       return { x: pts[i].x+(pts[i+1].x-pts[i].x)*f, y: pts[i].y+(pts[i+1].y-pts[i].y)*f };
     }
+    // Scale y-coords to fit preview canvas height (same logic as Game.resize)
+    const rawPtFlat = rawPaths.flat();
+    const rawMinY = Math.min(...rawPtFlat.map(p=>p.y));
+    const rawMaxY = Math.max(...rawPtFlat.map(p=>p.y));
+    const previewSY = (H - 22) / Math.max(rawMaxY - rawMinY, 10);
+    const previewOY = 11 - rawMinY * previewSY;
+    const sp = p => ({x: p.x, y: p.y * previewSY + previewOY});
+    const allPaths = rawPaths.map(pts => pts.map(sp));
+    const path = allPaths[0];
+    const epts = rawEpts ? rawEpts.map(sp) : null;
+    const allALs = allPaths.map(buildAL);
+    const eliteAL = epts ? buildAL(epts) : null;
+    const enemies = [{t:.1},{t:.25},{t:.42},{t:.58},{t:.74}];
 
     function frame() {
       const now = (Date.now()-t0)/1000;
@@ -1045,8 +1062,7 @@ const MapRenderer = {
       });
 
       // Elite path (unlocked at round 10)
-      if(mapData.elitePathFn) {
-        const epts = mapData.elitePathFn(W);
+      if(epts) {
         const ecol = mapData.eliteEnemy?.color || '#cc2020';
         const eglow = mapData.eliteEnemy?.glowColor || '#ff4400';
         // dark base road
@@ -1068,7 +1084,7 @@ const MapRenderer = {
         // animated elite enemy preview
         if(animated) {
           const prog = ((now*.035)+.15)%1;
-          const pt = ptOnPath(prog, epts);
+          const pt = ptOnPath(prog, epts, eliteAL);
           const bob = Math.sin(now*3.5)*1.5;
           c.shadowColor=eglow; c.shadowBlur=10;
           c.fillStyle=ecol;
@@ -1100,8 +1116,9 @@ const MapRenderer = {
       if(animated && enemies) {
         enemies.forEach((en,i)=>{
           const pts = allPaths[i % allPaths.length];
+          const al = allALs[i % allPaths.length];
           const prog=(en.t+now*.05)%1;
-          const pt=ptOnPath(prog, pts);
+          const pt=ptOnPath(prog, pts, al);
           const bob=Math.sin(now*4+i)*1.2;
           c.fillStyle=i%2===0?'#b03818':i%3===0?'#5818a0':'#485060';
           c.beginPath(); c.arc(pt.x,pt.y+bob,4,0,Math.PI*2); c.fill();
@@ -1127,8 +1144,8 @@ const MODES = [
     desc:'20 round, 45 giây chuẩn bị mỗi wave. Cân bằng và đầy đủ nhất.',
     pills:[{t:'45s chuẩn bị',g:true},{t:'Bán tháp được',g:true},{t:'Quota bình thường',g:false}] },
   { name:'Hardcore',  icon:'💀', badge:'Khó', bdgClass:'mb-1',
-    desc:'Không có thời gian chuẩn bị. Xây tháp ngay khi quái đang chạy.',
-    pills:[{t:'0s chuẩn bị',g:false},{t:'Không bán tháp',g:false},{t:'+50% thưởng',g:true},{t:'Quota ×0.4',g:false}] },
+    desc:'Chỉ 20 giây chuẩn bị — phải xây tháp thật nhanh. Quái khỏe hơn và không bán lại tháp được.',
+    pills:[{t:'20s chuẩn bị',g:false},{t:'Không bán tháp',g:false},{t:'+50% thưởng',g:true},{t:'Quota ×0.4',g:false}] },
   { name:'Endless',   icon:'♾️', badge:'Vô tận', bdgClass:'mb-2',
     desc:'Chơi đến khi tinh thể vỡ. Sau round 20 quái tăng 8%/round.',
     pills:[{t:'Không kết thúc',g:false},{t:'Leaderboard',g:true},{t:'Khó tăng dần',g:false}] },
@@ -1459,6 +1476,9 @@ const Game = {
     document.getElementById('hud-rows')?.classList.remove('hud-collapsed');
     const hudTab = document.getElementById('hud-tab');
     if(hudTab) hudTab.textContent = '▲ Thu';
+    document.getElementById('bot-rows')?.classList.remove('bot-collapsed');
+    const botTab = document.getElementById('bot-tab');
+    if(botTab) botTab.textContent = '▼ Ẩn';
     document.getElementById('reconnect-toast')?.classList.add('hidden');
     const ggBtn=document.getElementById('give-gold-btn');
     if(ggBtn) ggBtn.classList.toggle('hidden',!isMP||mpPlayers.length<2);
@@ -1522,7 +1542,7 @@ const Game = {
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // compute paths (multi-path support)
     const topH = 95;
-    const botH = 95;
+    const botH = 78;
     const mapH = this.H - topH - botH;
     const mapY = topH;
     const allRaw = this.mapData.pathFns.map(fn => fn(this.W));
@@ -1544,6 +1564,8 @@ const Game = {
     } else {
       this.elitePath = null;
     }
+    // Aerial path: straight horizontal at center of map height, used by flying enemies
+    this.aerialY = mapY + mapH * 0.5;
     this.bgDirty = true;
   },
 
@@ -1579,6 +1601,15 @@ const Game = {
   startRound() {
     this.round++;
     if(this.round > 20 && this.modeIdx !== 2) { this.win(); return; }
+    // T.Nhiên: pay +8 gold per tower to each owner at the start of every round
+    this.towers.forEach(tw => {
+      if(tw.typeId !== 5) return;
+      const ownerI = tw.ownerIdx != null ? tw.ownerIdx : 0;
+      this.playerGold[ownerI] = (this.playerGold[ownerI]||0) + 8;
+      if(ownerI === this.mpPlayerIdx) { this.gold = this.playerGold[ownerI]; }
+      else if(!this.isMP) { this.gold += 8; }
+    });
+    if(this.towers.some(tw=>tw.typeId===5)) { this.updateHUD(); SFX.earnGold?.(); }
     const data = ROUND_SPAWN[Math.min(this.round-1, 19)];
     const ev = ROUND_EVENTS[this.round] || {};
     this.roundEvent = ev;
@@ -1685,6 +1716,38 @@ const Game = {
       }
     }
 
+    // Aerial wave: spawn flying enemies (Storm Wyvern / Siege Drake)
+    if(data.aerial && this.aerialY != null) {
+      const aerialTypes = [7, 8]; // Storm Wyvern, Siege Drake
+      const aerialCount = 4 + Math.floor(this.round / 4);
+      for(let a=0; a<aerialCount; a++) {
+        const typeIdx = aerialTypes[Math.floor(Math.random() * aerialTypes.length)];
+        const aen = {...ENEMY_TYPES[typeIdx]};
+        aen.hp = aen.hp * hpM; aen.maxHp = aen.hp;
+        aen.t = 0; aen.spd = aen.spd * spdM; aen.slow = 1;
+        aen.typeId = typeIdx; aen.spawnId = Math.random()*1000;
+        aen.aerial = true;
+        aen.x = -30; aen.y = this.aerialY + (Math.random()-0.5)*30;
+        aen._id = `r${this.round}_air_${a}`;
+        this.spawnQueue.push({enemy: aen, delay: a === 0 ? 90 : 30});
+      }
+      // Announcement for aerial wave
+      setTimeout(() => {
+        const el = document.getElementById('elite-gate-announce');
+        if(el) {
+          el.style.color='#60c0ff'; el.style.textShadow='0 0 18px #0080ff,0 0 35px #0040aa';
+          el.style.borderColor='#0060aa';
+          el.textContent = `🦅 QUÁI TRÊN KHÔNG XUẤT HIỆN — CẦN THÁP PHÒNG KHÔNG!`;
+          el.classList.add('show');
+        }
+        this.addShake(10);
+        setTimeout(() => {
+          const el2 = document.getElementById('elite-gate-announce');
+          if(el2) { el2.classList.remove('show'); el2.style.color=''; el2.style.textShadow=''; el2.style.borderColor=''; }
+        }, 3500);
+      }, 500);
+    }
+
     // weather
     this.weatherTimer--;
     if(this.weatherTimer <= 0) {
@@ -1693,7 +1756,7 @@ const Game = {
     }
     this.updateWeatherHUD();
 
-    const prepT = this.modeIdx === 1 ? 0 : 45;
+    const prepT = [45, 20, 45, 35][this.modeIdx] ?? 45; // Standard:45s Hardcore:20s Endless:45s Challenge:35s
     this.gamePhase = prepT > 0 ? 'prep' : 'wave';
     this.roundTimer = prepT * 60;
     this.spawnTimer = 0;
@@ -1829,6 +1892,21 @@ const Game = {
     // enemies
     for(let i=this.enemies.length-1;i>=0;i--) {
       const en = this.enemies[i];
+      // Aerial enemies fly straight across — handled separately from path system
+      if(en.aerial) {
+        en.x += en.spd * fps60 * 0.5;
+        if(en.x > this.W + 30) {
+          this.leakCount += 1;
+          SFX.crystalHit();
+          this.addShake(4);
+          this.spawnParticles(this.W - 20, en.y, '#e05a2b', 8);
+          this.enemies.splice(i, 1);
+          this.updateHUD();
+          this.updateQuotaHUD();
+          if(this.leakCount >= this.leakQuota) { this.lose(); return; }
+        }
+        continue;
+      }
       const spd = en.spd * en.slow * fps60 * .006;
       const ePath = en.elite ? (this.elitePath||this.path) : ((this.paths&&this.paths[en.pathIdx||0])||this.path);
       en.t = Math.min(en.t + spd / ePath.length, 1);
@@ -1855,7 +1933,7 @@ const Game = {
 
       // healer
       if(en.heals && Math.random() < .01*fps60) {
-        const nearby = this.enemies.filter(e=>e!==en&&Math.hypot(e.x-en.x,e.y-en.y)<50);
+        const nearby = this.enemies.filter(e=>e!==en&&!e.aerial&&Math.hypot(e.x-en.x,e.y-en.y)<50);
         if(nearby.length) { const t=nearby[Math.floor(Math.random()*nearby.length)]; t.hp=Math.min(t.maxHp, t.hp+5); }
       }
       if(en.slow < 1) en.slow = Math.min(1, en.slow + .01*fps60);
@@ -1863,23 +1941,13 @@ const Game = {
 
     // towers fire
     this.towers.forEach(tw=>{
-      if(tw.typeId === 5) { // nature tower
-        tw.goldTimer = (tw.goldTimer||0) - fps60;
-        if(tw.goldTimer <= 0) {
-          const ownerI = tw.ownerIdx != null ? tw.ownerIdx : 0;
-          this.playerGold[ownerI] = (this.playerGold[ownerI]||0) + 8;
-          if(ownerI === this.mpPlayerIdx) { this.gold = this.playerGold[ownerI]; this.updateHUD(); }
-          else if(!this.isMP) { this.gold += 8; this.updateHUD(); }
-          tw.goldTimer=3600;
-        }
-        return;
-      }
+      if(tw.typeId === 5) return; // nature tower — gold paid at round start, not here
       if(tw.typeId === 7) { // frost shrine — AoE slow all enemies in range
         tw.cooldown = (tw.cooldown||0) - fps60;
         if(tw.cooldown > 0) return;
         const lvl7=tw.level||1;
         const range7 = Math.round(85 * UPGRADE_RANGE_MULTS[lvl7-1]);
-        const inRange7 = this.enemies.filter(en=>Math.hypot(en.x-tw.x,en.y-tw.y)<range7);
+        const inRange7 = this.enemies.filter(en=>!en.aerial&&Math.hypot(en.x-tw.x,en.y-tw.y)<range7);
         if(inRange7.length) {
           inRange7.forEach(en=>{ if(en.slow>0.3) en.slow=0.3; });
           tw.flash=0.8;
@@ -1899,7 +1967,11 @@ const Game = {
       const dmgMult=UPGRADE_DMG_MULTS[lvl-1];
       // Rate upgrade: archer gets extra rate bonus stacked on top of global rate mult
       const rateMult = UPGRADE_RATE_MULTS[lvl-1] * (tw.typeId===0 ? UPGRADE_ARCHER_RATE[lvl-1] : 1);
-      const targets = this.enemies.filter(en=>Math.hypot(en.x-tw.x,en.y-tw.y)<=range);
+      const isAntiAir = tData.antiAir;
+      const targets = this.enemies.filter(en=>{
+        if(Math.hypot(en.x-tw.x,en.y-tw.y)>range) return false;
+        return isAntiAir ? en.aerial : !en.aerial; // anti-air hits only aerial; others hit only ground
+      });
       if(!targets.length) return;
       targets.sort((a,b)=>b.t-a.t);
       const target = targets[0];
@@ -1908,7 +1980,7 @@ const Game = {
       tw.flash = 1;
       // Đại Pháo (type 9): instant AoE on target — no travelling projectile needed
       if(tw.typeId === 9) {
-        const splash9 = this.enemies.filter(e=>Math.hypot(e.x-target.x,e.y-target.y)<55);
+        const splash9 = this.enemies.filter(e=>!e.aerial&&Math.hypot(e.x-target.x,e.y-target.y)<55);
         splash9.forEach(e=>this.damageEnemy(e,dmg));
         this.spawnParticles(target.x,target.y,'#e8d040',20);
         this.spawnParticles(target.x,target.y,'#ff8800',10);
@@ -1939,7 +2011,7 @@ const Game = {
       if(!target || !this.enemies.includes(target)) { this.projectiles.splice(i,1); continue; }
       const dx = target.x - p.x, dy = target.y - p.y;
       const dist = Math.hypot(dx,dy);
-      const spd = p.typeId===1?4:p.typeId===0||p.typeId===6?7:p.typeId===4||p.typeId===8?5:6;
+      const spd = p.typeId===1?4:p.typeId===0||p.typeId===6?7:p.typeId===4||p.typeId===8?5:p.typeId===10?9:6;
       if(dist < spd+2) {
         // hit sound (throttled: 1 per 3 frames per type)
         if(!this._hitCooldown) this._hitCooldown={};
@@ -2184,6 +2256,24 @@ const Game = {
       c.fillStyle='#ff8050'; c.font='bold 9px sans-serif'; c.textAlign='center';
       c.fillText(pi===0?'⚠':'⚠', sx, sy+3);
     });
+
+    // ── Aerial lane (subtle sky corridor where flying enemies travel) ──
+    if(this.aerialY != null) {
+      const ay=this.aerialY;
+      // Faint cloud/sky lane
+      c.globalAlpha=0.09;
+      c.fillStyle='#88c8ff';
+      c.fillRect(0, ay-18, W, 36);
+      c.globalAlpha=1;
+      // Dashed center line
+      c.strokeStyle='rgba(96,192,255,0.18)'; c.lineWidth=1; c.setLineDash([12,8]);
+      c.beginPath(); c.moveTo(0,ay); c.lineTo(W,ay); c.stroke();
+      c.setLineDash([]);
+      // Sky lane entry portal
+      c.fillStyle='rgba(96,192,255,0.5)';
+      c.font='bold 8px sans-serif'; c.textAlign='left';
+      c.fillText('✈ SKY', 4, ay+3);
+    }
 
     // ── Gate zone ──
     const gateX=W-60;
@@ -2600,6 +2690,49 @@ const Game = {
         }
         break;
       }
+      case 10: { // Phòng Không — anti-air rotating radar dish
+        const col10='#60c0ff';
+        // Base platform
+        c.fillStyle='#1a2838'; this._rr(c,x-9,y+2,18,10,2); c.fill();
+        c.strokeStyle='#2a4060'; c.lineWidth=1; c.stroke();
+        if(lvl>=2){ c.strokeStyle='#4080c0'; c.lineWidth=.8; c.strokeRect(x-9,y+2,18,10); }
+        // Vertical mast
+        c.fillStyle='#243050'; c.fillRect(x-2,y-10,4,14);
+        c.fillStyle='#304060'; c.fillRect(x-1,y-10,2,14);
+        // Rotating radar dish
+        const ang10 = tw.angle || now*0.8;
+        c.save(); c.translate(x, y-10); c.rotate(ang10);
+        // Dish arms
+        c.strokeStyle=col10; c.lineWidth=2;
+        c.beginPath(); c.moveTo(0,0); c.lineTo(0,-10); c.stroke();
+        c.beginPath(); c.moveTo(0,0); c.lineTo(-7,-7); c.stroke();
+        c.beginPath(); c.moveTo(0,0); c.lineTo(7,-7); c.stroke();
+        // Dish arc (radar sweep)
+        c.strokeStyle=col10+'cc'; c.lineWidth=2.5;
+        c.beginPath(); c.arc(0,-2,9,-Math.PI*.7, Math.PI*.7); c.stroke();
+        // Center hub
+        c.fillStyle='#80d8ff';
+        c.beginPath(); c.arc(0,0,3,0,Math.PI*2); c.fill();
+        c.restore();
+        // Radar sweep pulse
+        if(flash>0.1 || Math.sin(now*3)>0.5) {
+          const sweepA = ang10;
+          c.globalAlpha=(flash||0.2+Math.sin(now*3)*.15)*0.5;
+          c.fillStyle=col10;
+          c.beginPath(); c.moveTo(x,y-10); c.arc(x,y-10,16,sweepA-0.4,sweepA+0.4); c.closePath(); c.fill();
+          c.globalAlpha=1;
+        }
+        // Level upgrades: extra dish rings
+        if(lvl>=2){
+          c.strokeStyle=`rgba(96,192,255,${0.3+Math.sin(now*2.5)*.15})`; c.lineWidth=1; c.setLineDash([3,3]);
+          c.beginPath(); c.arc(x,y-8,14,0,Math.PI*2); c.stroke(); c.setLineDash([]);
+        }
+        if(lvl>=3){
+          c.globalAlpha=0.12; c.strokeStyle=col10; c.lineWidth=10;
+          c.beginPath(); c.arc(x,y-8,20,0,Math.PI*2); c.stroke(); c.globalAlpha=1;
+        }
+        break;
+      }
     }
 
     // nation tower color badge overlay (small colored dot on top of tower)
@@ -2875,6 +3008,34 @@ const Game = {
         c.restore();
         break;
       }
+      case 10: { // Anti-air — homing sky bolt (cyan energy dart)
+        const ang10=p.angle||Math.atan2((p.targetEnemy?.y||p.ty)-p.y,(p.targetEnemy?.x||p.tx)-p.x);
+        // Cyan energy trail
+        p.trail.forEach((pt,i)=>{
+          const a=(i/p.trail.length);
+          c.globalAlpha=a*.55;
+          c.fillStyle=a>.6?'#60c0ff':'#c0f0ff';
+          c.beginPath(); c.arc(pt.x,pt.y,(1-a)*3+1,0,Math.PI*2); c.fill();
+        });
+        c.globalAlpha=1;
+        // Outer glow
+        c.shadowColor='#60c0ff'; c.shadowBlur=8;
+        c.fillStyle='rgba(96,192,255,0.35)';
+        c.beginPath(); c.arc(p.x,p.y,7,0,Math.PI*2); c.fill();
+        // Dart body
+        c.save(); c.translate(p.x,p.y); c.rotate(ang10);
+        c.strokeStyle='#c0e8ff'; c.lineWidth=1.5;
+        c.beginPath(); c.moveTo(-10,0); c.lineTo(6,0); c.stroke();
+        c.fillStyle='#ffffff';
+        c.beginPath(); c.moveTo(6,0); c.lineTo(1,-2.5); c.lineTo(1,2.5); c.closePath(); c.fill();
+        // Spinning ring
+        const sp10=this.lastTime*.025;
+        c.strokeStyle='rgba(96,192,255,0.8)'; c.lineWidth=1;
+        c.beginPath(); c.arc(0,0,5,sp10,sp10+Math.PI); c.stroke();
+        c.restore();
+        c.shadowBlur=0;
+        break;
+      }
       default: { // Nature (won't have projectile but fallback)
         c.fillStyle='#50c850';
         c.beginPath(); c.arc(p.x,p.y,3,0,Math.PI*2); c.fill();
@@ -3123,6 +3284,69 @@ const Game = {
           c.beginPath(); c.arc(r*.25,-r*.3,r*.2,0,Math.PI*2); c.fill();
           break;
         }
+        case 7: { // Storm Wyvern — fast aerial wyvern
+          const wing7=Math.sin(t*14+(en.spawnId||0))*r*1.0;
+          // Shadow below (grounded shadow indicates flying height)
+          c.globalAlpha=0.25;
+          c.fillStyle='#000020';
+          c.beginPath(); c.ellipse(0, r*2.8, r*1.4, r*.4, 0, 0, Math.PI*2); c.fill();
+          c.globalAlpha=1;
+          // Wings
+          c.fillStyle=en.color+'cc';
+          c.beginPath(); c.moveTo(0,-r*.2); c.quadraticCurveTo(-r*2.8,wing7-r,-r*2,wing7*.6); c.quadraticCurveTo(-r,wing7*.2,0,-r*.2); c.fill();
+          c.beginPath(); c.moveTo(0,-r*.2); c.quadraticCurveTo(r*2.8,wing7-r,r*2,wing7*.6); c.quadraticCurveTo(r,wing7*.2,0,-r*.2); c.fill();
+          // Body
+          c.fillStyle=en.color;
+          c.beginPath(); c.ellipse(0,0,r*.55,r*.8,0,0,Math.PI*2); c.fill();
+          // Neck+head
+          c.fillStyle='#5090d0';
+          c.beginPath(); c.ellipse(r*.35,-r*.8,r*.35,r*.55,-0.4,0,Math.PI*2); c.fill();
+          // Eyes
+          c.fillStyle='#ffe060';
+          c.beginPath(); c.arc(r*.5,-r*.95,r*.16,0,Math.PI*2); c.fill();
+          // Tail
+          c.strokeStyle=en.color; c.lineWidth=r*.4;
+          c.beginPath(); c.moveTo(-r*.3,r*.4); c.quadraticCurveTo(-r*1.2,r*1.2,-r*.8,r*2); c.stroke();
+          break;
+        }
+        case 8: { // Siege Drake — heavy aerial dragon
+          const wing8=Math.sin(t*9+(en.spawnId||0))*r*.9;
+          // Shadow
+          c.globalAlpha=0.3;
+          c.fillStyle='#000020';
+          c.beginPath(); c.ellipse(0, r*3.2, r*2, r*.55, 0, 0, Math.PI*2); c.fill();
+          c.globalAlpha=1;
+          // Wings (broader, more reptilian)
+          c.fillStyle=en.color+'bb';
+          c.beginPath(); c.moveTo(0,-r*.3); c.quadraticCurveTo(-r*3.2,wing8-r*.5,-r*2.6,wing8*.7); c.quadraticCurveTo(-r*1.2,wing8*.3,-r*.4,r*.2); c.lineTo(0,-r*.3); c.fill();
+          c.beginPath(); c.moveTo(0,-r*.3); c.quadraticCurveTo(r*3.2,wing8-r*.5,r*2.6,wing8*.7); c.quadraticCurveTo(r*1.2,wing8*.3,r*.4,r*.2); c.lineTo(0,-r*.3); c.fill();
+          // Wing membrane lines
+          c.strokeStyle=en.color+'88'; c.lineWidth=.8;
+          [-2.4,-1.6,-0.8].forEach(ox=>{c.beginPath();c.moveTo(0,-r*.2);c.lineTo(ox*r,wing8-r*.4+(ox<-1?r*.2:0));c.stroke();});
+          [2.4,1.6,0.8].forEach(ox=>{c.beginPath();c.moveTo(0,-r*.2);c.lineTo(ox*r,wing8-r*.4+(ox>1?r*.2:0));c.stroke();});
+          // Armored body
+          c.fillStyle=en.color;
+          c.beginPath(); c.ellipse(0,0,r*.75,r*1.0,0,0,Math.PI*2); c.fill();
+          // Armor plates
+          c.strokeStyle='#308060'; c.lineWidth=1.2;
+          c.beginPath(); c.ellipse(0,-r*.15,r*.55,r*.35,0,0,Math.PI*2); c.stroke();
+          // Head + snout
+          c.fillStyle='#205040';
+          c.beginPath(); c.ellipse(r*.5,-r*1.1,r*.5,r*.6,-0.5,0,Math.PI*2); c.fill();
+          c.beginPath(); c.ellipse(r*1.1,-r*1.3,r*.3,r*.2,0.4,0,Math.PI*2); c.fill(); // snout
+          // Glowing eyes
+          c.fillStyle='#40ff80';
+          c.beginPath(); c.arc(r*.65,-r*1.2,r*.18,0,Math.PI*2); c.fill();
+          // Horns
+          c.strokeStyle='#508070'; c.lineWidth=r*.35;
+          c.beginPath(); c.moveTo(r*.3,-r*1.5); c.lineTo(r*.2,-r*2.1); c.stroke();
+          // Heavy tail
+          c.strokeStyle=en.color; c.lineWidth=r*.55;
+          c.beginPath(); c.moveTo(-r*.4,r*.5); c.quadraticCurveTo(-r*1.5,r*1.5,-r*1.0,r*2.4); c.stroke();
+          c.strokeStyle=en.color; c.lineWidth=r*.3;
+          c.beginPath(); c.moveTo(-r*1.0,r*2.4); c.lineTo(-r*1.5,r*2.9); c.stroke();
+          break;
+        }
         case 6: { // Behemoth — armored tank
           // Main armored body
           c.fillStyle=en.color;
@@ -3302,6 +3526,14 @@ const Game = {
     tab.textContent = collapsed ? '▼ HUD' : '▲ Thu';
   },
 
+  toggleBottomHUD() {
+    const rows = document.getElementById('bot-rows');
+    const tab = document.getElementById('bot-tab');
+    if(!rows||!tab) return;
+    const collapsed = rows.classList.toggle('bot-collapsed');
+    tab.textContent = collapsed ? '▲ HUD' : '▼ Ẩn';
+  },
+
   closeTowerPanel() {
     this.selectedPlacedTower=null;
     const panel=document.getElementById('tower-panel');
@@ -3366,8 +3598,6 @@ const Game = {
 
   selectHero(idx) {
     this.heroSelected=idx;
-    document.getElementById('hero-kael').classList.toggle('active',idx===0);
-    document.getElementById('hero-lyria').classList.toggle('active',idx===1);
   },
 
   useHeroSkill() {
@@ -3749,8 +3979,10 @@ const MP = {
   },
 
   showLobby(code) {
+    this._stopRoomRefresh();
     this.roomCode = code;
     document.getElementById('mp-card-main').classList.add('hidden');
+    document.getElementById('mp-card-rooms').classList.add('hidden');
     document.getElementById('mp-card-lobby').classList.remove('hidden');
     document.getElementById('lobby-code-display').textContent = code;
     document.getElementById('lobby-host-controls').classList.toggle('hidden', !this.isHost);
@@ -3871,7 +4103,19 @@ const MP = {
     document.getElementById('mp-card-rooms').classList.remove('hidden');
     document.getElementById('rooms-list').innerHTML='<div style="text-align:center;color:#3a3858;font-size:13px;padding:20px 0">Đang tải...</div>';
     document.getElementById('mp-err-rooms').textContent='';
-    this.connect(() => this.refreshRooms());
+    this.connect(() => {
+      this.refreshRooms();
+      this._stopRoomRefresh();
+      this._roomRefreshInterval = setInterval(() => {
+        if(document.getElementById('mp-card-rooms')&&!document.getElementById('mp-card-rooms').classList.contains('hidden')) {
+          this.refreshRooms();
+        }
+      }, 3000);
+    });
+  },
+
+  _stopRoomRefresh() {
+    if(this._roomRefreshInterval) { clearInterval(this._roomRefreshInterval); this._roomRefreshInterval = null; }
   },
 
   refreshRooms() {
@@ -3910,6 +4154,7 @@ const MP = {
   },
 
   _joinWithCode(code, password) {
+    this._stopRoomRefresh();
     this.isHost = false;
     this.myNation = this.myNation || 0;
     document.getElementById('mp-card-rooms').classList.add('hidden');
@@ -3917,6 +4162,7 @@ const MP = {
   },
 
   backFromBrowser() {
+    this._stopRoomRefresh();
     if(this.ws&&!this.roomCode) { this.ws.close(); this.ws=null; }
     document.getElementById('mp-card-rooms').classList.add('hidden');
     document.getElementById('mp-card-main').classList.remove('hidden');
@@ -3993,7 +4239,7 @@ const MP = {
         _id:en._id, t:en.t, x:en.x, y:en.y, hp:en.hp, maxHp:en.maxHp,
         slow:en.slow||1, isBoss:en.isBoss||false, color:en.color, typeId:en.typeId,
         radius:en.radius, reward:en.reward, heals:en.heals||false,
-        pathIdx:en.pathIdx||0
+        pathIdx:en.pathIdx||0, aerial:en.aerial||false
       })),
       towers: Game.towers.map(tw=>({
         x:tw.x, y:tw.y, typeId:tw.typeId, level:tw.level||1,
@@ -4322,6 +4568,10 @@ const SFX = {
       case 6: return this.towerShoot(0);
       case 7: return this.towerShoot(2);
       case 8: return this.towerShoot(4);
+      case 10: // Phòng Không — high-pitch targeting ping
+        this._osc('sine', 1600, 0.1, 0.12, null, 0.002, 0.04, 0.1, 0.08);
+        this._osc('sine', 2400, 0.06, 0.08, null, 0.001, 0.02, 0.05, 0.05);
+        break;
     }
   },
 

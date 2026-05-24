@@ -1,4 +1,4 @@
-# LAST BASTION — Game Design Document v7.0
+# LAST BASTION — Game Design Document v8.0
 
 > **Cập nhật:** 2026-05-24  
 > **Stack:** Single HTML file · Canvas API · Web Audio API · Node.js WebSocket (multiplayer)
@@ -51,7 +51,7 @@ Last Bastion là game tower defense theo lượt (20 round) được chơi trên
 
 ## 4. Maps
 
-Tất cả map đều được thiết kế lại với **đường đi dài + nhiều làn** (multi-path). Quái phân chia đồng đều theo số path, mỗi path có cổng spawn riêng ở cạnh trái.
+Tất cả map được thiết kế với **đường đi dài + nhiều làn** (multi-path). Quái phân chia đồng đều theo số path, mỗi path có cổng spawn riêng ở cạnh trái.
 
 | # | Tên | Độ khó | Kích thước | Số làn | Thời tiết | Quái Elite | Màu quái |
 |---|-----|--------|-----------|--------|-----------|-----------|---------|
@@ -62,26 +62,31 @@ Tất cả map đều được thiết kế lại với **đường đi dài + n
 | 4 | Crimson Rift | ⭐⭐⭐⭐ | 46×30 | 3 | Nhật thực định kỳ | 💀 Void Reaper | Đỏ đậm |
 | 5 | Void Nexus | ⭐⭐⭐⭐⭐ | 48×32 | 2 | Chaos | 🌀 Nexus Horror | Tím void |
 
+**Thiết kế đường đi (v7.0 redesign):**
+- Tất cả 6 map đã được thiết kế lại với hình dạng **S-curve, zigzag, staircase, mê cung** để quái di chuyển lâu hơn và phức tạp hơn.
+- Map 0: S-curve đôi · Map 1: Staircase U-turn · Map 2: Wide plateau S · Map 3: W/M wave · Map 4: 3 làn (cầu thang + S + zigzag) · Map 5: W-maze kép (phức tạp nhất)
+
 **Cơ chế multi-path:**
-- `pathFns: [fn1, fn2, ...]` — mảng các hàm tạo path theo chiều rộng màn hình.
+- `pathFns: [fn1, fn2, ...]` — mảng hàm tạo path theo chiều rộng màn hình.
 - `resize()` tính Y-range chung cho tất cả paths → scale đồng đều.
-- Enemies được phân phối **round-robin** qua tất cả paths (`i % numPaths`); đảm bảo mọi path đều có quái ngay từ đầu.
-- `ptOnPath(t, pi)` trả về tọa độ trên path `pi` dùng **arc-length parameterization** (tốc độ pixel đều tuyệt đối, không tăng tốc đoạn cuối).
+- Enemies phân phối **round-robin** qua tất cả paths (`i % numPaths`).
+- `ptOnPath(t, pi)` dùng **arc-length parameterization** — tốc độ pixel tuyệt đối đều.
 
 **Cổng Elite (từ Round 10):**
-- Mỗi map có `elitePathFn` — tạo ra đường đi riêng cho quái elite, không ảnh hưởng round-robin.
-- `pathIdx = 100` là hằng số đặc biệt → route sang `Game.elitePath`.
-- Màu sắc quái thường: mỗi map có `enemyColors[typeId]` tô màu riêng khi spawn.
+- `elitePathFn` → đường riêng cho quái elite, `pathIdx = 100`.
+- Số quái elite/round: `min(3 + floor((round-10)/3), 8)`.
+
+**Làn trên không (Aerial Lane):**
+- Background canvas vẽ đường đứt nét xanh dương ngang giữa màn hình (`aerialY = topH + mapH × 0.5`).
+- Quái bay xuất hiện từ cạnh trái, bay thẳng sang phải theo làn này.
 
 **Preview map (MapRenderer):**
-- Vẽ tất cả đường thường (A, B, C...) + **elite path** riêng biệt:
-  - Đường đứt khúc đỏ đen, marker ★, badge "R10+"
-  - Quái elite nhỏ di chuyển trên đường preview (màu/glow theo map)
-- Elite path hiển thị trong cả map select screen lẫn mini-preview trong lobby.
+- Y-scaling tự động: tất cả path scale vừa canvas 130px.
+- Hiển thị đường thường + elite path (đứt khúc đỏ đen, badge "R10+").
+- Quái elite nhỏ di chuyển trên đường preview.
 
 **Thưởng vàng sau mỗi round:**
 - Sau mỗi round thắng: `30 + round × 12` vàng cho tất cả người chơi.
-- Round 1: 42g · Round 10: 150g · Round 20: 270g.
 
 ---
 
@@ -89,10 +94,12 @@ Tất cả map đều được thiết kế lại với **đường đi dài + n
 
 | # | Tên | Thời gian chuẩn bị | Bán tháp | Đặc điểm |
 |---|-----|-------------------|---------|---------|
-| 0 | **Standard** | 45 giây / round | ✅ | Cân bằng, khuyên dùng |
-| 1 | **Hardcore** | 0 giây | ❌ | Xây tháp khi quái đang chạy, +50% thưởng, Quota ×0.4 |
-| 2 | **Endless** | 45 giây / round | ✅ | Không kết thúc, sau round 20 quái +9%/round, leaderboard |
-| 3 | **Challenge** | 45 giây / round | ✅ | Điều kiện ẩn ngẫu nhiên, thưởng ×2, skin đặc biệt |
+| 0 | **Standard** | **45 giây** / round | ✅ | Cân bằng, khuyên dùng |
+| 1 | **Hardcore** | **20 giây** / round | ❌ | Chuẩn bị thật nhanh, +50% thưởng, Quota ×0.4 |
+| 2 | **Endless** | **45 giây** / round | ✅ | Không kết thúc, sau round 20 quái +9%/round |
+| 3 | **Challenge** | **35 giây** / round | ✅ | Điều kiện ẩn ngẫu nhiên, thưởng ×2 |
+
+> `prepT = [45, 20, 45, 35][modeIdx]` — tất cả mode đều có thời gian chuẩn bị.
 
 ---
 
@@ -106,7 +113,7 @@ Tất cả map đều được thiết kế lại với **đường đi dài + n
 - Passive: Tháp Cung +20% tốc bắn
 - Skill: **Gale Arrow** — 1 mũi tên xuyên toàn bộ quái trên đường, 80 DMG
 
-> Skill hồi chiêu: mỗi 3 round. Bấm nút **"✨ Kỹ năng"** trong HUD dưới để kích hoạt.
+> Skill hồi chiêu: mỗi 3 round. HUD dưới chỉ có nút **"✨ Kỹ năng"** — hero selector đã bị ẩn khỏi HUD để tiết kiệm không gian.
 
 ---
 
@@ -114,37 +121,31 @@ Tất cả map đều được thiết kế lại với **đường đi dài + n
 
 ### 7.1 Cơ chế Nation
 
-Khi bắt đầu game (solo hoặc MP lobby), mỗi người chọn **1 trong 3 nation**. Nation quyết định bộ tháp được dùng: 4 tháp cơ bản chia sẻ + 1 tháp độc quyền riêng của phe.
+Mỗi người chọn **1 trong 3 nation**. Nation quyết định bộ **7 tháp** được dùng: 5 tháp chia sẻ (Cung, Đại Bác/Băng/Lửa, Sét, T.Nhiên, Đại Pháo) + 1 tháp độc quyền + **Phòng Không** (chung).
 
-| ID | Tên | Icon | Màu | Tháp có | Tháp độc quyền |
-|----|-----|------|-----|---------|---------------|
-| 0 | Ironhold | ⚔️ | #d08030 | Cung, Đại Bác, Sét, T.Nhiên | 🎯 Ballista |
-| 1 | Glacien | ❄️ | #5ab8f8 | Cung, Băng, Sét, T.Nhiên | 🔮 Băng Đền |
-| 2 | Emberon | 🔥 | #ff4400 | Cung, Đại Bác, Lửa, T.Nhiên | 🌋 Magma |
+| ID | Tên | Icon | Màu | Tháp có (7 tháp) |
+|----|-----|------|-----|-----------------|
+| 0 | Ironhold | ⚔️ | #d08030 | Cung, Đại Bác, Sét, T.Nhiên, Ballista, Đại Pháo, **Phòng Không** |
+| 1 | Glacien | ❄️ | #5ab8f8 | Cung, Băng, Sét, T.Nhiên, Băng Đền, Đại Pháo, **Phòng Không** |
+| 2 | Emberon | 🔥 | #ff4400 | Cung, Đại Bác, Lửa, T.Nhiên, Magma, Đại Pháo, **Phòng Không** |
+
+Tower grid: **7 cột** (`grid-template-columns: repeat(7, 1fr)`).
 
 ### 7.2 Tháp độc quyền
 
 | ID | Tên | Nation | Giá | DMG | Range | Rate | Hiệu ứng đặc biệt |
 |----|-----|--------|-----|-----|-------|------|-------------------|
 | 6 | Ballista | Ironhold | 130 | 38 | 110 | 2500ms | Tầm siêu xa, +80% DMG với quái áo giáp |
-| 7 | Băng Đền | Glacien | 110 | 3 | 85 | 1000ms | AoE passive: làm chậm 70% TẤT CẢ quái trong tầm |
+| 7 | Băng Đền | Glacien | 110 | 3 | 85 | 1000ms | AoE passive: làm chậm 70% TẤT CẢ quái đất trong tầm |
 | 8 | Magma | Emberon | 100 | 25 | 65 | 900ms | Chain lửa đến 3 mục tiêu, chain nhận 60% DMG |
-
-**Băng Đền** không bắn projectile — thay vào đó liên tục apply slow lên mọi kẻ địch trong vùng mỗi 1s. Aura ring nhìn thấy trên tháp.
-
-**Grid tháp** chỉ hiển thị các tháp thuộc nation đã chọn. Nation không thể đổi sau khi game bắt đầu.
 
 ### 7.3 Đạn / Projectile đặc trưng theo Nation
 
-Mỗi nation có hình dạng và màu sắc đạn riêng biệt cho các tháp dùng chung (type 0 và type 3). Tháp độc quyền đã có visual riêng.
-
 | Type | Tháp | Ironhold | Glacien | Emberon |
 |------|------|----------|---------|---------|
-| 0 | Cung | Steel Bolt (kim loại xám, trail tia lửa cam) | Ice Needle (mũi kim tinh thể, vòng xoay băng) | Flame Arrow (đầu lửa cam, trail tro đỏ) |
-| 1 | Đại Bác | Iron Cannonball (gradient xám, highlight cam) | — | Lava Bomb (cầu dung nham nổi, crack vàng, glow đỏ) |
-| 3 | Sét | Copper Arc (tia điện amber/cam, zigzag rộng) | Frost Bolt (tia điện xanh trắng geometric) | — |
-
-*Types 2 (Băng), 4 (Lửa), 6 (Ballista), 8 (Magma): đã nation-exclusive, visual không đổi.*
+| 0 | Cung | Steel Bolt (kim loại xám, trail tia lửa cam) | Ice Needle (tinh thể, vòng xoay băng) | Flame Arrow (đầu lửa cam, trail tro đỏ) |
+| 1 | Đại Bác | Iron Cannonball (gradient xám, highlight cam) | — | Lava Bomb (cầu dung nham nổi, crack vàng) |
+| 3 | Sét | Copper Arc (tia điện amber, zigzag rộng) | Frost Bolt (tia điện xanh trắng geometric) | — |
 
 ---
 
@@ -154,24 +155,41 @@ Mỗi nation có hình dạng và màu sắc đạn riêng biệt cho các tháp
 
 | # | Tên | Icon | Giá | DMG | Range | Rate | Ghi chú |
 |---|-----|------|-----|-----|-------|------|---------|
-| 0 | Cung | 🏹 | 50 | 9 | 80 | 800ms | Đơn mục tiêu — **tốc bắn tăng mạnh khi nâng cấp** — mọi nation |
-| 1 | Đại Bác | 💣 | 100 | 45 | 70 | 2000ms | AoE radius 40, reload chậm — Ironhold, Emberon |
+| 0 | Cung | 🏹 | 50 | 9 | 80 | 800ms | Đơn mục tiêu — tốc bắn tăng mạnh khi nâng cấp |
+| 1 | Đại Bác | 💣 | 100 | 45 | 70 | 2000ms | AoE radius 40 — Ironhold, Emberon |
 | 2 | Băng | ❄️ | 80 | 8 | 75 | 1200ms | Làm chậm quái 75% — Glacien |
 | 3 | Sét | ⚡ | 120 | 30 | 85 | 1500ms | Chain 2 mục tiêu — Ironhold, Glacien |
 | 4 | Lửa | 🔥 | 90 | 18 | 65 | 1000ms | DoT, diệt đám đông — Emberon |
-| 5 | T.Nhiên | 🌿 | 150 | — | — | — | Không bắn, +8 vàng/round — mọi nation |
+| 5 | T.Nhiên | 🌿 | 150 | — | — | — | **+8 vàng/round** cho chủ tháp — mọi nation |
 | 6 | Ballista | 🎯 | 130 | 38 | 110 | 2500ms | Xuyên giáp — **Ironhold độc quyền** |
 | 7 | Băng Đền | 🔮 | 110 | 3 | 85 | 1000ms | AoE slow — **Glacien độc quyền** |
 | 8 | Magma | 🌋 | 100 | 25 | 65 | 900ms | Chain lửa — **Emberon độc quyền** |
-| 9 | Đại Pháo | 🎆 | 160 | 50 | 95 | 3200ms | **AoE radius 55px full damage** — tất cả quái trong vùng — mọi nation |
+| 9 | Đại Pháo | 🎆 | 160 | 50 | 95 | 3200ms | AoE radius 55px full damage — mọi nation |
+| 10 | Phòng Không | 🦅 | 140 | 35 | 160 | 1100ms | **Chỉ bắn quái bay** — tầm siêu xa — mọi nation |
 
-### 8.2 Băng tower buff
+### 8.2 Quy tắc bắn: Mặt đất vs Trên không
 
-Tháp Băng làm chậm mục tiêu **75%** (slow = 0.25 × tốc gốc). Kết hợp với Sét/Lửa để tiêu diệt trong thời gian chậm.
+| Tháp | Có thể bắn quái đất | Có thể bắn quái bay |
+|------|--------------------|--------------------|
+| Cung, Đại Bác, Băng, Sét, Lửa, Ballista, Magma | ✅ | ❌ |
+| Băng Đền (AoE slow) | ✅ (chỉ đất) | ❌ |
+| Đại Pháo (AoE splash) | ✅ (chỉ đất) | ❌ |
+| T.Nhiên | — (sinh vàng) | — |
+| **Phòng Không** | ❌ | ✅ **Chỉ trên không** |
 
-### 8.3 Nâng cấp tháp (5 cấp, chi phí lũy tiến)
+> Mỗi loại tháp chỉ có thể tương tác với **một tầng**. Phòng Không là tháp duy nhất bắn được quái bay.
 
-Bấm vào tháp đã đặt → hiện panel với thông tin, nút nâng cấp và nút bán.
+### 8.3 T.Nhiên — Cơ chế sinh vàng per-round
+
+Tháp T.Nhiên **không bắn**. Thay vào đó, đầu mỗi round (`startRound()`), mỗi tháp T.Nhiên cộng **+8 vàng** vào pool của người đã đặt tháp đó.
+
+- **Ví dụ:** 3 tháp T.Nhiên → +24 vàng ngay khi round bắt đầu.
+- Trong MP: chỉ chủ tháp nhận vàng (không chia sẻ).
+- Kèm âm thanh `earnGold` khi có ít nhất 1 tháp T.Nhiên.
+
+> Trước v8.0: T.Nhiên sinh vàng theo timer 60 giây — không nhất quán với thời gian chuẩn bị khác nhau giữa các mode.
+
+### 8.4 Nâng cấp tháp (5 cấp, chi phí lũy tiến)
 
 | Cấp | DMG mult | Range mult | Rate mult (chung) | Rate mult (Cung) | Chi phí | Scale |
 |-----|---------|-----------|-----------------|-----------------|---------|-------|
@@ -181,210 +199,181 @@ Bấm vào tháp đã đặt → hiện panel với thông tin, nút nâng cấp
 | 4 | ×3.2 | ×1.55 | ×0.62 | **×0.43** | `base×1.5` | ×1.7 |
 | 5 | ×5.0 | ×1.8 | ×0.50 | **×0.29** | `base×2.5` | ×2.0 |
 
-*Rate mult = `UPGRADE_RATE_MULTS[lvl-1]`. Cung thêm `UPGRADE_ARCHER_RATE` nhân chồng → Lv5 Cung bắn nhanh ~3.5× cấp 1.*
+**Sell refund:** 60% tổng chi phí. Không thể bán trong Hardcore.
 
-**Ví dụ Cung (base 50):** Cấp→2: 25, →3: 40, →4: 75, →5: 125 vàng | Tổng: 315 vàng
+### 8.5 Tower Ownership (MP)
 
-**Sell refund:** 60% tổng chi phí (gốc + tất cả lần nâng cấp).
-> Không thể bán trong mode Hardcore.
-
-### 8.4 Quyền sở hữu tháp (Tower Ownership)
-
-- Mỗi tháp có `ownerIdx` — chỉ người xây mới **nâng cấp / bán** được.
-- Badge màu ở góc tháp biểu thị chủ: P1=tím, P2=xanh dương, P3=xanh lá, P4=đỏ.
-- Tower panel hiện `🔒 Tháp của PX` khi không phải chủ sở hữu.
-
-### 8.5 Tower panel UI
-
-- Hiện khi bấm tháp đã đặt; bấm lại → đóng; bấm chỗ khác → đóng.
-- Panel hiển thị: icon, tên (+ màu chủ MP), cấp X/5, DMG/Range thực tế
-- Nút Nâng cấp: disabled nếu Cấp 5, không đủ vàng, hoặc không phải chủ.
-- Nút Bán: ẩn nếu Hardcore hoặc không phải chủ.
+- `ownerIdx` — chỉ người xây mới nâng cấp/bán được.
+- Badge màu: P1=tím, P2=xanh dương, P3=xanh lá, P4=đỏ.
 
 ### 8.6 Preview tầm bắn
 
-Khi đang chọn tháp (chưa đặt): di chuột / drag ngón tay → hiện vòng tròn tầm bắn màu tháp theo cursor.
-
-### 8.7 Chỉ báo cấp tháp (dots)
-
-- Cấp 2: 2 chấm xanh | Cấp 3: 3 chấm vàng | Cấp 4: 4 chấm cam | Cấp 5: 5 chấm tím
+Khi đang chọn tháp → di chuột/ngón tay → hiện vòng tròn tầm bắn theo cursor.
 
 ---
 
-## 8. Hệ thống kẻ địch
+## 9. Hệ thống kẻ địch
 
-### 8.1 Quái thường
+### 9.1 Quái mặt đất (Ground Enemies)
 
 | ID | Tên | HP | Tốc | Thưởng | Đặc tính |
 |----|-----|-----|-----|--------|---------|
 | 0 | Shade Crawler | 60 | 1.2 | 8 | — |
-| 1 | Swarm Bat | 40 | 1.8 | 6 | Bay (bỏ qua địa hình) |
+| 1 | Swarm Bat | 40 | 1.8 | 6 | Bay thấp (vẫn theo đường đất) |
 | 2 | Stone Golem | 180 | 0.7 | 20 | — |
 | 3 | Healer Shaman | 80 | 1.0 | 15 | Hồi máu quái xung quanh |
 | 4 | Phase Wraith | 100 | 1.3 | 18 | Tàng hình định kỳ |
 | 5 | Berserker | 140 | 1.0 | 22 | Tăng tốc khi HP thấp |
 | 6 | Behemoth | 400 | 0.5 | 40 | Áo giáp |
 
-### 8.2 Quái Elite (Cổng Đặc Biệt — từ Round 10)
+### 9.2 Quái trên không (Aerial Enemies) — mới v8.0
 
-Mỗi map có **1 cổng đặc biệt** xuất hiện từ Round 10. Quái từ cổng này di chuyển theo `elitePath` riêng (không trùng đường thường).
+| ID | Tên | HP | Tốc | Thưởng | Visual |
+|----|-----|-----|-----|--------|--------|
+| 7 | Storm Wyvern | 90 | 1.5 | 18 | Wyvern xanh dương, cánh vỗ nhanh, đuôi dài |
+| 8 | Siege Drake | 260 | 0.85 | 40 | Rồng xanh lá bọc giáp, cánh rộng, sừng |
 
-| Map | Tên | Màu | HP mult | Tốc mult | Thưởng mult | Thiết kế |
-|-----|-----|-----|---------|---------|------------|---------|
-| 0 | Lava Titan | 🔥 #ff5500 | ×1.9 | ×1.3 | ×2.5 | Ellipse body, 6 vết nứt dung nham, mắt phát sáng |
-| 1 | Shadow Stalker | 👻 #4a10a0 | ×2.0 | ×1.4 | ×2.2 | Bóng ma tối, 5 xúc tu cong, mắt đôi phát sáng |
-| 2 | Tide Colossus | 🌊 #0060c0 | ×2.2 | ×1.1 | ×2.8 | Khối giáp hình chữ nhật, đầu tròn, giọt nước phát sáng |
-| 3 | Cinder Warrior | ⚔ #c03000 | ×2.0 | ×1.25 | ×2.4 | Kỵ sĩ giáp, kính mũ bảo hiểm, đường viền giáp |
-| 4 | Void Reaper | 💀 #cc0040 | ×2.3 | ×1.2 | ×2.6 | Áo choàng ellipse, lưỡi hái, mắt tím phát sáng |
-| 5 | Nexus Horror | 🌀 #6000c0 | ×2.5 | ×1.15 | ×3.0 | Đa giác méo, vòng tròn, 3 mắt |
+**Cơ chế aerial:**
+- Thuộc tính `aerial: true` — phân biệt với quái đất.
+- Di chuyển **thẳng ngang** từ trái sang phải theo `aerialY = topH + mapH × 0.5` (giữa màn hình).
+- Tốc độ thực: `en.x += en.spd × fps60 × 0.5` — không dùng path system.
+- **Chỉ Phòng Không (id:10) mới bắn được** — tháp đất hoàn toàn bỏ qua.
+- Không bị Healer Shaman hồi máu; không bị Băng Đền làm chậm.
+- Visual: shadow đổ xuống bên dưới + cánh vỗ animation.
 
-**Cơ chế:**
-- Số quái elite/round: `min(3 + floor((round-10)/3), 8)` — tăng dần, tối đa 8.
-- **Round 10 lần đầu:** màn hình rung mạnh (`shake=18`), nhạc aura (`SFX.eliteGate()`), thông báo đỏ đặc biệt `⚠ [TÊN] — CỔNG TỐI THỨC TỈNH!`.
-- **Round 11+:** rung nhẹ (`shake=8`), nhạc nhỏ, thông báo ngắn gọn.
+**Xuất hiện ở 5 round:** 4, 8, 11, 14, 18 — không trùng boss round (5, 10, 15, 20).
 
-### 8.3 Boss (xuất hiện round 5, 10, 15, 20)
+**Số lượng:** `4 + floor(round / 4)` quái bay/round (tăng dần theo round).
 
-Boss rounds giờ spawn **nhiều boss** trên các path khác nhau:
+**Thông báo:** Toast xanh dương xuất hiện khi round aerial bắt đầu: `🦅 QUÁI TRÊN KHÔNG XUẤT HIỆN — CẦN THÁP PHÒNG KHÔNG!`
 
-| Round | Số boss | Boss chính | Boss phụ |
-|-------|---------|------------|----------|
-| 5 | 1 | Malachar's Puppet (HP 800) | — |
-| 10 | **2** | Void Serpent (HP 1200, path 1) | Puppet (HP 70%, path 2) |
-| 15 | **2** | Iron Colossus (HP 2000, path 1) | The Twins (HP 70%, path 2) |
-| 20 | **3** | Void Colossus (HP 3000, path 1) | Iron Colossus + The Twins (70%) |
+### 9.3 Quái Elite (Cổng Đặc Biệt — từ Round 10)
 
-- Boss phụ có **70% HP** so với base để cân bằng
-- Spawn cách nhau **90 frames (1.5s)** — xuất hiện liên tiếp trên các path
-- Wave announce: `⚠️ BOSS ×N — [Tên boss] + đồng bọn!`
-- **Scale theo round:** HP × (1 + round\_index × 0.09)
+Mỗi map có **1 cổng đặc biệt** từ Round 10 với `elitePath` riêng.
 
-### 8.4 Sự kiện đặc biệt theo round
+| Map | Tên | HP mult | Tốc mult | Thưởng mult |
+|-----|-----|---------|---------|------------|
+| 0 | Lava Titan | ×1.9 | ×1.3 | ×2.5 |
+| 1 | Shadow Stalker | ×2.0 | ×1.4 | ×2.2 |
+| 2 | Tide Colossus | ×2.2 | ×1.1 | ×2.8 |
+| 3 | Cinder Warrior | ×2.0 | ×1.25 | ×2.4 |
+| 4 | Void Reaper | ×2.3 | ×1.2 | ×2.6 |
+| 5 | Nexus Horror | ×2.5 | ×1.15 | ×3.0 |
+
+### 9.4 Boss (round 5, 10, 15, 20)
+
+| Round | Boss |
+|-------|------|
+| 5 | 1× Malachar's Puppet (HP 800) |
+| 10 | 2× Void Serpent + Puppet (70% HP) |
+| 15 | 2× Iron Colossus + The Twins (70% HP) |
+| 20 | 3× Void Colossus + Iron Colossus + The Twins (70% HP) |
+
+### 9.5 Sự kiện đặc biệt theo round
 
 | Round | Sự kiện | Hiệu ứng |
 |-------|---------|---------|
 | 3 | ⚡ Xung kích! | Quân số ×1.8, HP ×0.82 |
-| 7 | 🌑 Tập kích đêm | Quân số +50%, bản đồ tối (không tăng tốc) |
-| 12 | 💚 Máu tái sinh | Quái tự hồi HP từ từ |
+| 7 | 🌑 Tập kích đêm | Quân số +50% |
+| 12 | 💚 Máu tái sinh | Quái tự hồi HP |
 | 17 | 🔥 Cuồng phong! | Tất cả loại quái, quân số ×1.6 |
 
-> **Cân bằng chế độ (v5.0):** Tất cả sự kiện chỉ thay đổi HP/quân số — không có spdMult (tốc độ di chuyển luôn bình thường). Mode Hardcore thêm ×1.2 HP và +3 quái/cổng.
+### 9.6 Spawn theo stage
 
-### 8.5 Spawn theo stage
-
-| Round | Stage | Loại quái | Số quái/cổng |
-|-------|-------|-----------|-------------|
+| Round | Stage | Loại quái đất | Số quái/cổng |
+|-------|-------|--------------|-------------|
 | 1–5 | Early | 0,1 | 8–13 + floor(r) |
 | 6–10 | Mid | 0,1,2,3 | 11–16 + floor(r) |
 | 11–15 | Late | 0,1,2,3,4,5 | 14–19 + floor(r) |
 | 16–20 | End | 0,1,2,3,4,5,6 | 18–22 + floor(r) |
 
-Số cổng hoạt động: `min(1 + floor(round/7), 3)` — tối đa 3 cổng.
+### 9.7 Hệ thống sóng (Batch Wave)
 
-### 8.6 Hệ thống sóng (Batch Wave)
-
-Quái không ra từng con mà ra theo **đợt** (như các game tower defense chuẩn):
-
-- **WAVE_SIZE = 10** — mỗi đợt thả tối đa 10 con cùng lúc
-- **Stagger nội bộ = 5 frames** (~0.08s) giữa các con trong cùng đợt
-- **WAVE_GAP = 180 frames** (~3s) giữa hai đợt liên tiếp
-- Đợt đầu tiên xuất hiện sau 30 frames kể từ khi WAVE bắt đầu
-
-**Ví dụ:** Round có 30 quái → 3 đợt × 10 con, cách nhau ~3 giây.  
-**Phân phối path:** Tất cả quái trong round được đánh index và gán `pathIdx = i % numPaths` để phân bổ đều qua mọi con đường.
+- **WAVE_SIZE = 10** con/đợt · **Stagger = 5 frames** trong đợt · **WAVE_GAP = 180 frames** (~3s) giữa đợt
 
 ---
 
-## 9. Vòng chơi (Game Loop)
+## 10. Vòng chơi (Game Loop)
 
-### 9.1 Luồng 1 round
+### 10.1 Luồng 1 round
 
 ```
-[Wave Announce: "ROUND X"] → [Giai đoạn PREP] → [▶ Bắt đầu / Đếm ngược hết] → [Giai đoạn WAVE] → [Quái hết + không còn ai trên sân] → [+Vàng thưởng round] → [Round tiếp]
+[T.Nhiên trả vàng] → [Wave Announce] → [Giai đoạn PREP] → [▶ Bắt đầu / Hết giờ] → [WAVE] → [Quái hết] → [+Vàng thưởng round] → [Round tiếp]
 ```
 
-**Thưởng vàng cuối round:** `30 + round × 12` vàng cho tất cả người chơi. Hiển thị popup "+N 💰 Vàng thưởng vòng" fade-up. Trong MP: host broadcast `round_bonus` event để guest đồng bộ vàng.
+**Thưởng vàng cuối round:** `30 + round × 12` cho tất cả người chơi.
 
-### 9.2 Giai đoạn PREP (Chuẩn bị)
+### 10.2 Giai đoạn PREP
 
-- Mode Standard/Endless/Challenge: 45 giây đếm ngược.
-- Mode Hardcore: bỏ qua hoàn toàn, vào WAVE luôn.
-- HUD hiển thị: `⏱ Xs` (giây còn lại) trong `#hud-phase`.
-- Nút **"▶ Bắt đầu"** (màu xanh lá, nhấp nháy) cho phép bỏ qua đếm ngược → vào WAVE ngay.
-- Trong thời gian PREP: có thể tự do đặt/bán tháp.
+| Mode | Thời gian |
+|------|----------|
+| Standard | 45 giây |
+| Hardcore | 20 giây |
+| Endless | 45 giây |
+| Challenge | 35 giây |
 
-### 9.3 Giai đoạn WAVE
+Nút **"▶ Bắt đầu"** cho phép bỏ qua đếm ngược. Trong PREP: tự do đặt/bán tháp.
 
-- `#hud-phase` hiển thị `⚔️ ×N` (N = số quái còn lại trong queue + trên sân).
-- Nút "▶ Bắt đầu" ẩn đi.
-- Vẫn có thể đặt tháp (và bán trong Standard/Endless/Challenge).
+### 10.3 Giai đoạn WAVE
 
-### 9.4 Kết thúc game
+`#hud-phase` hiển thị `⚔️ ×N` (N = quái còn lại). Vẫn có thể đặt tháp.
 
-- **Thắng:** Sống sót qua Round 20 mà chưa hết mạng (Standard/Challenge).
-- **Thua:** Tổng quái lọt qua đạt 20 (Normal) hoặc 10 (Hard) — mạng về 0.
-- Màn hình Win/Lose có nút Chơi lại và Về menu.
+### 10.4 Kết thúc game
+
+- **Thắng:** Sống qua Round 20 (Standard/Challenge).
+- **Thua:** Quái lọt qua đủ quota (`leakQuota = 20/10` tùy mode).
 
 ---
 
-## 10. HUD & UI
+## 11. HUD & UI
 
-### 10.1 HUD trên
-
-```
-[Round X/20] [⏱/⚔️ phase]   [● Gold] [🛡 N Mạng]   [▶ Bắt đầu] [⏸] [🔊]
-[Lives bar ─────────────────────────────────── 0/20]
-[☁ Thời tiết hiện tại ─────────── +bonus]
-```
-
-> Icon tiền là CSS `.gc` (radial-gradient vòng vàng) thay vì emoji 🪙 để tương thích Android cũ.
-
-### 10.2 HUD trên — Thu gọn
-
-HUD trên (Round/Vàng/Mạng + Quota bar + Thời tiết) có thể **thu gọn** để nhường không gian cho map:
-
-- Nút **"▲ Thu"** ở góc phải HUD → ẩn toàn bộ 3 rows (hud-top + quota + weather)
-- Khi đã thu: nút đổi thành **"▼ HUD"** → bấm để mở lại
-- Animation: `max-height` transition 280ms — mượt, không giật
-- HUD tự mở lại khi bắt đầu game mới
-
-### 10.3 HUD dưới (landscape mobile optimized)
+### 11.1 HUD trên
 
 ```
-[K Kael] [L Lyria]                               [✨]
-[Tháp1][Tháp2][Tháp3][Tháp4][Tháp5] │ [LL1][LL2][LL3]
+[Round X/20] [⏱/⚔️ phase]   [● Gold] [🛡 N Mạng]   [▶ Bắt đầu] [⏸] [🔊] [⛶]
+[Lives quota bar ───────────────────────────────── 0/20]
+[☁ Thời tiết ────────────────────── bonus]
 ```
 
-- Hàng 1: Hero selector (chip thu gọn) + nút skill `✨` (icon-only)
-- Hàng 2: **6 tháp** (nation-specific, gồm Đại Pháo) + 3 lifeline cùng 1 hàng ngang
-- Thiết kế tối ưu cho màn hình ngang điện thoại — `botH = 95px`
-- Nation modal trên landscape: 3 nation card hiển thị ngang hàng, có scroll + sticky confirm
+### 11.2 HUD trên — Thu gọn
 
-### 10.4 Tương tác tháp đã đặt
+- Nút **"▲ Thu"** → ẩn toàn bộ HUD trên. Đổi thành **"▼ HUD"** khi đã thu.
+- `max-height` transition 280ms. Tự mở lại khi bắt đầu game mới.
 
-1. **Bấm tháp** → hiện Tower Panel (góc gần vị trí bấm).
-2. **Bấm lại cùng tháp** → đóng panel.
-3. **Bấm chỗ khác trên canvas** → đóng panel, bỏ chọn.
-4. Tower Panel gồm: icon, tên, cấp X/3, DMG/Range thực tế, nút **⬆ Nâng cấp** (kèm giá), nút **💰 Bán** (kèm số vàng hoàn lại).
+### 11.3 HUD dưới
 
-### 10.5 Preview tầm bắn khi đặt
+```
+[▼ Ẩn]
+[Tháp1][Tháp2][Tháp3][Tháp4][Tháp5][Tháp6][Tháp7] │ [LL1][LL2][LL3]
+```
 
-Khi chọn tháp từ grid (chưa đặt), di chuột/ngón tay trên bản đồ → hiện vòng tròn tầm bắn màu của tháp đó theo con trỏ.
+- **7 tháp** (nation-specific, gồm Đại Pháo + Phòng Không) + 3 lifeline cùng 1 hàng.
+- Nút **"▼ Ẩn"** / **"▲ HUD"** thu gọn HUD dưới — animation `max-height` 280ms.
+- `botH = 78px` (hero row đã bỏ để tiết kiệm không gian).
+- Hero selector bị loại khỏi HUD dưới — hero được chọn ngầm định.
+
+### 11.4 Tower Panel UI
+
+- Bấm tháp đã đặt → hiện panel: icon, tên, cấp X/5, DMG/Range thực tế.
+- Nút ⬆ Nâng cấp (kèm giá) · Nút 💰 Bán (kèm hoàn tiền 60%).
+- Khóa nếu không phải chủ (MP) hoặc Hardcore (bán).
+
+### 11.5 Fullscreen
+
+- Nút `⛶` trong HUD trên — toggle fullscreen (`requestFullscreen` + webkit fallback).
+- Icon đổi thành `✕` khi đang fullscreen, `⛶` khi không.
 
 ---
 
-## 11. Mạng Sống (Lives / Leak Quota)
+## 12. Mạng Sống (Lives / Leak Quota)
 
-- Mỗi quái lọt qua Cửa Tử → tiêu thụ **1 mạng**. Boss lọt qua tốn **3 mạng**.
-- Hết mạng → **Game Over ngay lập tức**.
-- **20 mạng** (Standard/Endless/Challenge) · **10 mạng** (Hardcore) — cố định cả ván, **không hồi phục**.
-- HUD hiện `🛡 N Mạng` (N = mạng còn lại).
-- HUD Quota bar: ô xanh = còn lại, ô đỏ = đã mất — `leakCount / leakQuota`.
-- Crystal Tinh Thể đổi màu: 🔵 → 🟠 → 🔴 khi mạng cạn dần.
+- Quái đất lọt qua → **−1 mạng**. Boss → **−3 mạng**. Quái bay lọt qua → **−1 mạng**.
+- **20 mạng** (Standard/Endless/Challenge) · **10 mạng** (Hardcore).
+- Không hồi phục. Hết → Game Over ngay.
 
 ---
 
-## 12. Thời tiết
+## 13. Thời tiết
 
 Thay đổi ngẫu nhiên mỗi vài round.
 
@@ -399,93 +388,55 @@ Thay đổi ngẫu nhiên mỗi vài round.
 
 ---
 
-## 13. Lifeline (Phao cứu sinh)
+## 14. Lifeline (Phao cứu sinh)
 
-Ba lifeline mỗi trận, **mỗi chiêu tối đa 2 lần/trận**.
-
-- **Chỉ Host được dùng lifeline** — guests thấy nút nhưng không có hiệu lực.
-- Counter hiển thị ngay dưới tên lifeline: `2/2` → `1/2` → `0/2`.
-- Khi hết lần dùng: nút mờ đi (opacity 0.3, cursor not-allowed).
+Ba lifeline mỗi trận, **mỗi chiêu tối đa 2 lần/trận**. Chỉ Host dùng được.
 
 | # | Tên | Hiệu ứng |
 |---|-----|---------|
-| 0 | 🔰 Iron Shield | Tinh Thể được bảo vệ hoàn toàn trong 10 giây |
+| 0 | 🔰 Iron Shield | Tinh Thể bảo vệ hoàn toàn 10 giây |
 | 1 | 💥 Napalm | Tiêu diệt toàn bộ quái trên sân |
-| 2 | 🌀 Time Warp | Làm chậm ~80% tất cả quái trong **6 giây** (timer-based, không tự hồi phục) |
+| 2 | 🌀 Time Warp | Làm chậm ~80% tất cả quái trong **6 giây** |
 
 ---
 
-## 14. Multiplayer — Kiến trúc Host-Authoritative
+## 15. Multiplayer — Kiến trúc Host-Authoritative
 
-### 14.1 Tổng quan
+### 15.1 Tổng quan
 
 - Tối đa **4 người** / phòng, mã phòng 6 ký tự.
-- **Host** chạy toàn bộ game loop (quái, combat, vàng, HP Tinh Thể).
-- **Guest** nhận state snapshot từ host ~12Hz (~5 frame/lần ở 60fps) và chỉ render.
-- Vàng là **per-player** — mỗi người có pool riêng; HP Tinh Thể là shared.
+- **Host** chạy toàn bộ game loop. **Guest** nhận state snapshot ~12Hz và render.
+- Vàng là **per-player** — pool riêng. HP Tinh Thể là shared.
 
-### 14.2 Tìm phòng (Room Browser)
+### 15.2 Tìm phòng (Room Browser)
 
-Thay vì nhập mã thủ công, người chơi có thể dùng **danh sách phòng chờ**:
+1. Nhập tên → **"🔍 Xem danh sách phòng chờ"**.
+2. Danh sách tự refresh mỗi 3 giây khi đang xem.
+3. Bấm **"Vào →"** → nhập mật khẩu nếu phòng có khóa.
 
-1. Nhập tên → bấm **"🔍 Xem danh sách phòng chờ"**.
-2. Client kết nối WebSocket → gửi `list_rooms` → server trả `rooms_list`.
-3. Mỗi phòng hiển thị: mã phòng, tên map, chế độ, số người, 🔒 nếu có mật khẩu.
-4. Bấm **"Vào →"** → nếu phòng có mật khẩu, hiện popup nhập mật khẩu.
-5. Nút 🔄 làm mới danh sách bất kỳ lúc nào.
+### 15.3 Admin & Tạo phòng
 
-Vẫn giữ tùy chọn nhập mã thẳng (kèm field mật khẩu tùy chọn).
+- Nút "Tạo phòng mới" ẩn mặc định, hiện sau khi nhập mật khẩu admin (`BASTION`).
+- Host đặt mật khẩu phòng tùy chọn khi tạo.
 
-### 14.3 Admin password & Tạo phòng
+### 15.4 Lobby
 
-- Nút "Tạo phòng mới" ẩn mặc định, hiện sau khi nhập đúng mật khẩu admin (`BASTION`).
-- Host có thể đặt **mật khẩu phòng** (tùy chọn) khi tạo — người vào phải nhập đúng.
-- Host có toàn quyền chọn map/mode trong lobby.
-- Server validate mật khẩu phòng khi `join`; trả lỗi `Mật khẩu phòng không đúng` nếu sai.
+- Host chọn map/mode; guests chọn nation + **bấm "✓ Sẵn sàng"**.
+- Server từ chối `start` nếu có guest chưa ready.
 
-### 14.4 Lobby — Điều kiện bắt đầu
-
-- Host chọn map/mode; guests chọn nation và **bắt buộc bấm "✓ Sẵn sàng"**.
-- Nút "🚀 Bắt đầu" chỉ active khi **tất cả guest đã sẵn sàng** (client-side check).
-- Server cũng validate: từ chối `start` nếu có guest chưa ready (server-side backup).
-- Counter: `⏳ Chờ guests sẵn sàng (0/N)` → `🚀 Bắt đầu (N người)`.
-
-### 14.5 Chọn Nation trong Lobby
-
-- Mỗi player chọn nation độc lập trong lobby (3 nút: ⚔️ Ironhold / ❄️ Glacien / 🔥 Emberon).
-- Server lưu `player.nation` và broadcast `room_update` khi đổi.
-- Nation của từng người hiện dưới tên trong danh sách player (màu và icon).
-- `game_start` gửi `players[].nation` → mỗi client dùng đúng bộ tháp của mình.
-- **Chỉ có một phòng per connection**: server từ chối nếu đã ở trong phòng.
-
-### 14.6 Luồng dữ liệu
-
-```
-HOST                        SERVER                    GUESTS
-  |                            |                         |
-  |──── state_sync ───────────>|──── broadcast ─────────>|  (~12Hz)
-  |                            |                         |
-  |<─── player_input ──────────|<──── relay ─────────────|  (tức thì)
-  |                            |                         |
-  |──── game_event (game_over)>|──── broadcast ─────────>|  (1 lần)
-```
-
-### 14.7 State snapshot (`state_sync`)
+### 15.5 State Snapshot (`state_sync`)
 
 Host gửi mỗi 5 frame:
-```
+```js
 { enemies[], towers[], gold, playerGold[], crystalHP, round, roundTimer,
   gamePhase, leakCount, leakQuota, roundEvent, spawnQueueLen, lifelinesUsed[] }
 ```
 
-- Enemy có `_id: 'r7_g0_e3'` và `pathIdx` để guest reconcile.
-- Tower có `ownerIdx` để guest biết ai sở hữu.
-- `playerGold[i]` là vàng của player i; guest thấy `playerGold[mpPlayerIdx]`.
-- `lifelinesUsed[]` là mảng số (0–2), không phải boolean.
+Enemy fields: `{ _id, t, x, y, hp, maxHp, slow, isBoss, color, typeId, radius, reward, heals, pathIdx, aerial }`
 
-### 14.8 Guest input relay (`player_input`)
+> `aerial: true` được sync để guest biết quái nào thuộc làn trên không.
 
-Guest không sửa state trực tiếp — gửi action lên host:
+### 15.6 Guest Input Relay
 
 | Action | Data |
 |--------|------|
@@ -494,97 +445,82 @@ Guest không sửa state trực tiếp — gửi action lên host:
 | `upgrade_tower` | `{x, y}` |
 | `give_gold` | `{toIdx, amount}` |
 
-> Lifeline bị loại khỏi relay — chỉ Host dùng được trực tiếp.
+### 15.7 Reconnect
 
-Host validate (đủ vàng, vị trí hợp lệ, đúng chủ tháp, v.v.) rồi apply.
-
-### 14.9 Per-player gold & donation
-
-- Mỗi player bắt đầu với cùng lượng vàng tùy mode.
-- Quái chết → **tất cả players** nhận reward (cộng đồng đều).
-- Tháp T.Nhiên → +8 vàng cho riêng **chủ tháp**.
-- Nút 💰 (góc HUD) → hiện menu "Cho 50 vàng cho: P2 P3 P4" — gửi `give_gold` action.
-
-### 14.10 Reconnect sau khi mất kết nối
-
-- Khi game bắt đầu: client lưu `{code, name, playerIdx, nationIdx}` vào `localStorage.lb_session`.
-- Khi F5 / mất mạng / trang tải lại: toast xuất hiện "Bạn đã ngắt kết nối khỏi phòng [CODE]" + nút **Vào lại**.
-- Bấm "Vào lại" → gửi `join` với tên + mã phòng đã lưu.
-- Server nhận biết slot bị disconnect (`player.disconnected=true`) và khớp theo tên → gửi `reconnected` với room info.
-- Client nhận `reconnected` → `Game.init()` với nation đã lưu, đợi `state_sync` từ host.
-- Slot giữ trong 10 phút sau khi disconnect mid-game; sau đó tự xóa.
-- Khi game kết thúc bình thường (`win`/`lose`/`quit`): `lb_session` bị xóa, toast không hiện.
-
-### 14.11 Kết thúc game
-
-Host gọi `win()`/`lose()` → broadcast `game_event: {type:'game_over', ...}` → guests hiện modal.
-
-### 14.12 Nút "▶ Bắt đầu" trong multiplayer
-
-- **Host**: thấy và bấm được — kích hoạt wave ngay lập tức.
-- **Guest**: nút ẩn — host kiểm soát thời điểm bắt đầu wave.
+- Client lưu `{code, name, playerIdx, nationIdx}` vào `localStorage.lb_session`.
+- F5/mất mạng → toast "Bạn đã ngắt kết nối" + nút **Vào lại**.
+- Server khớp slot theo tên → gửi `reconnected` → game tiếp tục.
+- Slot giữ **10 phút** sau disconnect.
 
 ---
 
-## 15. Audio (Web Audio API)
+## 16. Audio (Web Audio API)
 
-Toàn bộ âm thanh tổng hợp bằng oscillator — không cần file ngoài.
+Toàn bộ âm thanh tổng hợp bằng oscillator — không cần file.
 
 | Sự kiện | Mô tả |
 |---------|-------|
-| Đặt tháp | Tone theo loại tháp (tần số khác nhau) |
+| Đặt tháp | Tone theo loại tháp |
 | Bán tháp | 3 note coin jingle |
 | Nâng cấp | Chord ascending |
 | Quái chết | Short burst noise |
 | Boss xuất hiện | Deep rumble |
 | Hero skill | Ascending chord |
-| **Cổng Elite (Round 10)** | Deep sine + noise burst + sawtooth fanfare (SFX.eliteGate) |
-| **Cổng Elite (Round 11+)** | Sawtooth short + noise nhẹ (SFX.eliteGate(true)) |
-| **Vàng thưởng round** | earnGold tone |
+| Cổng Elite (R10) | Deep sine + noise burst + sawtooth fanfare |
+| Cổng Elite (R11+) | Sawtooth short + noise nhẹ |
+| **Phòng Không bắn** | High-pitch targeting ping (2 sine tần số cao) |
+| Vàng thưởng round | earnGold tone |
 | Game over | Descending minor |
 | Win | Fanfare |
-| UI click | Short tick |
-| Nhạc nền menu | Ambient drone |
-
-Nút 🔊/🔇 trên HUD tắt/mở âm thanh.
 
 ---
 
-## 16. Luồng màn hình (Navigation)
+## 17. Luồng màn hình (Navigation)
 
 ```
 Menu
- ├─ [📖 Hướng dẫn] ──────────────────────→ Game (Tutorial mode, nation=Ironhold)
+ ├─ [📖 Hướng dẫn] → Game (Tutorial, nation=Ironhold)
  ├─ [⚔️ Bắt đầu chiến đấu]
  │    ├─ (Lần đầu) → Tutorial → Map Select
  │    └─ (Đã chơi) → Map Select → Mode Select → Nation Picker → Game
  └─ [👥 Nhiều người chơi] → MP Overlay
-      ├─ [🔍 Xem danh sách phòng] → Room Browser → [Vào →] (+ mật khẩu nếu cần) → Lobby
+      ├─ [🔍 Danh sách phòng] → Room Browser (auto-refresh 3s) → Lobby
       ├─ [Nhập mã + mật khẩu] → Lobby
-      ├─ [Admin: Tạo phòng (+ mật khẩu tùy chọn)] → Lobby
-      └─ Lobby (chọn Nation + Ready → Host Start) → Game
-           └─ (F5/mất mạng) → Reconnect Toast → [Vào lại] → Game (từ state_sync)
+      ├─ [Admin: Tạo phòng] → Lobby
+      └─ Lobby (Nation + Ready → Host Start) → Game
+           └─ (F5/mất mạng) → Toast Reconnect → [Vào lại] → Game
 ```
 
 ---
 
-## 17. Lưu trữ cục bộ
+## 18. Lưu trữ cục bộ
 
 | Key | Giá trị | Mục đích |
 |-----|---------|---------|
 | `lb_played` | `"1"` | Đánh dấu đã xem tutorial |
-| `lb_session` | `{code, name, playerIdx, nationIdx}` | Reconnect sau khi mất kết nối mid-game |
+| `lb_session` | `{code, name, playerIdx, nationIdx}` | Reconnect mid-game |
 
 ---
 
-## 18. Roadmap (chưa triển khai)
+## 19. Roadmap (chưa triển khai)
 
 - [ ] Mở khóa Void Nexus sau khi thắng 5 map
 - [ ] Leaderboard Endless (score theo round sống được)
 - [ ] Challenge mode: điều kiện ẩn ngẫu nhiên thật sự
 - [ ] Skin tháp đặc biệt từ Challenge reward
 - [ ] Ashfield Ruins: ô núi lửa buff Lửa lên Cấp 4
-- [ ] Tidal Docks: thu hẹp bản đồ khi thủy triều dâng (round 10/20/30)
-- [ ] Crimson Rift: Rift portal mechanic
-- [ ] Berserker: AI tăng tốc khi HP < 30%
-- [ ] Phase Wraith: chu kỳ tàng hình thực sự
+- [ ] Tidal Docks: thu hẹp bản đồ khi thủy triều dâng
+- [ ] Boss aerial: boss rồng xuất hiện trên làn bay
+- [ ] Swarm Bat thật sự bay (chuyển sang aerial lane, chỉ Phòng Không bắn)
+
+---
+
+## 20. Changelog
+
+| Phiên bản | Ngày | Thay đổi chính |
+|-----------|------|---------------|
+| v8.0 | 2026-05-24 | Aerial enemy system (Storm Wyvern + Siege Drake), Phòng Không (id:10), T.Nhiên per-round, HUD collapse, hero row removed, 7-column grid |
+| v7.0 | 2026-05-24 | Map redesign (S-curve/zigzag/mê cung), arc-length preview, prep time mọi mode, room browser auto-refresh, fullscreen fix |
+| v6.0 | 2026-05-23 | Multi-boss rounds, batch wave spawn, global lives, multi-path fix |
+| v5.0 | 2026-05-22 | Nation system, one-room-per-connection, mid-game reconnect |
+| v4.0 | 2026-05-21 | Đại Pháo AoE, 6-column grid, 5-level upgrade |

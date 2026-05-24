@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-24) — last updated (map nav, upgrades, multi-boss, MP fixes)
+## Current State (2026-05-24) — last updated (aerial enemies + anti-air tower system)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,20 @@
 ---
 
 ## Completed Features
+
+### Aerial Enemy System + Anti-Air Tower (2026-05-24)
+- **Aerial enemies**: Storm Wyvern (id:7, spd 1.5, HP 90) + Siege Drake (id:8, spd 0.85, HP 260), `aerial:true`
+- Aerial enemies fly **straight across** at `aerialY = topH + mapH * 0.5` (center of game area), independent of ground paths — direct pixel movement `en.x += en.spd * fps60 * 0.5`
+- **5 aerial rounds**: rounds 4, 8, 11, 14, 18 (not boss rounds); 4 + round/4 enemies each
+- **Anti-air tower** (id:10, `antiAir:true`): cost 140, DMG 35, range 160, rate 1100ms, `🦅` icon — **only** hits aerial enemies
+- Tower targeting filter: anti-air → `en.aerial`; all other towers → `!en.aerial`
+- Frost shrine AoE + Đại Pháo splash also skip aerial enemies
+- **Radar dish visual**: rotating antenna with sweep pulse, per-nation color badge
+- **Cyan energy dart** projectile for anti-air (speed 9, spinning ring + trail)
+- Healer Shaman can't accidentally heal aerial enemies (`!e.aerial` filter added)
+- Each nation gets id:10 → tower grids now have **7 columns** (`repeat(7,1fr)`)
+- Background canvas shows a subtle aerial lane (sky blue dashed line at aerialY)
+- Announcement toast reuses `#elite-gate-announce` styled in blue: `🦅 QUÁI TRÊN KHÔNG XUẤT HIỆN`
 
 ### Map Navigation Arrows (thay tab bar)
 - Thay scrollable tab bar bằng nút **‹ ›** trong header màn hình chọn map
@@ -126,6 +140,47 @@
 - Join thẳng bằng mã vẫn giữ, có thêm field "🔒 Mật khẩu phòng (nếu có)"
 - Server-side: validate password trước khi vào, check all-ready trước khi start
 - Host chỉ bắt đầu được khi **tất cả** guest đã nhấn Sẵn sàng (cả client + server check)
+
+### Map Redesign — Đường Dài + Phức Tạp
+- Thiết kế lại path cho tất cả 6 map để quái di chuyển lâu hơn và phong phú hơn:
+  - **Map 0 Ironhold Pass**: Hình chữ S kép — 3 đỉnh sóng mỗi làn
+  - **Map 1 Sylvan Crossing**: Cầu thang / U-turn — quái rơi thẳng đứng rồi đổi hướng (góc L)
+  - **Map 2 Tidal Docks**: Phẳng rồi rơi sâu — đoạn phẳng dài + valley đột ngột
+  - **Map 3 Ashfield Ruins**: Sóng W/M chéo — đường sóng nghiêng 4 đỉnh
+  - **Map 4 Crimson Rift**: 3 làn mỗi làn khác nhau — cầu thang / S-curve / zigzag
+  - **Map 5 Void Nexus**: W kép 5 đảo chiều — phức tạp nhất, nhiều cầu thang
+- `MapRenderer.draw()` thêm **y-scaling** (giống `Game.resize()`) — preview luôn khớp tỷ lệ dù path dùng y range nào
+- Mỗi path đều đã verify không giao nhau (gap tối thiểu 7-40px tùy map)
+
+### Thời Gian Chuẩn Bị Tất Cả Chế Độ
+- Trước: Hardcore = 0s (không có prep), các mode khác = 45s
+- Sau: `prepT = [45, 20, 45, 35][modeIdx]` — **Hardcore 20s**, Standard 45s, Endless 45s, Challenge 35s
+- Cập nhật mô tả + badge pill Hardcore: "0s chuẩn bị" → "20s chuẩn bị"
+
+### Map Preview Arc-length Fix
+- `MapRenderer.draw()` dùng arc-length parameterization giống game loop
+- `buildAL(pts)` tính trước cumulative pixel distance; `ptOnPath(t, pts, al)` map `t` theo pixel distance thực
+- Áp dụng cho cả enemy thường (allALs) và elite enemy (eliteAL)
+- `epts` và `eliteAL` tính một lần ngoài `frame()` — không tính lại mỗi frame nữa
+
+### Room Browser Auto-refresh
+- Khi mở danh sách phòng: cứ 3 giây tự gửi `list_rooms` → danh sách cập nhật real-time
+- `_stopRoomRefresh()` dọn interval khi rời browser (back, join, create)
+- `showLobby()` cũng gọi `_stopRoomRefresh()` và ẩn `mp-card-rooms` để tránh bị stuck
+
+### Fullscreen Fix
+- Xóa nút fullscreen khỏi main menu (nó là nút "lạ" bên dưới Nhiều người chơi)
+- `toggleFullscreen()` dùng `document.webkitFullscreenElement` đúng cách; thêm `.catch(()=>{})` cho iOS
+- Global `fullscreenchange` / `webkitfullscreenchange` listener cập nhật icon `⛶`/`✕` HUD button
+
+### Bottom HUD Cleanup — Bỏ Hero Row, Thêm Nút Thu
+- Xóa hoàn toàn `.hero-row` (Kael/Lyria chips + skill button ✨) khỏi `#game-bottom`
+- Thêm `#bot-tab` — nút **"▼ Ẩn"** ở trên cùng bottom HUD → thu gọn/mở rộng khu vực tháp + lifeline
+  - Khi thu: nút đổi thành **"▲ HUD"** → bấm lại để mở ra
+  - CSS: `#bot-rows` dùng `max-height` transition (0 ↔ 90px, 280ms ease)
+- `toggleBottomHUD()` thêm vào Game object
+- Reset `bot-rows` (mở ra) khi bắt đầu game mới
+- `botH` giảm 95 → **78** (tiết kiệm ~17px map space do không còn hero row)
 
 ### Enemy Movement Speed Tuning + Uniform Speed Fix
 - Speed multiplier: `spd = en.spd * en.slow * fps60 * .006`
