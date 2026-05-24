@@ -158,7 +158,7 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 /* Towers + Lifelines — one shared row */
 .tower-section{padding:3px 6px 4px;display:flex;gap:4px;align-items:stretch}
 .tower-lbl{display:none}
-.tower-grid{flex:5;display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+.tower-grid{flex:6;display:grid;grid-template-columns:repeat(6,1fr);gap:2px}
 .tp{background:#0e1225;border:1px solid #1e2240;border-radius:7px;padding:4px 1px 3px;text-align:center;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .tp.selected{border-color:#7b4fee;background:#180e38}
 .tp.disabled{opacity:.4;cursor:not-allowed}
@@ -392,6 +392,7 @@ body{position:fixed;width:100%;height:100%}
     <button class="btn-primary" onclick="App.checkFirst()">⚔️ &nbsp;Bắt đầu chiến đấu</button>
     <button class="btn-secondary" onclick="App.startTutorial()">📖 &nbsp;Hướng dẫn chơi</button>
     <button class="btn-secondary" onclick="MP.open()">👥 &nbsp;Nhiều người chơi</button>
+    <button class="btn-secondary" onclick="App.toggleFullscreen()" style="font-size:12px;padding:8px 14px">⛶ &nbsp;Toàn màn hình (ẩn thanh địa chỉ)</button>
   </div>
 </div>
 
@@ -449,6 +450,7 @@ body{position:fixed;width:100%;height:100%}
       <button class="hud-pause" onclick="Game.pause()">⏸</button>
       <button class="hud-pause" id="mute-btn" onclick="const m=SFX.toggle();this.textContent=m?'🔇':'🔊'" style="margin-left:4px">🔊</button>
       <button class="hud-pause hidden" id="give-gold-btn" onclick="Game.showGiveDonateMenu()" style="margin-left:4px;font-size:11px" title="Cho vàng cho đồng đội">💰</button>
+      <button class="hud-pause" id="fs-btn" onclick="App.toggleFullscreen()" style="margin-left:4px;font-size:13px" title="Toàn màn hình">⛶</button>
     </div>
     <div class="hud-quota">
       <div class="quota-lbl">🚪 Quota</div>
@@ -751,7 +753,7 @@ const MAPS_DATA = [
 ];
 
 const TOWERS_DATA = [
-  { id:0, name:'Cung',       icon:'🏹', cost:50,  dmg:12, range:80,  rate:800,  color:'#7acf40', desc:'Bắn nhanh, tầm xa, đơn mục tiêu' },
+  { id:0, name:'Cung',       icon:'🏹', cost:50,  dmg:9,  range:80,  rate:800,  color:'#7acf40', desc:'Bắn nhanh, tầm xa — nâng cấp tăng tốc bắn mạnh' },
   { id:1, name:'Đại Bác',   icon:'💣', cost:100, dmg:45, range:70,  rate:2000, color:'#c87828', desc:'AoE diện rộng, reload chậm' },
   { id:2, name:'Băng',      icon:'❄️', cost:80,  dmg:8,  range:75,  rate:1200, color:'#5ab8f8', desc:'Làm chậm quái 75%, tầm trung' },
   { id:3, name:'Sét',       icon:'⚡', cost:120, dmg:30, range:85,  rate:1500, color:'#c880ff', desc:'Chain sang 2 mục tiêu gần nhất' },
@@ -760,7 +762,9 @@ const TOWERS_DATA = [
   // Nation-exclusive towers
   { id:6, name:'Ballista',  icon:'🎯', cost:130, dmg:38, range:110, rate:2500, color:'#d08030', desc:'Tầm siêu xa, xuyên giáp (Ironhold)' },
   { id:7, name:'Băng Đền',  icon:'🔮', cost:110, dmg:3,  range:85,  rate:1000, color:'#5ab8f8', desc:'Làm chậm AoE mọi quái trong tầm (Glacien)' },
-  { id:8, name:'Magma',     icon:'🌋', cost:100, dmg:25, range:65,  rate:900,  color:'#ff4400', desc:'Chuỗi lửa 3 mục tiêu (Emberon)' }
+  { id:8, name:'Magma',     icon:'🌋', cost:100, dmg:25, range:65,  rate:900,  color:'#ff4400', desc:'Chuỗi lửa 3 mục tiêu (Emberon)' },
+  // Shared AoE tower
+  { id:9, name:'Đại Pháo',  icon:'🎆', cost:160, dmg:50, range:95,  rate:3200, color:'#e8d040', desc:'Nổ AoE bán kính 55px — sát thương tất cả quái, reload chậm' }
 ];
 
 // Tower upgrade constants (5 levels)
@@ -769,6 +773,10 @@ const UPGRADE_COST_MULTS = [0, .5, .8, 1.5, 2.5]; // cost to go from lvl N to N+
 const UPGRADE_DMG_MULTS  = [1, 1.4, 2.1, 3.2, 5.0];
 const UPGRADE_RANGE_MULTS= [1, 1.15, 1.35, 1.55, 1.8];
 const UPGRADE_SCALE      = [1, 1.2, 1.45, 1.7, 2.0];
+// Rate multiplier: lower = faster fire (applied to cooldown). Archer gets extra bonus via UPGRADE_ARCHER_RATE.
+const UPGRADE_RATE_MULTS = [1, 0.88, 0.75, 0.62, 0.50];
+// Archer-specific extra rate reduction (stacks with UPGRADE_RATE_MULTS)
+const UPGRADE_ARCHER_RATE= [1, 0.92, 0.82, 0.70, 0.58];
 
 // Per-player colors (host=0, guest1=1, guest2=2, guest3=3)
 const PLAYER_COLORS = ['#a060ff','#40a0ff','#40c060','#e06060'];
@@ -778,9 +786,9 @@ const ADMIN_PASSWORD = 'BASTION';
 
 // Nation system: 3 factions, each with different tower sets (id 0-5 are common/shared, 6/7/8 are exclusive)
 const NATIONS_DATA = [
-  { id:0, name:'Ironhold', icon:'⚔️', color:'#d08030', towers:[0,1,3,5,6], desc:'Pháo thủ tầm xa · Ballista xuyên giáp' },
-  { id:1, name:'Glacien',  icon:'❄️', color:'#5ab8f8', towers:[0,2,3,5,7], desc:'Kiểm soát băng giá · Băng Đền AoE slow' },
-  { id:2, name:'Emberon',  icon:'🔥', color:'#ff4400', towers:[0,1,4,5,8], desc:'Công kích ồ ạt · Magma chuỗi lửa' }
+  { id:0, name:'Ironhold', icon:'⚔️', color:'#d08030', towers:[0,1,3,5,6,9], desc:'Pháo thủ tầm xa · Ballista xuyên giáp · Đại Pháo AoE' },
+  { id:1, name:'Glacien',  icon:'❄️', color:'#5ab8f8', towers:[0,2,3,5,7,9], desc:'Kiểm soát băng giá · Băng Đền AoE slow · Đại Pháo AoE' },
+  { id:2, name:'Emberon',  icon:'🔥', color:'#ff4400', towers:[0,1,4,5,8,9], desc:'Công kích ồ ạt · Magma chuỗi lửa · Đại Pháo AoE' }
 ];
 
 const ENEMY_TYPES = [
@@ -883,6 +891,21 @@ const App = {
   goMultiplayer() {
     App.showScreen('lobby');
     Lobby.init();
+  },
+  toggleFullscreen() {
+    if(!document.fullscreenElement) {
+      (document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen||function(){}).call(document.documentElement);
+      const btn=document.getElementById('fs-btn');
+      if(btn) btn.textContent='✕FS';
+    } else {
+      (document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document);
+      const btn=document.getElementById('fs-btn');
+      if(btn) btn.textContent='⛶';
+    }
+    document.addEventListener('fullscreenchange',()=>{
+      const btn=document.getElementById('fs-btn');
+      if(btn) btn.textContent=document.fullscreenElement?'✕FS':'⛶';
+    },{once:true});
   }
 };
 
@@ -1476,6 +1499,8 @@ const Game = {
     this.leakCount = 0;
     this.leakQuota = this.modeIdx === 1 ? 10 : 20;
     this.lifelinesUsed = [0,0,0]; // counts (max 2 per lifeline)
+    this.timeWarpActive = false;
+    this.timeWarpTimer = 0;
     this.selectedTower = -1;
     this.weather = 5;
     this.weatherTimer = 180;
@@ -1782,6 +1807,15 @@ const Game = {
     this.weatherTimer -= dt;
     if(this.weatherTimer <= 0) { this.weather=Math.floor(Math.random()*WEATHERS.length); this.weatherTimer=3*30; SFX.weatherChange(); this.updateWeatherHUD(); }
 
+    // Time Warp timer
+    if(this.timeWarpActive) {
+      this.timeWarpTimer -= fps60;
+      if(this.timeWarpTimer <= 0) {
+        this.timeWarpActive = false;
+        this.timeWarpTimer = 0;
+      }
+    }
+
     // enemies
     for(let i=this.enemies.length-1;i>=0;i--) {
       const en = this.enemies[i];
@@ -1790,7 +1824,11 @@ const Game = {
       en.t = Math.min(en.t + spd / ePath.length, 1);
       const pt = this.ptOnPath(en.t, en.elite ? 100 : (en.pathIdx||0));
       en.x = pt.x; en.y = pt.y;
-      if(en.slow < 1) en.slow = Math.min(1, en.slow + .02*fps60);
+      if(this.timeWarpActive) {
+        en.slow = Math.min(en.slow, 0.22); // hold slow while warp is active
+      } else if(en.slow < 1) {
+        en.slow = Math.min(1, en.slow + .02*fps60);
+      }
 
       if(en.t >= .99) {
         // reached gate zone — accumulate global leak count
@@ -1849,6 +1887,8 @@ const Game = {
       const lvl=tw.level||1;
       const range = Math.round(tData.range*UPGRADE_RANGE_MULTS[lvl-1]);
       const dmgMult=UPGRADE_DMG_MULTS[lvl-1];
+      // Rate upgrade: archer gets extra rate bonus stacked on top of global rate mult
+      const rateMult = UPGRADE_RATE_MULTS[lvl-1] * (tw.typeId===0 ? UPGRADE_ARCHER_RATE[lvl-1] : 1);
       const targets = this.enemies.filter(en=>Math.hypot(en.x-tw.x,en.y-tw.y)<=range);
       if(!targets.length) return;
       targets.sort((a,b)=>b.t-a.t);
@@ -1856,6 +1896,17 @@ const Game = {
       const dmg = tData.dmg * rateMultiplier * dmgMult;
       tw.angle = Math.atan2(target.y - tw.y, target.x - tw.x);
       tw.flash = 1;
+      // Đại Pháo (type 9): instant AoE on target — no travelling projectile needed
+      if(tw.typeId === 9) {
+        const splash9 = this.enemies.filter(e=>Math.hypot(e.x-target.x,e.y-target.y)<55);
+        splash9.forEach(e=>this.damageEnemy(e,dmg));
+        this.spawnParticles(target.x,target.y,'#e8d040',20);
+        this.spawnParticles(target.x,target.y,'#ff8800',10);
+        this.addShake(3);
+        SFX.hit(1); // reuse cannon hit sound
+        tw.cooldown = tData.rate * rateMult / 16.7;
+        return;
+      }
       this.projectiles.push({
         x:tw.x, y:tw.y, tx:target.x, ty:target.y,
         angle: tw.angle,
@@ -1864,7 +1915,7 @@ const Game = {
         vx:0, vy:0, life:1,
         trail:[], chainTargets:(tw.typeId===3||tw.typeId===8)?targets.slice(1,3):[]
       });
-      tw.cooldown = tData.rate / 16.7;
+      tw.cooldown = tData.rate * rateMult / 16.7;
       if(Math.random()<0.4) SFX.towerShoot(tw.typeId);
       this.spawnParticles(tw.x, tw.y, TOWERS_DATA[tw.typeId].color, 2);
     });
@@ -2501,6 +2552,41 @@ const Game = {
             c.fillStyle='rgba(220,180,40,0.8)';
             c.beginPath();c.arc(x+Math.cos(oa)*19,y-12+Math.sin(oa)*10,2,0,Math.PI*2);c.fill();
           });
+        }
+        break;
+      }
+      case 9: { // Đại Pháo — heavy mortar, ground-mounted, fires upward arc
+        const stone='#2a2830', stoneL='#3a3848', barrelC='#1e1e2a';
+        // Heavy base platform
+        c.fillStyle=stone; this._rr(c,x-11,y+2,22,12,3); c.fill();
+        c.strokeStyle=stoneL;c.lineWidth=1;c.stroke();
+        // Bolts on base
+        [x-8,x-2,x+4,x+10].forEach(bx=>{ c.fillStyle='#4a4860';c.beginPath();c.arc(bx,y+8,1.5,0,Math.PI*2);c.fill(); });
+        if(lvl>=2){ c.strokeStyle='#9a8020';c.lineWidth=.8;c.strokeRect(x-11,y+2,22,12); }
+        // Barrel — angled ~60deg
+        const barA = -Math.PI/3 + Math.sin(now*.4)*.04;
+        c.save(); c.translate(x,y+2); c.rotate(barA);
+        c.fillStyle=barrelC; this._rr(c,-4,-16,8,18,3); c.fill();
+        c.strokeStyle='#303040';c.lineWidth=1.2;c.stroke();
+        // Barrel rings
+        [-13,-7,-2].forEach(ry=>{ c.fillStyle='#404455';c.fillRect(-4,ry,8,2); });
+        // Barrel mouth
+        c.fillStyle='#10101c';c.beginPath();c.ellipse(0,-16,4,2.5,0,0,Math.PI*2);c.fill();
+        c.strokeStyle='#606080';c.lineWidth=1;c.stroke();
+        c.restore();
+        // Flash effect: expanding ring on fire
+        if(flash>0.1){
+          c.strokeStyle=`rgba(255,220,30,${flash*.8})`;c.lineWidth=3;c.shadowColor='#e8d040';c.shadowBlur=12*flash;
+          c.beginPath();c.arc(x,y+2,12+flash*14,0,Math.PI*2);c.stroke();c.shadowBlur=0;
+        }
+        // Level glow rings
+        if(lvl>=2){
+          c.strokeStyle=`rgba(232,208,64,${0.2+Math.sin(now*1.8)*.15})`;c.lineWidth=1.5;
+          c.beginPath();c.arc(x,y+2,13,0,Math.PI*2);c.stroke();
+        }
+        if(lvl>=3){
+          c.globalAlpha=0.1;c.strokeStyle='rgba(232,208,64,1)';c.lineWidth=12;
+          c.beginPath();c.arc(x,y+2,18,0,Math.PI*2);c.stroke();c.globalAlpha=1;c.lineWidth=1;
         }
         break;
       }
@@ -3160,9 +3246,12 @@ const Game = {
     document.getElementById('tpan-level').textContent=`Cấp ${lvl}/${TOWER_MAX_LEVEL}`;
     let totalSpent=tData.cost; for(let l=1;l<lvl;l++) totalSpent+=Math.floor(tData.cost*UPGRADE_COST_MULTS[l]);
     const sellVal=Math.floor(totalSpent*.6);
+    const rateMult9 = UPGRADE_RATE_MULTS[lvl-1] * (tw.typeId===0 ? UPGRADE_ARCHER_RATE[lvl-1] : 1);
+    const effectiveRate = tData.rate ? Math.round(tData.rate * rateMult9) : null;
+    const rateStr = effectiveRate ? `${effectiveRate}ms${lvl>1?' ⚡':''}` : '-';
     document.getElementById('tpan-stats').innerHTML=
       `🗡 DMG: ${Math.round(tData.dmg*dmgMult)} &nbsp;|&nbsp; 🎯 Range: ${Math.round(tData.range*rangeMult)}<br>`+
-      `⚡ Rate: ${tData.rate||'-'}ms &nbsp;|&nbsp; 💰 Đã dùng: ${totalSpent}`;
+      `⏱ Rate: ${rateStr} &nbsp;|&nbsp; 💰 Đã dùng: ${totalSpent}`;
     const upgradeBtn=document.getElementById('tpan-upgrade-btn');
     const sellBtn=document.getElementById('tpan-sell-btn');
     sellBtn.innerHTML=`💰 Bán — nhận <i class="gc"></i>${sellVal}`;
@@ -3301,7 +3390,9 @@ const Game = {
       this.enemies.forEach(en=>this.spawnParticles(en.x,en.y,'#ff8800',8));
       this.enemies=[];
       this.spawnParticles(this.W/2,this.H/2,'#ff6820',30);
-    } else { // time warp
+    } else { // time warp — 6 second duration
+      this.timeWarpActive = true;
+      this.timeWarpTimer = 360; // 6s at 60fps
       this.enemies.forEach(en=>en.slow=.2);
       this.spawnParticles(this.W/2,this.H/2,'#c880ff',20);
     }
