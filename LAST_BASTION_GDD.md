@@ -1,4 +1,4 @@
-# LAST BASTION — Game Design Document v8.0
+# LAST BASTION — Game Design Document v9.0
 
 > **Cập nhật:** 2026-05-24  
 > **Stack:** Single HTML file · Canvas API · Web Audio API · Node.js WebSocket (multiplayer)
@@ -94,12 +94,13 @@ Tất cả map được thiết kế với **đường đi dài + nhiều làn**
 
 | # | Tên | Thời gian chuẩn bị | Bán tháp | Đặc điểm |
 |---|-----|-------------------|---------|---------|
-| 0 | **Standard** | **45 giây** / round | ✅ | Cân bằng, khuyên dùng |
-| 1 | **Hardcore** | **20 giây** / round | ❌ | Chuẩn bị thật nhanh, +50% thưởng, Quota ×0.4 |
+| 0 | **Standard** | **45 giây** / round | ✅ | Cân bằng, khuyên dùng, 20 mạng |
+| 1 | **Hardcore** | **20 giây** / round | ✅ | Chuẩn bị thật nhanh, +50% thưởng, 10 mạng |
 | 2 | **Endless** | **45 giây** / round | ✅ | Không kết thúc, sau round 20 quái +9%/round |
 | 3 | **Challenge** | **35 giây** / round | ✅ | Điều kiện ẩn ngẫu nhiên, thưởng ×2 |
 
-> `prepT = [45, 20, 45, 35][modeIdx]` — tất cả mode đều có thời gian chuẩn bị.
+> `prepT = [45, 20, 45, 35][modeIdx]` — tất cả mode đều có thời gian chuẩn bị.  
+> Bán tháp được phép ở **mọi chế độ** (bao gồm Hardcore từ v9.0). Hoàn 60% tổng chi phí.
 
 ---
 
@@ -199,9 +200,16 @@ Tháp T.Nhiên **không bắn**. Thay vào đó, đầu mỗi round (`startRound
 | 4 | ×3.2 | ×1.55 | ×0.62 | **×0.43** | `base×1.5` | ×1.7 |
 | 5 | ×5.0 | ×1.8 | ×0.50 | **×0.29** | `base×2.5` | ×2.0 |
 
-**Sell refund:** 60% tổng chi phí. Không thể bán trong Hardcore.
+**Sell refund:** 60% tổng chi phí. Được phép bán ở **mọi chế độ** kể từ v9.0.
 
-### 8.5 Tower Ownership (MP)
+### 8.5 Tower Placement — Kiểm tra va chạm đường đi
+
+- Sử dụng **segment-distance** (`ptSegDist`) thay vì waypoint-distance: kiểm tra khoảng cách từ điểm đặt đến **từng đoạn thẳng** của path, ngưỡng 20px.
+- Bao gồm `elitePath` (cổng đặc biệt R10+) trong kiểm tra — trước v9.0 bị bỏ sót.
+- Áp dụng cả 3 chỗ: indicator preview (draw loop), handleTap, và host MP handler.
+- Indicator preview: vòng tròn xanh = có thể đặt, đỏ = bị chặn.
+
+### 8.6 Tower Ownership (MP)
 
 - `ownerIdx` — chỉ người xây mới nâng cấp/bán được.
 - Badge màu: P1=tím, P2=xanh dương, P3=xanh lá, P4=đỏ.
@@ -330,10 +338,11 @@ Nút **"▶ Bắt đầu"** cho phép bỏ qua đếm ngược. Trong PREP: tự
 ### 11.1 HUD trên
 
 ```
-[Round X/20] [⏱/⚔️ phase]   [● Gold] [🛡 N Mạng]   [▶ Bắt đầu] [⏸] [🔊] [⛶]
-[Lives quota bar ───────────────────────────────── 0/20]
+[Round X/20] [⏱/⚔️ phase]   [● Gold] [🛡 N Mạng]   [▶ Bắt đầu] [⏸] [🔊]
 [☁ Thời tiết ────────────────────── bonus]
 ```
+
+> Quota slot-bar đã bị xóa (v9.0). "🛡 N Mạng" trong hàng trên là nguồn hiển thị mạng sống duy nhất.
 
 ### 11.2 HUD trên — Thu gọn
 
@@ -344,10 +353,11 @@ Nút **"▶ Bắt đầu"** cho phép bỏ qua đếm ngược. Trong PREP: tự
 
 ```
 [▼ Ẩn]
-[Tháp1][Tháp2][Tháp3][Tháp4][Tháp5][Tháp6][Tháp7] │ [LL1][LL2][LL3]
+[Tháp1][Tháp2][Tháp3][Tháp4][Tháp5][Tháp6][Tháp7] │ [🌀]
 ```
 
-- **7 tháp** (nation-specific, gồm Đại Pháo + Phòng Không) + 3 lifeline cùng 1 hàng.
+- **7 tháp** (nation-specific, gồm Đại Pháo + Phòng Không) + **1 lifeline (Time Warp)** cùng 1 hàng.
+- Lifeline row: `width:72px` cố định (compact 1-button).
 - Nút **"▼ Ẩn"** / **"▲ HUD"** thu gọn HUD dưới — animation `max-height` 280ms.
 - `botH = 78px` (hero row đã bỏ để tiết kiệm không gian).
 - Hero selector bị loại khỏi HUD dưới — hero được chọn ngầm định.
@@ -356,12 +366,15 @@ Nút **"▶ Bắt đầu"** cho phép bỏ qua đếm ngược. Trong PREP: tự
 
 - Bấm tháp đã đặt → hiện panel: icon, tên, cấp X/5, DMG/Range thực tế.
 - Nút ⬆ Nâng cấp (kèm giá) · Nút 💰 Bán (kèm hoàn tiền 60%).
-- Khóa nếu không phải chủ (MP) hoặc Hardcore (bán).
+- Khóa nếu không phải chủ (MP). Bán được ở mọi chế độ kể từ v9.0.
 
 ### 11.5 Fullscreen
 
-- Nút `⛶` trong HUD trên — toggle fullscreen (`requestFullscreen` + webkit fallback).
+- Nút `⛶` **ở menu chính** (góc trên phải) — toggle fullscreen (`requestFullscreen` + webkit fallback).
+- Nút trong HUD game đã bị xóa (v9.0) — chỉ giữ 1 nút duy nhất ở menu.
 - Icon đổi thành `✕` khi đang fullscreen, `⛶` khi không.
+- **iOS**: Fullscreen API không được hỗ trợ trên iOS Safari/Chrome → hiện toast hướng dẫn "Thêm vào màn hình chính" thay vì im lặng thất bại.
+- Fullscreen SPA-persistent: không tự tắt khi chuyển màn hình trong ứng dụng.
 
 ---
 
@@ -390,13 +403,13 @@ Thay đổi ngẫu nhiên mỗi vài round.
 
 ## 14. Lifeline (Phao cứu sinh)
 
-Ba lifeline mỗi trận, **mỗi chiêu tối đa 2 lần/trận**. Chỉ Host dùng được.
+**Một lifeline duy nhất** mỗi trận, **tối đa 2 lần/trận**. Chỉ Host dùng được (v9.0: chỉ giữ Time Warp).
 
 | # | Tên | Hiệu ứng |
 |---|-----|---------|
-| 0 | 🔰 Iron Shield | Tinh Thể bảo vệ hoàn toàn 10 giây |
-| 1 | 💥 Napalm | Tiêu diệt toàn bộ quái trên sân |
-| 2 | 🌀 Time Warp | Làm chậm ~80% tất cả quái trong **6 giây** |
+| 0 | 🌀 Time Warp | Làm chậm ~80% tất cả quái trong **6 giây** |
+
+> v9.0: Iron Shield và Napalm (Orbital Strike) đã bị xóa để đơn giản hóa gameplay.
 
 ---
 
@@ -424,17 +437,25 @@ Ba lifeline mỗi trận, **mỗi chiêu tối đa 2 lần/trận**. Chỉ Host 
 - Host chọn map/mode; guests chọn nation + **bấm "✓ Sẵn sàng"**.
 - Server từ chối `start` nếu có guest chưa ready.
 
-### 15.5 State Snapshot (`state_sync`)
+### 15.5 State Snapshot (`state_sync`) — Split Sync
 
-Host gửi mỗi 5 frame:
+Host gửi theo 2 tần suất:
+- **Mỗi 2 frame (~33ms):** enemies + crystalHP + gamePhase + spawnQueueLen *(partial)*
+- **Mỗi 10 frame (~167ms):** toàn bộ state bao gồm towers, gold, round, lifelinesUsed *(full)*
+
 ```js
-{ enemies[], towers[], gold, playerGold[], crystalHP, round, roundTimer,
-  gamePhase, leakCount, leakQuota, roundEvent, spawnQueueLen, lifelinesUsed[] }
+// Partial (mọi 2 frame):
+{ enemies[], crystalHP, gamePhase, spawnQueueLen }
+
+// Full (mỗi 10 frame, thêm vào):
+{ towers[], gold, playerGold[], round, roundTimer,
+  leakCount, leakQuota, roundEvent, lifelinesUsed[],
+  timeWarpActive, timeWarpTimer }
 ```
 
-Enemy fields: `{ _id, t, x, y, hp, maxHp, slow, isBoss, color, typeId, radius, reward, heals, pathIdx, aerial }`
+Enemy fields (integer-truncated): `{ _id, t (4 decimal), x, y, hp, maxHp (integers), slow, isBoss, color, typeId, radius, reward, heals, pathIdx, aerial }`
 
-> `aerial: true` được sync để guest biết quái nào thuộc làn trên không.
+> Float truncation: `~~en.x/y/hp/maxHp` để giảm payload. `t` được cắt 4 chữ số thập phân.
 
 ### 15.6 Guest Input Relay
 
@@ -519,6 +540,7 @@ Menu
 
 | Phiên bản | Ngày | Thay đổi chính |
 |-----------|------|---------------|
+| v9.0 | 2026-05-24 | Tower placement segment-distance check + elitePath; bán tháp mọi chế độ; chỉ Time Warp lifeline; xóa Quota HUD; fullscreen menu-only + iOS toast; split sync MP (2/10 frame) |
 | v8.0 | 2026-05-24 | Aerial enemy system (Storm Wyvern + Siege Drake), Phòng Không (id:10), T.Nhiên per-round, HUD collapse, hero row removed, 7-column grid |
 | v7.0 | 2026-05-24 | Map redesign (S-curve/zigzag/mê cung), arc-length preview, prep time mọi mode, room browser auto-refresh, fullscreen fix |
 | v6.0 | 2026-05-23 | Multi-boss rounds, batch wave spawn, global lives, multi-path fix |

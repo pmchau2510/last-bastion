@@ -136,14 +136,6 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 .hud-start-wave.all-ready{background:#1a7a20;animation:pulseGold 0.8s ease-in-out infinite}
 @keyframes pulseGold{0%,100%{box-shadow:0 0 0 0 #40ff6066}60%{box-shadow:0 0 0 6px #40ff6000}}
 
-.hud-quota{background:#06080fcc;padding:2px 10px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #12162a;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
-.quota-lbl{font-size:9px;color:#3a3858;white-space:nowrap}
-.quota-slots{display:flex;gap:2px;flex:1}
-.qs{height:4px;border-radius:2px;flex:1}
-.qs.ok{background:#2a5a2a}
-.qs.leak{background:#c84a1a}
-.qs.empty{background:#1a1f35}
-.quota-count{font-size:9px;color:#5a5878;white-space:nowrap}
 
 .hud-weather{background:#06090fcc;padding:2px 10px;display:flex;align-items:center;gap:5px;border-bottom:1px solid #0d1525;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
 .w-icon{font-size:12px}
@@ -174,16 +166,14 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 /* Divider between towers and lifelines */
 .tower-section::after{content:'';display:block;width:1px;background:#1a1f35;align-self:stretch;margin:0}
 
-.lifeline-row{flex:3;display:flex;gap:2px}
+.lifeline-row{flex:none;width:72px;display:flex;gap:2px}
 .ll{flex:1;background:#080a15;border:1px solid #1a1f35;border-radius:7px;padding:4px 1px 3px;text-align:center;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .ll.used{opacity:.3;cursor:not-allowed}
 .ll:active:not(.used){transform:scale(.95)}
 .ll-icon{font-size:15px;display:block;margin-bottom:0;line-height:1.15}
 .ll-name{font-size:7px;color:#3a3858;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ll-count{font-size:8px;color:#5a5878;margin-top:0}
-.ll-0 .ll-icon{color:#5a8aff}
-.ll-1 .ll-icon{color:#e05a2b}
-.ll-2 .ll-icon{color:#9b5aee}
+.ll-0 .ll-icon{color:#9b5aee}
 
 /* ===== OVERLAY MODALS ===== */
 .modal-overlay{position:absolute;inset:0;background:#00000088;display:flex;align-items:center;justify-content:center;z-index:100}
@@ -353,7 +343,7 @@ body{position:fixed;width:100%;height:100%}
 
 /* ===== WebKit backdrop-filter prefix ===== */
 .hud-top,#game-bottom{-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
-.hud-quota,.hud-weather{-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.hud-weather{-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 .chat-msg,.qc-btn{-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 
 /* ===== iOS momentum scroll ===== */
@@ -397,7 +387,7 @@ body{position:fixed;width:100%;height:100%}
 <!-- MENU -->
 <div class="screen" id="menu">
   <div class="menu-stars" id="menu-stars"></div>
-  <button id="menu-fs-btn" onclick="App.toggleFullscreen()" title="Toàn màn hình" style="position:absolute;top:max(12px,env(safe-area-inset-top,12px));right:14px;background:none;border:1px solid #2a2d45;border-radius:8px;color:#5a5878;font-size:18px;padding:4px 9px;cursor:pointer;z-index:10">⛶</button>
+  <button id="menu-fs-btn" onclick="App.toggleFullscreen()" title="Toàn màn hình" style="position:absolute;top:max(12px,env(safe-area-inset-top,12px));right:14px;background:rgba(10,12,30,0.7);border:1px solid #4a4870;border-radius:8px;color:#c0aeff;font-size:18px;padding:4px 9px;cursor:pointer;z-index:10">⛶</button>
   <div class="menu-castle">🏰</div>
   <div class="menu-title">LAST BASTION</div>
   <div class="menu-sub">BẢO VỆ ĐẾN HƠI THỞ CUỐI CÙNG</div>
@@ -463,12 +453,6 @@ body{position:fixed;width:100%;height:100%}
       <button class="hud-pause" onclick="Game.pause()">⏸</button>
       <button class="hud-pause" id="mute-btn" onclick="const m=SFX.toggle();this.textContent=m?'🔇':'🔊'" style="margin-left:4px">🔊</button>
       <button class="hud-pause hidden" id="give-gold-btn" onclick="Game.showGiveDonateMenu()" style="margin-left:4px;font-size:11px" title="Cho vàng cho đồng đội">💰</button>
-      <button class="hud-pause" id="fs-btn" onclick="App.toggleFullscreen()" style="margin-left:4px;font-size:13px" title="Toàn màn hình">⛶</button>
-    </div>
-    <div class="hud-quota">
-      <div class="quota-lbl">🚪 Quota</div>
-      <div class="quota-slots" id="quota-slots"></div>
-      <div class="quota-count" id="quota-count">0/5</div>
     </div>
     <div class="hud-weather">
       <div class="w-icon" id="w-icon">⛅</div>
@@ -920,8 +904,17 @@ const App = {
     Lobby.init();
   },
   toggleFullscreen() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if(isIOS) {
+      const t=document.createElement('div');
+      t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1030;border:1px solid #4a3080;color:#c0a0ff;padding:8px 16px;border-radius:10px;font-size:12px;z-index:999;pointer-events:none;text-align:center;max-width:260px';
+      t.textContent='iOS không hỗ trợ toàn màn hình. Thêm vào màn hình chính (Add to Home Screen) để chơi toàn màn hình.';
+      document.body.appendChild(t);
+      setTimeout(()=>t.remove(),4000);
+      return;
+    }
     const inFS = document.fullscreenElement || document.webkitFullscreenElement;
-    const btn = document.getElementById('fs-btn');
     if(!inFS) {
       const req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
       if(req) req.call(document.documentElement).catch(()=>{});
@@ -935,7 +928,6 @@ const App = {
 ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{
   const inFS=document.fullscreenElement||document.webkitFullscreenElement;
   const icon=inFS?'✕':'⛶';
-  const btn=document.getElementById('fs-btn'); if(btn) btn.textContent=icon;
   const mBtn=document.getElementById('menu-fs-btn'); if(mBtn) mBtn.textContent=icon;
 }));
 
@@ -1172,10 +1164,10 @@ const MapRenderer = {
 const MODES = [
   { name:'Standard',  icon:'⚔️', badge:'Khuyên dùng', bdgClass:'mb-0',
     desc:'20 round, 45 giây chuẩn bị mỗi wave. Cân bằng và đầy đủ nhất.',
-    pills:[{t:'45s chuẩn bị',g:true},{t:'Bán tháp được',g:true},{t:'Quota bình thường',g:false}] },
+    pills:[{t:'45s chuẩn bị',g:true},{t:'Bán tháp được',g:true},{t:'20 mạng',g:true}] },
   { name:'Hardcore',  icon:'💀', badge:'Khó', bdgClass:'mb-1',
-    desc:'Chỉ 20 giây chuẩn bị — phải xây tháp thật nhanh. Quái khỏe hơn và không bán lại tháp được.',
-    pills:[{t:'20s chuẩn bị',g:false},{t:'Không bán tháp',g:false},{t:'+50% thưởng',g:true},{t:'Quota ×0.4',g:false}] },
+    desc:'Chỉ 20 giây chuẩn bị — phải xây tháp thật nhanh. Quái khỏe hơn và khắc nghiệt hơn.',
+    pills:[{t:'20s chuẩn bị',g:false},{t:'10 mạng',g:false},{t:'+50% thưởng',g:true}] },
   { name:'Endless',   icon:'♾️', badge:'Vô tận', bdgClass:'mb-2',
     desc:'Chơi đến khi tinh thể vỡ. Sau round 20 quái tăng 8%/round.',
     pills:[{t:'Không kết thúc',g:false},{t:'Leaderboard',g:true},{t:'Khó tăng dần',g:false}] },
@@ -1399,7 +1391,7 @@ const TUTORIAL_STEPS = [
   { title:'Cách xây tháp', desc:'Nhấn tháp ở thanh dưới để chọn, sau đó nhấn ô trống trên bản đồ để đặt. Tháp tự bắn trong tầm của nó.', step:'3/8' },
   { title:'Cửa Tử & Mạng Sống', desc:'Mọi quái đổ về Cửa Tử bên phải. Bạn có 20 mạng (10 ở Hard) cho cả ván — mỗi quái lọt qua tiêu thụ 1 mạng. Hết mạng là thua!', step:'4/8' },
   { title:'Thời tiết thay đổi', desc:'Mỗi 3 round thời tiết đổi — buff hoặc debuff tháp. Giông bão tăng Sét, Nắng to tăng Lửa. Điều chỉnh chiến lược theo thời tiết!', step:'5/8' },
-  { title:'3 Lifeline cứu nguy', desc:'⚡ Iron Shield: Tinh Thể bất tử 10s\n💥 Orbital Strike: Xóa toàn bộ quái\n⏸ Time Warp: Làm chậm quái 80%. Mỗi cái dùng 1 lần/ván!', step:'6/8' },
+  { title:'Time Warp — Chiêu đặc biệt', desc:'🌀 Time Warp: Làm chậm toàn bộ quái 80% trong 6 giây. Dùng tối đa 2 lần/ván — hãy giữ cho những lúc nguy cấp nhất!', step:'6/8' },
   { title:'Khi nào thắng/thua?', desc:'✅ THẮNG: Sống sót qua 20 round không hết mạng.\n❌ THUA: 20 quái lọt qua cả ván (Hard: 10 con). Boss lọt qua tốn 3 mạng!', step:'7/8' },
   { title:'Sẵn sàng chiến đấu!', desc:'Bắt đầu với map Ironhold Pass — dễ nhất. Xây Tháp Cung dọc 2 bên đường, tích vàng mua Đại Bác cho đoạn cuối. Chúc may mắn! 🏰', step:'8/8', last:true }
 ];
@@ -1459,7 +1451,7 @@ const Game = {
   leakCount: 0, leakQuota: 5,
   selectedTower: -1,
   selectedPlacedTower: null,
-  lifelinesUsed: [0,0,0],
+  lifelinesUsed: [0],
   paused: false,
   weather: 5, weatherTimer: 0,
   lastTime: 0,
@@ -1549,7 +1541,7 @@ const Game = {
     this.round = 0;
     this.leakCount = 0;
     this.leakQuota = this.modeIdx === 1 ? 10 : 20;
-    this.lifelinesUsed = [0,0,0]; // counts (max 2 per lifeline)
+    this.lifelinesUsed = [0]; // counts (max 2 per lifeline)
     this.timeWarpActive = false;
     this.timeWarpTimer = 0;
     this.selectedTower = -1;
@@ -1822,7 +1814,6 @@ const Game = {
     }
     this.announceRound();
     this.updateHUD();
-    this.updateQuotaHUD();
     SFX.roundStart(this.round);
     const isBossRound = [5,10,15,20].includes(this.round);
     SFX.playMusic(isBossRound ? 'boss' : 'battle');
@@ -1986,7 +1977,6 @@ const Game = {
           this.spawnParticles(this.W - 20, en.y, '#e05a2b', en.isBoss ? 16 : 8);
           this.enemies.splice(i, 1);
           this.updateHUD();
-          this.updateQuotaHUD();
           if(this.leakCount >= this.leakQuota) { this.lose(); return; }
         }
         continue;
@@ -2010,7 +2000,6 @@ const Game = {
         this.spawnParticles(this.W-20, this.H/2, '#e05a2b', 10);
         this.enemies.splice(i,1);
         this.updateHUD();
-        this.updateQuotaHUD();
         if(this.leakCount >= this.leakQuota) { this.lose(); return; }
         continue;
       }
@@ -2555,7 +2544,7 @@ const Game = {
       const mx=this.mouseX, my=this.mouseY;
       if(mx>0 && my>0) {
         const tooClose=this.towers.some(tw=>Math.hypot(tw.x-mx,tw.y-my)<22);
-        const onPath=(this.paths||[this.path]).some(pp=>pp&&pp.some(pt=>Math.hypot(pt.x-mx,pt.y-my)<18));
+        const onPath=onAnyPath(mx,my,this.paths||[this.path],this.elitePath,20);
         const canPlace=!tooClose&&!onPath;
         const iColor=canPlace?'#30ff60':'#ff3030';
         if(tData.range>0) {
@@ -3858,7 +3847,7 @@ const Game = {
       const myGold = this.isMP ? this.playerGold[this.mpPlayerIdx] : this.gold;
       if(myGold < tData.cost) { this.flashLowGold(); return; }
       const tooClose=this.towers.some(tw=>Math.hypot(tw.x-tx,tw.y-ty)<22);
-      const onPath=(this.paths||[this.path]).some(pp=>pp.some(pt=>Math.hypot(pt.x-tx,pt.y-ty)<18));
+      const onPath=onAnyPath(tx,ty,this.paths||[this.path],this.elitePath,20);
       if(tooClose||onPath) return;
       if(this.isGuestMP) {
         MP.sendInput('place_tower', {x:tx, y:ty, typeId:this.selectedTower});
@@ -3877,7 +3866,6 @@ const Game = {
   },
 
   sellTower(tw) {
-    if(this.modeIdx===1) return;
     const baseCost=TOWERS_DATA[tw.typeId].cost;
     const lvl=tw.level||1;
     let totalSpent=baseCost;
@@ -3891,7 +3879,6 @@ const Game = {
     SFX.sellTower();
     this.spawnParticles(tw.x,tw.y,'#f5c842',8);
     this.updateHUD();
-    this.updateQuotaHUD();
   },
 
   showTowerPanel(tw, tapX, tapY) {
@@ -3914,7 +3901,7 @@ const Game = {
     const upgradeBtn=document.getElementById('tpan-upgrade-btn');
     const sellBtn=document.getElementById('tpan-sell-btn');
     sellBtn.innerHTML=`💰 Bán — nhận <i class="gc"></i>${sellVal}`;
-    sellBtn.style.display=(this.modeIdx===1||!isOwner)?'none':'block';
+    sellBtn.style.display=(!isOwner)?'none':'block';
     if(!isOwner) {
       upgradeBtn.textContent='🔒 Tháp của P'+(tw.ownerIdx+1);
       upgradeBtn.disabled=true;
@@ -4048,20 +4035,11 @@ const Game = {
       if(this.lifelinesUsed[idx]>=2) el.classList.add('used');
     }
     SFX.lifeline(idx);
-    if(idx===0) { // iron shield
-      this.crystalShield=true;
-      setTimeout(()=>this.crystalShield=false,10000);
-      this.spawnParticles(this.W-14,this.H/2,'#5a8aff',15);
-    } else if(idx===1) { // orbital strike
-      this.enemies.forEach(en=>this.spawnParticles(en.x,en.y,'#ff8800',8));
-      this.enemies=[];
-      this.spawnParticles(this.W/2,this.H/2,'#ff6820',30);
-    } else { // time warp — 6 second duration
-      this.timeWarpActive = true;
-      this.timeWarpTimer = 360; // 6s at 60fps
-      this.enemies.forEach(en=>en.slow=.2);
-      this.spawnParticles(this.W/2,this.H/2,'#c880ff',20);
-    }
+    // time warp — 6 second duration
+    this.timeWarpActive = true;
+    this.timeWarpTimer = 360; // 6s at 60fps
+    this.enemies.forEach(en=>en.slow=.2);
+    this.spawnParticles(this.W/2,this.H/2,'#c880ff',20);
   },
 
   buildTowerGrid() {
@@ -4077,7 +4055,7 @@ const Game = {
 
   buildLifelines() {
     const row=document.getElementById('lifeline-row');
-    const ll=[{icon:'🔰',name:'Iron Shield',cls:'ll-0'},{icon:'💥',name:'Napalm',cls:'ll-1'},{icon:'🌀',name:'Time Warp',cls:'ll-2'}];
+    const ll=[{icon:'🌀',name:'Time Warp',cls:'ll-0'}];
     row.innerHTML=ll.map((l,i)=>`
       <div class="ll ${l.cls}" onclick="Game.useLifeline(${i})" title="${this.isGuestMP?'Chỉ Host mới dùng được':'Chiêu thức đặc biệt (2 lần/trận)'}">
         <div class="ll-icon">${l.icon}</div>
@@ -4105,19 +4083,6 @@ const Game = {
     el.textContent = `+${bonus} 💰 Vàng thưởng vòng`;
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 1800);
-  },
-
-  updateQuotaHUD() {
-    const slots=document.getElementById('quota-slots');
-    const count=document.getElementById('quota-count');
-    if(!slots) return;
-    const quota = this.leakQuota;
-    const used = Math.min(this.leakCount, quota);
-    slots.innerHTML=Array.from({length:quota},(_,i)=>{
-      const cls = i < (quota - used) ? 'ok' : 'leak';
-      return `<div class="qs ${cls}"></div>`;
-    }).join('');
-    count.textContent=`${used}/${quota}`;
   },
 
   updateWeatherHUD() {
@@ -4260,6 +4225,26 @@ const Game = {
     setTimeout(()=>menu.remove(),5000);
   }
 };
+
+// ============================================================
+//  UTILITY
+// ============================================================
+function ptSegDist(px, py, ax, ay, bx, by) {
+  const dx=bx-ax, dy=by-ay, lenSq=dx*dx+dy*dy;
+  if(lenSq===0) return Math.hypot(px-ax, py-ay);
+  const t=Math.max(0, Math.min(1, ((px-ax)*dx+(py-ay)*dy)/lenSq));
+  return Math.hypot(px-(ax+t*dx), py-(ay+t*dy));
+}
+function onAnyPath(tx, ty, paths, elitePath, threshold) {
+  const all = elitePath ? [...paths, elitePath] : paths;
+  return all.some(pp => {
+    if(!pp||pp.length<2) return false;
+    for(let i=0;i<pp.length-1;i++) {
+      if(ptSegDist(tx,ty,pp[i].x,pp[i].y,pp[i+1].x,pp[i+1].y)<threshold) return true;
+    }
+    return false;
+  });
+}
 
 // ============================================================
 //  MENU STARS
@@ -4887,7 +4872,6 @@ const MP = {
       });
     }
     Game.updateHUD();
-    Game.updateQuotaHUD();
   },
 
   // ── Host: process guest action ───────────────────────────
@@ -4899,7 +4883,7 @@ const MP = {
         if(!tData||guestGold<tData.cost) break;
         if(Game.towers.some(tw=>Math.hypot(tw.x-data.x,tw.y-data.y)<22)) break;
         const paths=Game.paths||[Game.path];
-        if(paths.some(pp=>pp.some(pt=>Math.hypot(pt.x-data.x,pt.y-data.y)<18))) break;
+        if(onAnyPath(data.x,data.y,paths,Game.elitePath,20)) break;
         Game.playerGold[fromIdx]-=tData.cost;
         Game.towers.push({x:data.x,y:data.y,typeId:data.typeId,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:fromIdx});
         SFX.placeTower(data.typeId);
@@ -4908,7 +4892,6 @@ const MP = {
         break;
       }
       case 'sell_tower': {
-        if(Game.modeIdx===1) break;
         const tw=Game.towers.find(t=>Math.hypot(t.x-data.x,t.y-data.y)<8);
         if(!tw) break;
         if(tw.ownerIdx!=null&&tw.ownerIdx!==fromIdx) break; // ownership check

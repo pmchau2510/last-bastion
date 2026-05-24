@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-24) — last updated (Android/iOS MP fix: missing .hidden CSS, overlay scroll, keepalive ping)
+## Current State (2026-05-24) — last updated (fullscreen improvements, Time Warp only, quota removed)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,47 @@
 ---
 
 ## Completed Features
+
+### Fullscreen, Special Abilities, Quota Removal (2026-05-24)
+
+#### Fullscreen improvements
+- Removed in-game `#fs-btn` from HUD (already moved to main menu)
+- Fixed `#menu-fs-btn` color: was near-invisible (`#5a5878`), now clearly visible (`#c0aeff` with border `#4a4870` and semi-dark background)
+- iOS detection in `toggleFullscreen()`: shows an informational toast ("iOS không hỗ trợ toàn màn hình — Thêm vào màn hình chính") instead of silently failing
+- fullscreenchange listener cleaned up (no longer references removed `#fs-btn`)
+- Fullscreen via Fullscreen API persists across screen transitions in the SPA (no fix needed for Android)
+
+#### Special abilities — Time Warp only
+- Removed Iron Shield and Napalm (orbital strike) lifelines
+- Time Warp is the only lifeline (now idx 0, was idx 2)
+- CSS updated: `.ll-0 .ll-icon` is now purple (was blue)
+- `lifelinesUsed` array reduced from `[0,0,0]` to `[0]`
+- Tutorial step 6 updated to describe Time Warp only
+- Lifeline row width changed from `flex:3` to `flex:none;width:72px` (compact single-button layout)
+
+#### Quota HUD removed
+- Removed `<div class="hud-quota">` visual bar and all quota CSS
+- Removed `updateQuotaHUD()` function and all 5 call sites
+- **Underlying `leakCount`/`leakQuota` logic kept** — lives system and game-over condition unchanged
+- `hud-hp` "Mạng" display still shows remaining lives numerically
+- Mode pills updated: Standard → "20 mạng", Hardcore → "10 mạng" (removed "Quota ×0.4", removed "Không bán tháp")
+- Hardcore description updated (removed "không bán lại tháp được" since sell is now allowed everywhere)
+
+---
+
+### Tower Placement + Sell Fix (2026-05-24)
+
+#### Path collision: segment-distance check
+- Old check tested distance to individual waypoints only → towers could be placed on road between distant waypoints
+- Added `ptSegDist(px,py,ax,ay,bx,by)` helper (point-to-segment projection/clamp) and `onAnyPath(tx,ty,paths,elitePath,threshold)` helper
+- All 3 placement checks (draw indicator, handleTap, host place_tower handler) now use segment distance with threshold 20px
+- `elitePath` now included in the check (was previously omitted)
+
+#### Sell tower in all modes
+- Removed `modeIdx===1` (Hardcore) restriction from `sellTower()`, `showTowerPanel()` sell button visibility, and host `sell_tower` handler
+- Sell is now available in all modes: Standard, Hardcore, Endless, Challenge
+
+---
 
 ### Android/iOS MP Bug Fixes + UI Polish (2026-05-24)
 
