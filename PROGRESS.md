@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-24) — last updated (nation-specific projectile visuals)
+## Current State (2026-05-24) — last updated (map nav, upgrades, multi-boss, MP fixes)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,51 @@
 ---
 
 ## Completed Features
+
+### Map Navigation Arrows (thay tab bar)
+- Thay scrollable tab bar bằng nút **‹ ›** trong header màn hình chọn map
+- Counter `X/Y` cho biết đang ở map số mấy / tổng unlocked
+- Nút tự disable khi đã ở đầu/cuối danh sách — thân thiện hơn nhiều trên mobile
+
+### Tower Fire Rate Upgrade System
+- `UPGRADE_RATE_MULTS = [1, 0.88, 0.75, 0.62, 0.50]` — áp dụng cho **tất cả** tháp khi upgrade
+- Archer thêm `UPGRADE_ARCHER_RATE = [1, 0.92, 0.82, 0.70, 0.58]` chồng lên → Cấp 5 bắn nhanh hơn ~71%
+- Archer base DMG 12 → 9 (nerf để cân bằng với rate tăng)
+- Tower panel hiển thị rate thực tế sau upgrade (kèm ⚡ nếu > cấp 1)
+
+### Tháp mới: Đại Pháo (type 9)
+- 🎆 cost 160, DMG 50, range 95, rate 3200ms
+- **AoE bán kính 55px**: nổ instant — damage 100% tất cả quái trong vùng (không cần projectile)
+- Có ở cả 3 nation. Tower grid đổi từ 5 → **6 cột**
+- Visual: mortar nặng đặt trên nền đá, barrel xoay 60°, flash ring vàng khi nổ
+
+### Time Warp 6 giây
+- Trước: set `slow=0.2` 1 lần, enemy tự recover sau ~0.67s → không có tác dụng thực tế
+- Sau: `timeWarpTimer = 360 frames (6s)` — enemy slow bị cap ≤ 0.22 suốt thời gian
+- `timeWarpActive` + `timeWarpTimer` được sync qua MP (`state_sync` + `applyNetState`)
+
+### Multi-Boss Rounds
+- R5: 1 boss — Malachar's Puppet (intro)
+- R10: **2 boss** — Void Serpent (path 1) + Puppet (path 2)
+- R15: **2 boss** — Iron Colossus + The Twins cùng lúc
+- R20: **3 boss** — Void Colossus + Iron Colossus + The Twins
+- Boss phụ có 70% HP; spawn cách nhau 90 frames trên các path round-robin
+- Announce hiển thị: "⚠️ BOSS ×2 — Void Serpent + đồng bọn!"
+
+### HUD Collapse Button (▲ Thu)
+- Nút `#hud-tab` dưới weather bar — bấm để thu gọn/mở rộng HUD top
+- CSS sáng hơn: màu `#c4a0ff`, viền `#5a3aaa`, text-shadow glow tím
+- Tự mở lại khi bắt đầu game mới
+
+### Fullscreen (ẩn thanh địa chỉ)
+- Nút ⛶ trong HUD top bar và main menu
+- Gọi `requestFullscreen()` API — Android Chrome ẩn URL bar
+- iOS: dùng "Add to Home Screen" (PWA meta tags đã có sẵn)
+
+### Xóa Admin Password
+- Bỏ `ADMIN_PASSWORD` constant và `checkAdminPw()` method
+- "Tạo phòng mới" hiển thị mặc định — ai cũng tạo được
+- Vẫn giữ mật khẩu phòng (tùy chọn) để giới hạn người vào
 
 ### Wave System (batch spawning)
 - Enemies now release in **batches of 10** per sub-wave
@@ -191,11 +236,7 @@
 
 ## Pending / Backlog
 
-These features exist in an old todo list but have NOT been implemented:
-1. Admin password flow (hide create button, host-only start)
-2. Host-only lifelines + max 2 uses each
-3. Tower upgrade system (5 levels, exponential cost)
-4. Tower ownership (ownerIdx, player colors, restrict upgrade/sell)
-5. Per-player gold + donation system
+> **Do NOT start these without explicit user instruction.**
 
-> **Do NOT start these without explicit user instruction.** They may conflict with each other and need planning.
+1. Tower ownership UI improvements (player color indicators on placed towers)
+2. Per-player gold display improvements in MP HUD

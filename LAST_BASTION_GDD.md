@@ -154,8 +154,8 @@ Mỗi nation có hình dạng và màu sắc đạn riêng biệt cho các tháp
 
 | # | Tên | Icon | Giá | DMG | Range | Rate | Ghi chú |
 |---|-----|------|-----|-----|-------|------|---------|
-| 0 | Cung | 🏹 | 50 | 12 | 80 | 800ms | Đơn mục tiêu, tốc nhanh — mọi nation |
-| 1 | Đại Bác | 💣 | 100 | 45 | 70 | 2000ms | AoE, reload chậm — Ironhold, Emberon |
+| 0 | Cung | 🏹 | 50 | 9 | 80 | 800ms | Đơn mục tiêu — **tốc bắn tăng mạnh khi nâng cấp** — mọi nation |
+| 1 | Đại Bác | 💣 | 100 | 45 | 70 | 2000ms | AoE radius 40, reload chậm — Ironhold, Emberon |
 | 2 | Băng | ❄️ | 80 | 8 | 75 | 1200ms | Làm chậm quái 75% — Glacien |
 | 3 | Sét | ⚡ | 120 | 30 | 85 | 1500ms | Chain 2 mục tiêu — Ironhold, Glacien |
 | 4 | Lửa | 🔥 | 90 | 18 | 65 | 1000ms | DoT, diệt đám đông — Emberon |
@@ -163,6 +163,7 @@ Mỗi nation có hình dạng và màu sắc đạn riêng biệt cho các tháp
 | 6 | Ballista | 🎯 | 130 | 38 | 110 | 2500ms | Xuyên giáp — **Ironhold độc quyền** |
 | 7 | Băng Đền | 🔮 | 110 | 3 | 85 | 1000ms | AoE slow — **Glacien độc quyền** |
 | 8 | Magma | 🌋 | 100 | 25 | 65 | 900ms | Chain lửa — **Emberon độc quyền** |
+| 9 | Đại Pháo | 🎆 | 160 | 50 | 95 | 3200ms | **AoE radius 55px full damage** — tất cả quái trong vùng — mọi nation |
 
 ### 8.2 Băng tower buff
 
@@ -172,13 +173,15 @@ Tháp Băng làm chậm mục tiêu **75%** (slow = 0.25 × tốc gốc). Kết 
 
 Bấm vào tháp đã đặt → hiện panel với thông tin, nút nâng cấp và nút bán.
 
-| Cấp | DMG mult | Range mult | Chi phí nâng cấp | Scale hình |
-|-----|---------|-----------|-----------------|-----------|
-| 1 | ×1.0 | ×1.0 | — (đặt ban đầu) | ×1.0 |
-| 2 | ×1.4 | ×1.15 | `floor(baseCost × 0.5)` | ×1.2 |
-| 3 | ×2.1 | ×1.35 | `floor(baseCost × 0.8)` | ×1.45 |
-| 4 | ×3.2 | ×1.55 | `floor(baseCost × 1.5)` | ×1.7 |
-| 5 | ×5.0 | ×1.8 | `floor(baseCost × 2.5)` | ×2.0 |
+| Cấp | DMG mult | Range mult | Rate mult (chung) | Rate mult (Cung) | Chi phí | Scale |
+|-----|---------|-----------|-----------------|-----------------|---------|-------|
+| 1 | ×1.0 | ×1.0 | ×1.0 | ×1.0 | — | ×1.0 |
+| 2 | ×1.4 | ×1.15 | ×0.88 | **×0.81** | `base×0.5` | ×1.2 |
+| 3 | ×2.1 | ×1.35 | ×0.75 | **×0.62** | `base×0.8` | ×1.45 |
+| 4 | ×3.2 | ×1.55 | ×0.62 | **×0.43** | `base×1.5` | ×1.7 |
+| 5 | ×5.0 | ×1.8 | ×0.50 | **×0.29** | `base×2.5` | ×2.0 |
+
+*Rate mult = `UPGRADE_RATE_MULTS[lvl-1]`. Cung thêm `UPGRADE_ARCHER_RATE` nhân chồng → Lv5 Cung bắn nhanh ~3.5× cấp 1.*
 
 **Ví dụ Cung (base 50):** Cấp→2: 25, →3: 40, →4: 75, →5: 125 vàng | Tổng: 315 vàng
 
@@ -242,14 +245,19 @@ Mỗi map có **1 cổng đặc biệt** xuất hiện từ Round 10. Quái từ
 
 ### 8.3 Boss (xuất hiện round 5, 10, 15, 20)
 
-| Round | Tên | HP cơ bản | Thưởng |
-|-------|-----|-----------|--------|
-| 5 | Malachar's Puppet | 800 | 120 |
-| 10 | Void Serpent | 1200 | 180 |
-| 15 | Iron Colossus | 2000 | 250 |
-| 20 | **Malachar** *(final boss)* | 5000 | 600 |
+Boss rounds giờ spawn **nhiều boss** trên các path khác nhau:
 
-**Scale theo round:** HP × (1 + round\_index × 0.09)
+| Round | Số boss | Boss chính | Boss phụ |
+|-------|---------|------------|----------|
+| 5 | 1 | Malachar's Puppet (HP 800) | — |
+| 10 | **2** | Void Serpent (HP 1200, path 1) | Puppet (HP 70%, path 2) |
+| 15 | **2** | Iron Colossus (HP 2000, path 1) | The Twins (HP 70%, path 2) |
+| 20 | **3** | Void Colossus (HP 3000, path 1) | Iron Colossus + The Twins (70%) |
+
+- Boss phụ có **70% HP** so với base để cân bằng
+- Spawn cách nhau **90 frames (1.5s)** — xuất hiện liên tiếp trên các path
+- Wave announce: `⚠️ BOSS ×N — [Tên boss] + đồng bọn!`
+- **Scale theo round:** HP × (1 + round\_index × 0.09)
 
 ### 8.4 Sự kiện đặc biệt theo round
 
@@ -348,7 +356,7 @@ HUD trên (Round/Vàng/Mạng + Quota bar + Thời tiết) có thể **thu gọn
 ```
 
 - Hàng 1: Hero selector (chip thu gọn) + nút skill `✨` (icon-only)
-- Hàng 2: 5 tháp (nation-specific) + 3 lifeline cùng 1 hàng ngang
+- Hàng 2: **6 tháp** (nation-specific, gồm Đại Pháo) + 3 lifeline cùng 1 hàng ngang
 - Thiết kế tối ưu cho màn hình ngang điện thoại — `botH = 95px`
 - Nation modal trên landscape: 3 nation card hiển thị ngang hàng, có scroll + sticky confirm
 
@@ -403,7 +411,7 @@ Ba lifeline mỗi trận, **mỗi chiêu tối đa 2 lần/trận**.
 |---|-----|---------|
 | 0 | 🔰 Iron Shield | Tinh Thể được bảo vệ hoàn toàn trong 10 giây |
 | 1 | 💥 Napalm | Tiêu diệt toàn bộ quái trên sân |
-| 2 | 🌀 Time Warp | Làm chậm 80% tất cả quái trong ~5 giây |
+| 2 | 🌀 Time Warp | Làm chậm ~80% tất cả quái trong **6 giây** (timer-based, không tự hồi phục) |
 
 ---
 
