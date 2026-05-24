@@ -4120,6 +4120,7 @@ const Game = {
     this.closeTowerPanel();
     // For solo: re-open nation picker; for MP: just restart with same nation
     if(this.isMP) {
+      if(this.isHostMP) MP.broadcastEvent({type:'host_restart'});
       Game.init(STATE.mapIdx, STATE.modeIdx, false, this.isMP, this.mpPlayerIdx, this.mpPlayers, this.nationIdx||0);
     } else {
       NationPicker.open(n => Game.init(STATE.mapIdx, STATE.modeIdx, false, false, 0, [], n));
@@ -4697,6 +4698,10 @@ const MP = {
             `Đã để lọt ${event.leakCount||Game.leakCount} quái tại Round ${r}. ${r<10?'Hãy xây tháp nhiều hơn ngay từ đầu!':r<20?'Bạn đã chơi tốt! Thêm tháp AoE cho giai đoạn giữa.':'Gần thắng rồi! Cải thiện phòng thủ Cửa Tử.'}`;
           document.getElementById('lose-modal').classList.remove('hidden');
         }
+        break;
+      }
+      case 'host_restart': {
+        Game.restart();
         break;
       }
       case 'round_bonus': {
