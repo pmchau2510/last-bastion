@@ -362,11 +362,19 @@ body{position:fixed;width:100%;height:100%}
 /* ===== select element mobile style ===== */
 .mp-input select,.mp-input,select.mp-input{-webkit-appearance:none;appearance:none}
 
+/* ===== Missing .hidden rules (critical — mp-cards and others) ===== */
+.mp-card.hidden{display:none!important}
+.hud-pause.hidden{display:none!important}
+.w-bonus.hidden{display:none!important}
+#lobby-guest-controls.hidden{display:none!important}
+
 /* ===== Multiplayer overlay ===== */
-#mp-overlay{position:fixed;inset:0;background:#07090fee;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(20px,env(safe-area-inset-top,20px)) 20px max(20px,env(safe-area-inset-bottom,20px));overflow-y:auto;-webkit-overflow-scrolling:touch}
+/* justify-content removed: overflow at top is unreachable on mobile — use #mp-inner with margin:auto instead */
+#mp-overlay{position:fixed;inset:0;background:#07090fee;z-index:200;display:flex;flex-direction:column;align-items:center;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
 #mp-overlay.hidden{display:none}
+#mp-inner{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;margin:auto;padding:20px 20px}
 /* Room browser */
-#mp-card-rooms{max-height:min(80vh,520px);display:flex;flex-direction:column}
+#mp-card-rooms{max-height:min(70vh,500px);display:flex;flex-direction:column}
 .room-item{background:#080a15;border:1px solid #1e2235;border-radius:10px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:border-color .2s}
 .room-item:hover{border-color:#3a4080}
 .room-item:active{transform:scale(.98);border-color:#5a5ff0}
@@ -389,6 +397,7 @@ body{position:fixed;width:100%;height:100%}
 <!-- MENU -->
 <div class="screen" id="menu">
   <div class="menu-stars" id="menu-stars"></div>
+  <button id="menu-fs-btn" onclick="App.toggleFullscreen()" title="Toàn màn hình" style="position:absolute;top:max(12px,env(safe-area-inset-top,12px));right:14px;background:none;border:1px solid #2a2d45;border-radius:8px;color:#5a5878;font-size:18px;padding:4px 9px;cursor:pointer;z-index:10">⛶</button>
   <div class="menu-castle">🏰</div>
   <div class="menu-title">LAST BASTION</div>
   <div class="menu-sub">BẢO VỆ ĐẾN HƠI THỞ CUỐI CÙNG</div>
@@ -570,6 +579,7 @@ body{position:fixed;width:100%;height:100%}
 
 <!-- MULTIPLAYER OVERLAY -->
 <div id="mp-overlay" class="hidden">
+<div id="mp-inner">
   <!-- Card: Tạo / Vào phòng -->
   <div class="mp-card" id="mp-card-main">
     <div class="mp-title">🌐 Nhiều người chơi</div>
@@ -634,6 +644,7 @@ body{position:fixed;width:100%;height:100%}
     <div class="mp-err" id="mp-err-lobby"></div>
     <button class="mp-btn mp-btn-back" onclick="MP.leaveRoom()">← Rời phòng</button>
   </div>
+</div><!-- #mp-inner -->
 </div>
 
 <!-- TOWER UPGRADE/SELL PANEL -->
@@ -922,8 +933,10 @@ const App = {
 };
 
 ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{
-  const btn=document.getElementById('fs-btn');
-  if(btn) btn.textContent=(document.fullscreenElement||document.webkitFullscreenElement)?'✕':'⛶';
+  const inFS=document.fullscreenElement||document.webkitFullscreenElement;
+  const icon=inFS?'✕':'⛶';
+  const btn=document.getElementById('fs-btn'); if(btn) btn.textContent=icon;
+  const mBtn=document.getElementById('menu-fs-btn'); if(mBtn) mBtn.textContent=icon;
 }));
 
 // ============================================================
@@ -4322,10 +4335,20 @@ const MP = {
       this.setErr('Không thể kết nối server. Hãy chạy server.js trước!');
       return;
     }
-    this.ws.onopen = () => { this.setErr(''); onOpen(); };
+    this.ws.onopen = () => {
+      this.setErr('');
+      // Keepalive ping every 25s — prevents Render.com free-tier from closing idle WebSocket
+      if(this._pingTimer) clearInterval(this._pingTimer);
+      this._pingTimer = setInterval(() => {
+        if(this.ws && this.ws.readyState===WebSocket.OPEN) this.send({type:'ping'});
+        else { clearInterval(this._pingTimer); this._pingTimer=null; }
+      }, 25000);
+      onOpen();
+    };
     this.ws.onerror = () => this.setErr('Lỗi kết nối. Kiểm tra server đang chạy không?');
     this.ws.onmessage = e => this.handle(JSON.parse(e.data));
     this.ws.onclose = () => {
+      if(this._pingTimer) { clearInterval(this._pingTimer); this._pingTimer=null; }
       if(Game.gamePhase && Game.gamePhase!=='done') {
         this.showChat('🔴 Server mất kết nối');
       }

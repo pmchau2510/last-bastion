@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-24) — last updated (MP: wave-ready indicator + donate gold improvements)
+## Current State (2026-05-24) — last updated (Android/iOS MP fix: missing .hidden CSS, overlay scroll, keepalive ping)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,28 @@
 ---
 
 ## Completed Features
+
+### Android/iOS MP Bug Fixes + UI Polish (2026-05-24)
+
+#### Critical: Missing `.mp-card.hidden` CSS rule
+- **Root cause**: `.mp-card.hidden{display:none}` CSS rule did not exist → ALL 4 mp-cards rendered simultaneously (create/rooms/lobby stacked on top of mp-card-main)
+- Symptom on Android: overlay showed multiple cards stacked, couldn't scroll to join area; room browser showed but had no WebSocket connection (never triggered `showRoomBrowser()`)
+- Also fixed missing rules: `.hud-pause.hidden`, `.w-bonus.hidden`, `#lobby-guest-controls.hidden`
+
+#### MP overlay scroll fix (Android)
+- Removed `justify-content:center` from `#mp-overlay` — centers content but makes top overflow unreachable on scroll
+- Added `#mp-inner` wrapper div inside overlay with `margin:auto` — centers when content fits, scrolls from top when it overflows
+- Added `overscroll-behavior:contain` to prevent page bounce while scrolling overlay
+
+#### WebSocket keepalive ping
+- `MP.connect()` now starts a 25-second ping interval on open → prevents Render.com free-tier from closing idle connections (causing rooms to disappear cross-device)
+- Interval cleared on close/error; cleaned up with `_pingTimer`
+
+#### Fullscreen button on main menu
+- Added `#menu-fs-btn` (⛶) to top-right corner of main menu screen — accessible before entering game
+- `fullscreenchange` listener updates both `#fs-btn` (in-game) and `#menu-fs-btn` (menu) icon
+
+---
 
 ### MP: Wave-Ready Indicator + Donate Gold Improvements (2026-05-24)
 
