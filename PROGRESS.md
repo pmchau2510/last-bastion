@@ -36,6 +36,14 @@
 - Each path gets its own spawn marker labeled A, B, C...
 - Animated enemies walk across all paths proportionally
 
+### Bottom HUD Redesign (landscape mobile)
+- Towers + Lifelines gộp vào **1 hàng ngang** thay vì 2 hàng chồng — tiết kiệm ~55px
+- Hero row thu gọn: avatar nhỏ hơn (18px), hero name nhỏ hơn, skill button → chỉ còn icon `✨`
+- `tower-grid` đổi thành `repeat(5,1fr)` khớp với số tháp thực tế (5 tháp/nation)
+- `botH` giảm 148→95: map được thêm **~53px chiều cao** hiển thị
+- Nation modal: `max-height:100svh` + `overflow-y:auto` + confirm button `sticky bottom`
+- Landscape CSS: 3 nation card hiển thị ngang hàng (`@media orientation:landscape`)
+
 ### Enemy Movement Speed Tuning
 - Speed multiplier reduced from `* .01` → `* .006` (chậm ~40%)
 - Áp dụng trong công thức: `spd = en.spd * en.slow * fps60 * .006`

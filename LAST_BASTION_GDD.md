@@ -283,13 +283,17 @@ Quái không ra từng con mà ra theo **đợt** (như các game tower defense 
 
 > Icon tiền là CSS `.gc` (radial-gradient vòng vàng) thay vì emoji 🪙 để tương thích Android cũ.
 
-### 10.2 HUD dưới
+### 10.2 HUD dưới (landscape mobile optimized)
 
 ```
-[Kael ●] [Lyria ○]                    [✨ Kỹ năng]
-[🏹50] [💣100] [❄️80] [⚡120] [🔥90] [🌿150]
-[Lifeline 1] [Lifeline 2] [Lifeline 3]
+[K Kael] [L Lyria]                               [✨]
+[Tháp1][Tháp2][Tháp3][Tháp4][Tháp5] │ [LL1][LL2][LL3]
 ```
+
+- Hàng 1: Hero selector (chip thu gọn) + nút skill `✨` (icon-only)
+- Hàng 2: 5 tháp (nation-specific) + 3 lifeline cùng 1 hàng ngang
+- Thiết kế tối ưu cho màn hình ngang điện thoại — `botH = 95px`
+- Nation modal trên landscape: 3 nation card hiển thị ngang hàng, có scroll + sticky confirm
 
 ### 10.3 Tương tác tháp đã đặt
 
