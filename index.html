@@ -1755,25 +1755,7 @@ const Game = {
       } else if(this.round > 10 && !this.eliteGateShown) {
         this.eliteGateShown = true; this.bgDirty = true;
       }
-      // First time gate appears (round 10): dramatic announcement
-      if(this.round === 10) {
-        setTimeout(() => {
-          const el = document.getElementById('elite-gate-announce');
-          if(el) { el.textContent = `⚠ ${this.mapData.eliteEnemy.name.toUpperCase()} — CỔNG TỐI THỨC TỈNH!`; el.classList.add('show'); }
-          this.addShake(18);
-          SFX.eliteGate();
-          setTimeout(() => document.getElementById('elite-gate-announce')?.classList.remove('show'), 4500);
-        }, 800);
-      } else {
-        // Subsequent rounds: smaller warning
-        setTimeout(() => {
-          const el = document.getElementById('elite-gate-announce');
-          if(el) { el.textContent = `⚠ ${this.mapData.eliteEnemy.name} xuất hiện!`; el.classList.add('show'); }
-          this.addShake(8);
-          SFX.eliteGate(true);
-          setTimeout(() => document.getElementById('elite-gate-announce')?.classList.remove('show'), 2500);
-        }, 600);
-      }
+      this.announceEliteGate(this.round);
     }
 
     // Aerial wave: spawn flying enemies (Storm Wyvern / Siege Drake) from same gates as ground enemies
@@ -1866,6 +1848,28 @@ const Game = {
     const upcoming = [5,10,15,20].find(b=>b>this.round&&b-this.round<=2);
     warn.textContent = upcoming ? `⚠ BOSS R${upcoming}` : '';
     warn.classList.toggle('hidden', !upcoming);
+  },
+
+  announceEliteGate(round) {
+    if(!this.elitePath || !this.mapData?.eliteEnemy) return;
+    const eed = this.mapData.eliteEnemy;
+    if(round === 10) {
+      setTimeout(() => {
+        const el = document.getElementById('elite-gate-announce');
+        if(el) { el.textContent = `⚠ ${eed.name.toUpperCase()} — CỔNG TỐI THỨC TỈNH!`; el.classList.add('show'); }
+        this.addShake(18);
+        SFX.eliteGate();
+        setTimeout(() => document.getElementById('elite-gate-announce')?.classList.remove('show'), 4500);
+      }, 800);
+    } else {
+      setTimeout(() => {
+        const el = document.getElementById('elite-gate-announce');
+        if(el) { el.textContent = `⚠ ${eed.name} xuất hiện!`; el.classList.add('show'); }
+        this.addShake(8);
+        SFX.eliteGate(true);
+        setTimeout(() => document.getElementById('elite-gate-announce')?.classList.remove('show'), 2500);
+      }, 600);
+    }
   },
 
   tutorialDone() {
@@ -4856,13 +4860,14 @@ const MP = {
       const swBtn=document.getElementById('start-wave-btn');
       if(swBtn) swBtn.classList.add('hidden');
       Game.updateWaveReadyBar();
-      // Elite gate reveal for guests
+      // Elite gate reveal + announcement for guests
       if(Game.elitePath) {
         if(s.round === 10 && !Game.eliteGateShown && !Game.eliteGateRevealStart) {
           Game.eliteGateRevealStart = performance.now();
         } else if(s.round > 10 && !Game.eliteGateShown) {
           Game.eliteGateShown = true; Game.bgDirty = true;
         }
+        if(s.round >= 10) Game.announceEliteGate(s.round);
       }
     } else if(s.round!=null) {
       if(s.roundTimer!=null) Game.roundTimer = s.roundTimer;
