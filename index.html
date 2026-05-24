@@ -846,7 +846,7 @@ const ROUND_SPAWN = Array.from({length:20}, (_,ri) => {
   const gates = Math.min(1 + Math.floor(r/7), 3);
   const allT=[0,1,2,3,4,5,6];
   const types = stage===0?[0,1]:stage===1?[0,1,2,3]:stage===2?[0,1,2,3,4,5]:allT;
-  const hpMult = 1 + ri * .09;
+  const hpMult = Math.pow(1.07, ri); // exponential: R1=1.0x, R10=2.0x, R15=2.76x, R20=3.87x
   // Aerial rounds: ~5 rounds per game where flying enemies appear (not boss rounds)
   const aerial = [4, 8, 11, 14, 18].includes(r);
   return { round:r, perGate, gates, types, hpMult, isBoss, bossIdx, bossIdxList, bossCount, aerial };
@@ -1650,28 +1650,43 @@ const Game = {
 
     const numPaths = this.paths ? this.paths.length : 1;
     if(isBoss) {
-      // Spawn each boss on a different path (round-robin), staggered 90 frames apart
+      // One boss per gate — each gate spawns a boss from bossIdxList (round-robin)
       const idxList = data.bossIdxList || [data.bossIdx];
-      idxList.forEach((bIdx, bi) => {
+      for(let pi = 0; pi < numPaths; pi++) {
+        const bIdx = idxList[pi % idxList.length];
         const boss = {...BOSS_TYPES[Math.min(bIdx, BOSS_TYPES.length-1)]};
-        // Each extra boss has slightly scaled-down HP so it doesn't feel unfair
-        const bossHpScale = bi === 0 ? 1 : 0.7;
+        const bossHpScale = pi === 0 ? 1 : 0.75;
         boss.hp = boss.hp * hpM * bossHpScale;
         boss.maxHp = boss.hp;
         boss.t = 0; boss.spd = boss.spd * spdM; boss.slow = 1;
         if(boss.aerial) {
-          const pIdx = bi % numPaths;
-          boss.x = (this.paths[pIdx][0].x || 0) - 30;
-          boss.y = this.paths[pIdx][0].y;
+          boss.x = (this.paths[pi][0].x || 0) - 30;
+          boss.y = this.paths[pi][0].y;
         } else {
-          boss.pathIdx = bi % numPaths;
-          const pathPts = this.paths[boss.pathIdx];
+          boss.pathIdx = pi;
+          const pathPts = this.paths[pi];
           boss.x = pathPts[0].x; boss.y = pathPts[0].y;
         }
         boss.isBoss = true; boss.spawnId = Math.random()*1000;
-        boss._id = `r${this.round}_boss${bi}`;
-        this.spawnQueue.push({enemy: boss, delay: bi === 0 ? 60 : 90});
-      });
+        boss._id = `r${this.round}_boss${pi}`;
+        this.spawnQueue.push({enemy: boss, delay: pi === 0 ? 60 : 90});
+      }
+      // Elite gate boss: appears from round 10+ — 2x HP of the primary boss
+      if(this.round >= 10 && this.elitePath && this.mapData.eliteEnemy) {
+        const eed = this.mapData.eliteEnemy;
+        const primaryBoss = {...BOSS_TYPES[Math.min(idxList[0], BOSS_TYPES.length-1)]};
+        primaryBoss.hp = primaryBoss.hp * hpM * 2;
+        primaryBoss.maxHp = primaryBoss.hp;
+        primaryBoss.t = 0; primaryBoss.spd = primaryBoss.spd * spdM * 0.9; primaryBoss.slow = 1;
+        primaryBoss.pathIdx = 100; primaryBoss.elite = true;
+        primaryBoss.color = eed.color; primaryBoss.glowColor = eed.glowColor;
+        primaryBoss.radius = (eed.radius || 9) + 5;
+        primaryBoss.reward = primaryBoss.reward * 2;
+        primaryBoss.isBoss = true; primaryBoss.spawnId = Math.random()*1000;
+        primaryBoss._id = `r${this.round}_boss_elite`;
+        primaryBoss.x = this.elitePath[0].x; primaryBoss.y = this.elitePath[0].y;
+        this.spawnQueue.push({enemy: primaryBoss, delay: 120});
+      }
     }
 
     // Collect all regular enemies, then distribute across paths and batch into waves
@@ -4747,9 +4762,16 @@ const MP = {
         x:~~en.x, y:~~en.y,
         hp:~~en.hp, maxHp:~~en.maxHp,
         slow:en.slow||1, spd:en.spd, isBoss:en.isBoss||false, color:en.color, typeId:en.typeId,
-        id:en.id, elite:en.elite||false,
+        id:en.id, elite:en.elite||false, glowColor:en.glowColor||null, spawnId:en.spawnId||0,
         radius:en.radius, reward:en.reward, heals:en.heals||false,
         pathIdx:en.pathIdx||0, aerial:en.aerial||false
+      })),
+      projectiles: Game.projectiles.slice(0,30).map(p=>({
+        x:~~p.x, y:~~p.y,
+        tx:~~(p.targetEnemy?p.targetEnemy.x:(p.tx||0)),
+        ty:~~(p.targetEnemy?p.targetEnemy.y:(p.ty||0)),
+        typeId:p.typeId, angle:p.angle||0, nation:p.nation||0,
+        trail:p.trail.slice(-8).map(t=>({x:~~t.x,y:~~t.y}))
       })),
       crystalHP: Game.crystalHP,
       gamePhase: Game.gamePhase,
@@ -4793,6 +4815,10 @@ const MP = {
       if(prev) { Object.assign(prev,se); return prev; }
       return {...se,flash:0,pathIdx:se.pathIdx||0};
     });
+    // sync visual projectiles so guest sees bullets
+    if(s.projectiles) {
+      Game.projectiles = s.projectiles.map(p=>({...p, trail:p.trail||[], targetEnemy:null}));
+    }
     if(s.towers) {
       Game.towers = s.towers.map(tw=>({...tw,cooldown:0,ownerIdx:tw.ownerIdx||0}));
       // Re-sync selected tower reference to prevent panel flicker after towers rebuild
