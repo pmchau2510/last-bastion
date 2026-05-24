@@ -1,4 +1,4 @@
-# LAST BASTION — Game Design Document v9.0
+# LAST BASTION — Game Design Document v9.1
 
 > **Cập nhật:** 2026-05-24  
 > **Stack:** Single HTML file · Canvas API · Web Audio API · Node.js WebSocket (multiplayer)
@@ -101,6 +101,17 @@ Tất cả map được thiết kế với **đường đi dài + nhiều làn**
 
 > `prepT = [45, 20, 45, 35][modeIdx]` — tất cả mode đều có thời gian chuẩn bị.  
 > Bán tháp được phép ở **mọi chế độ** (bao gồm Hardcore từ v9.0). Hoàn 60% tổng chi phí.
+
+**Vàng khởi đầu:**
+
+| Mode | Solo | MP |
+|------|------|-----|
+| Standard | 400 | 200 |
+| Hardcore | 300 | 150 |
+| Endless | 400 | 200 |
+| Challenge | 350 | 200 |
+
+> Solo được cho nhiều hơn vì không có đồng đội chia sẻ kinh tế.
 
 ---
 
@@ -540,6 +551,7 @@ Menu
 
 | Phiên bản | Ngày | Thay đổi chính |
 |-----------|------|---------------|
+| v9.1 | 2026-05-24 | Solo starting gold +100 mọi mode (Standard 400, Hardcore 300, Endless 400, Challenge 350) |
 | v9.0 | 2026-05-24 | Tower placement segment-distance check + elitePath; bán tháp mọi chế độ; chỉ Time Warp lifeline; xóa Quota HUD; fullscreen menu-only + iOS toast; split sync MP (2/10 frame) |
 | v8.0 | 2026-05-24 | Aerial enemy system (Storm Wyvern + Siege Drake), Phòng Không (id:10), T.Nhiên per-round, HUD collapse, hero row removed, 7-column grid |
 | v7.0 | 2026-05-24 | Map redesign (S-curve/zigzag/mê cung), arc-length preview, prep time mọi mode, room browser auto-refresh, fullscreen fix |

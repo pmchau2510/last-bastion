@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-24) — last updated (fullscreen improvements, Time Warp only, quota removed)
+## Current State (2026-05-24) — last updated (solo starting gold +100)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,12 @@
 ---
 
 ## Completed Features
+
+### Solo Starting Gold Buff (2026-05-24)
+- Solo: Standard 300→**400**, Hardcore 200→**300**, Endless 300→**400**, Challenge 250→**350**
+- MP unchanged: `[200, 150, 200, 200]`
+
+---
 
 ### Fullscreen, Special Abilities, Quota Removal (2026-05-24)
 
