@@ -1641,10 +1641,16 @@ const Game = {
     const ev = ROUND_EVENTS[this.round] || {};
     this.roundEvent = ev;
     this.spawnQueue = [];
-    const hpM = data.hpMult * (this.modeIdx === 1 ? 1.2 : 1) * (ev.hpMult || 1);
-    const spdM = ev.spdMult || 1;
+    // Endless: after R20 enemies scale 8%/round HP and +1 count per 3 rounds
+    const endlessR = (this.modeIdx === 2 && this.round > 20) ? this.round - 20 : 0;
+    const endlessHpX = endlessR > 0 ? Math.pow(1.08, endlessR) : 1;
+    const modeHpX = this.modeIdx === 1 ? 1.2 : this.modeIdx === 3 ? 1.1 : 1;
+    const hpM = data.hpMult * endlessHpX * modeHpX * (ev.hpMult || 1);
+    const modeSpdX = this.modeIdx === 3 ? 1.15 : 1; // Challenge: +15% speed
+    const spdM = (ev.spdMult || 1) * modeSpdX;
     const isBoss = data.isBoss;
-    const perG = Math.round((data.perGate + (this.modeIdx === 1 ? 3 : 0)) * (ev.countMult || 1));
+    const endlessCountExtra = endlessR > 0 ? Math.floor(endlessR / 3) : 0;
+    const perG = Math.round((data.perGate + (this.modeIdx === 1 ? 3 : 0) + endlessCountExtra) * (ev.countMult || 1));
     const allT=[0,1,2,3,4,5,6];
     const typePool = ev.allTypes ? allT : data.types;
 
@@ -2191,12 +2197,6 @@ const Game = {
       setTimeout(()=>this.startRound(), gap*16.7);
     }
 
-    // endless bonus
-    if(this.modeIdx===2 && this.round>20) {
-      const extra = Math.floor((this.round-20)/5);
-      const overrideEnemy = this.enemies[0];
-      if(overrideEnemy) overrideEnemy.hp *= 1; // already scaled at spawn
-    }
   },
 
   damageEnemy(en, dmg) {
@@ -2212,7 +2212,9 @@ const Game = {
       SFX.enemyDie(!!en.isBoss, en.typeId||0);
       if(en.isBoss) { this.addShake(6); this.spawnParticles(en.x,en.y,en.color,20); }
       else this.spawnParticles(en.x,en.y,en.color,8);
-      const reward = (en.reward || 10) + (en.isBoss ? 50 : 0);
+      const baseReward = (en.reward || 10) + (en.isBoss ? 50 : 0);
+      const rewardMult = this.modeIdx === 1 ? 1.5 : this.modeIdx === 3 ? 2.0 : 1;
+      const reward = Math.round(baseReward * rewardMult);
       // each player earns the reward independently
       for(let gi=0;gi<this.playerGold.length;gi++) this.playerGold[gi]=(this.playerGold[gi]||0)+reward;
       this.gold = this.playerGold[this.mpPlayerIdx];
