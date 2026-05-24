@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-24) — last updated (tower upgrade balance + boss HP buff)
+## Current State (2026-05-24) — last updated (MP: wave-ready indicator + donate gold improvements)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,25 @@
 ---
 
 ## Completed Features
+
+### MP: Wave-Ready Indicator + Donate Gold Improvements (2026-05-24)
+
+#### Wave-Ready Indicator (tính năng 2)
+- Trong pha prep (chuẩn bị), hiện thanh `#wave-ready-bar` bên cạnh nút "Bắt đầu" trên HUD
+- Mỗi người chơi hiển thị là **✅ tên** (sẵn sàng) hoặc **⏳ tên** (chưa)
+- **Guest**: bấm vào slot của mình trong thanh để toggle sẵn sàng → gửi `wave_ready` input đến host
+- **Host**: slot host luôn ✅; khi tất cả guest ✅ → nút "Bắt đầu" chuyển sang **pulse gold** (animation `all-ready`)
+- Flag reset mỗi round mới (host và guest đều reset)
+- Bar tự ẩn khi wave bắt đầu (timer hết hoặc host bấm start)
+- Luồng: guest click → `player_input(wave_ready)` → host update `waveReadyFlags[]` → `broadcastEvent(wave_ready_update)` → tất cả `updateWaveReadyBar()`
+
+#### Donate Gold Improvements (tính năng 6)
+- Menu donate (💰 button) giờ **hiển thị gold hiện tại** của từng người nhận — không cần đoán ai đang cần tiền
+- **Recipient toast**: khi ai đó donate cho bạn, bạn thấy toast `💰 +50 vàng từ [Tên]`
+- Guest → guest donate đã hoạt động đúng (không có bug); cải thiện là UX và notification
+- Luồng toast: host xử lý `give_gold` → `broadcastEvent(gold_gift)` → recipient nhận và hiện toast qua `applyRemoteEvent`
+
+---
 
 ### Tower Upgrade Balance + Boss HP Buff (2026-05-24)
 
