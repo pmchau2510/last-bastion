@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-24) — last updated (performance optimizations: object pools, split sync, payload compression)
+## Current State (2026-05-24) — last updated (tower upgrade balance + boss HP buff)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,36 @@
 ---
 
 ## Completed Features
+
+### Tower Upgrade Balance + Boss HP Buff (2026-05-24)
+
+**Problem:** Cheap towers (Cung 50g) maxed to level 5 gave ~194 DPS — higher than Ballista (130g) at ~152 DPS, making late rounds/bosses trivially easy.
+
+**Root cause:** DMG scale 5.0× + double-stacked rate bonus (UPGRADE_RATE_MULTS × UPGRADE_ARCHER_RATE) → Archer at max shot every 232ms with 45 DMG.
+
+#### Upgrade constant changes
+| Constant | Before | After |
+|---|---|---|
+| `UPGRADE_DMG_MULTS[4]` (max) | 5.0 | **4.2** |
+| `UPGRADE_RATE_MULTS[4]` (max) | 0.50 | **0.62** |
+| `UPGRADE_ARCHER_RATE[4]` (max) | 0.58 | **0.74** |
+| `UPGRADE_COST_MULTS[3]` (lvl3→4) | 1.5 | **2.0** |
+| `UPGRADE_COST_MULTS[4]` (lvl4→5) | 2.5 | **4.0** |
+
+**Result (Cung max):** 194 DPS @ 315g → **103 DPS @ 420g** (-47% DPS, +33% cost)
+
+#### Boss HP buffs
+| Boss | Before | After |
+|---|---|---|
+| Scorpion King (R5) | 800 | **900** |
+| Venomfang Serpent (R10) | 1400 | **2000** |
+| Goblin Warlord (R10) | 700 | **1000** |
+| Stone Titan (R15) | 2200 | **3200** |
+| Storm Drake (R15) | 1600 | **2400** |
+| Eternal Dragon (R20) | 5000 | **8000** |
+| Shadow Colossus (R20) | 3200 | **5000** |
+
+---
 
 ### Performance Optimizations (2026-05-24)
 
