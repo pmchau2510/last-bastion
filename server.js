@@ -94,9 +94,7 @@ wss.on('connection', ws => {
       case 'list_rooms': {
         const list = [];
         rooms.forEach((r, c) => {
-          if (!r.started) {
-            list.push({ code: c, map: r.map, mode: r.mode, hasPassword: !!(r.password), playerCount: r.players.length });
-          }
+          list.push({ code: c, map: r.map, mode: r.mode, hasPassword: !!(r.password), playerCount: r.players.length, started: r.started });
         });
         ws.send(JSON.stringify({ type: 'rooms_list', rooms: list }));
         break;

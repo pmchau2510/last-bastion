@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-24) — last updated (aerial enemies + anti-air tower system)
+## Current State (2026-05-24) — last updated (performance optimizations: object pools, split sync, payload compression)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,93 @@
 ---
 
 ## Completed Features
+
+### Performance Optimizations (2026-05-24)
+
+#### Particle Object Pool + Cap 200
+- `spawnParticles()` now reuses objects from `this._particlePool` (cap 400) instead of allocating each frame
+- Particle removal uses **swap-and-pop** (`particles[i] = particles[last]; pop()`) instead of `splice()` — O(1) vs O(n)
+- Hard cap: max 200 active particles at a time; new ones drop when full
+- Both host loop and guest loop updated
+
+#### DamageNum Object Pool
+- `damageNums.push()` reuses from `this._dmgPool` (cap 200)
+- Damage number removal also uses swap-and-pop
+- Both host loop and guest loop updated
+
+#### Split Sync Rate (enemies vs full state)
+- **Every 2 frames (~33ms)**: enemy-only sync (position, HP, slow) — keeps movement smooth
+- **Every 10 frames (~167ms)**: full sync (towers, gold, round info, timers) — rarely changes
+- `_fullSyncCounter` added to `reset()` alongside `_syncCounter`
+- `broadcastState(full)` and `getNetState(full)` parameterized accordingly
+
+#### Compressed getNetState Payload
+- Enemy positions: `~~en.x`, `~~en.y` (integer pixels)
+- Enemy HP: `~~en.hp`, `~~en.maxHp`
+- Path progress: `~~(en.t*10000)/10000` (4 decimal precision)
+- Towers/gold/round only included in full sync — not sent every frame
+
+#### applyNetState: handles partial syncs
+- `s.towers` optional: only rebuilds tower array when present (every 10 frames)
+- `s.round` optional: round/timer/leakCount only updated when present (full sync)
+- `gamePhase` always present: transition from `prep→wave` handled even in partial sync
+- `s.gold`/`s.playerGold` optional: only updates when present
+
+---
+
+### Aerial Gate Fix + Elite Gate Animation + Tower Size Fix (2026-05-24)
+
+#### Aerial enemies from gate (not separate lane)
+- Aerial enemies (Storm Wyvern, Siege Drake) now spawn from **same gate as ground enemies** (round-robin across paths), fly straight right from that Y position
+- Aerial bosses (Venomfang Serpent, Storm Drake, Eternal Dragon) also spawn from gate positions
+- Removed the `aerialY` center-lane from `buildBgCanvas` entirely — no more blue sky strip
+
+#### Elite Gate bug fix + animation (round 10)
+- **Root cause**: elite path was never drawn on screen — enemies walked on an invisible road
+- **Fix**: `buildBgCanvas` now draws the elite path (dark red road) when `eliteGateShown = true`
+- **Round 10 animation** (`_drawEliteGateReveal`): 3-second animated path draw — path draws itself from gate to end, glowing front tip, spark particles, portal pops in at gate
+- After animation completes: background rebuilds with elite path permanently
+- Subsequent rounds (11+): path shows immediately on game start
+- Guests get the same animation via `applyNetState` round detection
+- Both solo and multiplayer fully supported
+
+#### Tower upgrade visual size
+- `UPGRADE_SCALE`: `[1, 1.2, 1.45, 1.7, 2.0]` → `[1, 1.1, 1.22, 1.35, 1.48]` — still grows visibly but less dramatically
+
+---
+
+### Boss Redesign + Multiplayer Fixes + Tower Placement + Room UI (2026-05-24)
+
+#### Boss Redesign
+- All 6 boss types completely redrawn with unique per-boss visuals using `en.id` switch
+- **Scorpion King** (R5, id:10): segmented tail, stinger glow, paired claws, 6 legs, 3-eye cluster
+- **Venomfang Serpent** (R10, id:11, aerial): S-curve snake body, folding wings, fangs, venom-green eyes
+- **Goblin Warlord** (R10, id:12): armored goblin, gold axe, horned helmet, orange eyes
+- **Stone Titan** (R15, id:13): cracked stone body with lava-glow cracks, rune chest, stone crown
+- **Storm Drake** (R15, id:14, aerial): electric aura, lightning crackling, blue dragon with wings
+- **Eternal Dragon** (R20, id:15, aerial, FINAL): dual wing pairs, golden scale pattern, crown of horns, 4 glowing eyes, fire breath, animated energy rings
+- **Shadow Colossus** (R20, id:16): shifting void blob, 6 tentacle tendrils, giant purple single eye
+- New `BOSS_TYPES`: R5=Scorpion King, R10=Venomfang Serpent+Goblin Warlord, R15=Stone Titan+Storm Drake, R20=Eternal Dragon+Shadow Colossus+Stone Titan
+- Aerial bosses spawn at `aerialY` (not on path); aerial boss leak = 3 lives (same as ground boss)
+
+#### Multiplayer Guest Lag Fix
+- Sync rate increased: host broadcasts state every **2 frames** (was 5) → ~33ms interval
+- **Client-side enemy prediction** added to guest update loop: enemies move smoothly between syncs using same speed formula as host (`en.spd * en.slow * fps60 * 0.006`); aerial enemies predicted with direct pixel movement
+- **Tower panel flicker fix**: `applyNetState` re-finds `selectedPlacedTower` by position after tower array rebuild — panel stays open without flickering
+
+#### Tower Placement Red/Green Indicator
+- When dragging to place a tower: green circle = valid spot, red circle = path/collision blocked
+- Range preview ring also turns red when placement is invalid
+- Both solo and multiplayer (check is client-side, server validates on place)
+
+#### Room UI Separation
+- **Create Room** moved to its own card (`mp-card-create`) — separate from join/browse
+- Main card now has clear "Create" and "Browse" buttons — no more mixed UI
+- Room browser now shows **in-progress rooms** with orange "● Đang chơi" badge and green "Vào lại →" button
+- `server.js`: `list_rooms` now includes started rooms (with `started:true` flag)
+- Rejoining works: click "Vào lại" → name-match reconnect via existing server logic
+
+---
 
 ### Aerial Enemy System + Anti-Air Tower (2026-05-24)
 - **Aerial enemies**: Storm Wyvern (id:7, spd 1.5, HP 90) + Siege Drake (id:8, spd 0.85, HP 260), `aerial:true`
@@ -227,8 +314,9 @@
 ## Known Architecture
 
 ### Multiplayer
-- **Host-authoritative**: host runs full game loop, broadcasts `state_sync` every 5 frames
+- **Host-authoritative**: host runs full game loop, broadcasts `state_sync` every 2 frames (enemies) / every 10 frames (full state including towers, gold, round)
 - Guests send `player_input` to host; host processes and re-syncs state
+- Guest loop: client-side enemy prediction between syncs; object pools for particles + damage numbers
 
 ### Paths
 - Maps define `pathFns: [fn1, fn2, ...]`

@@ -565,18 +565,24 @@ body{position:fixed;width:100%;height:100%}
     <div class="mp-title">🌐 Nhiều người chơi</div>
     <input class="mp-input mp-name-input" id="mp-name" placeholder="Nhập tên của bạn" maxlength="16" autocomplete="off" autocorrect="off" spellcheck="false">
     <div class="mp-sep"></div>
-    <button class="mp-btn" style="background:#182050;color:#60a8ff;border:1px solid #2a4080;margin-bottom:10px" onclick="MP.showRoomBrowser()">🔍 Xem danh sách phòng chờ</button>
+    <button class="mp-btn mp-btn-create" style="margin-bottom:8px" onclick="MP.showCreate()">🏠 Tạo phòng mới</button>
+    <button class="mp-btn" style="background:#182050;color:#60a8ff;border:1px solid #2a4080;margin-bottom:10px" onclick="MP.showRoomBrowser()">🔍 Xem danh sách phòng</button>
     <div style="text-align:center;font-size:11px;color:#3a3858;margin:0 0 8px">— hoặc nhập mã phòng thẳng —</div>
     <input class="mp-input" id="mp-code" placeholder="Mã phòng (6 ký tự)" maxlength="6" autocomplete="off" autocorrect="off" spellcheck="false" style="text-transform:uppercase;letter-spacing:.2em;text-align:center;margin-bottom:6px">
     <input class="mp-input-small" id="mp-join-pw" type="password" placeholder="🔒 Mật khẩu phòng (nếu có)" maxlength="20" autocomplete="off">
     <button class="mp-btn mp-btn-join" onclick="MP.join()">🚪 Vào phòng</button>
-    <div class="mp-sep"></div>
-    <div id="mp-create-section">
-      <input class="mp-input-small" id="mp-room-pw" type="password" placeholder="🔒 Mật khẩu phòng (tùy chọn)" maxlength="20" autocomplete="off">
-      <button class="mp-btn mp-btn-create" onclick="MP.create()">🏠 Tạo phòng mới</button>
-    </div>
     <div class="mp-err" id="mp-err"></div>
     <button class="mp-btn mp-btn-back" onclick="MP.close()">← Quay lại</button>
+  </div>
+
+  <!-- Card: Tạo phòng mới -->
+  <div class="mp-card hidden" id="mp-card-create">
+    <div class="mp-title">🏠 Tạo phòng mới</div>
+    <div style="font-size:12px;color:#4a6888;margin-bottom:10px;text-align:center">Tên người chơi: <strong id="create-name-display" style="color:#80c0ff">--</strong></div>
+    <input class="mp-input-small" id="mp-room-pw" type="password" placeholder="🔒 Mật khẩu phòng (tùy chọn)" maxlength="20" autocomplete="off" style="margin-bottom:10px">
+    <button class="mp-btn mp-btn-create" onclick="MP.create()">🚀 Tạo phòng</button>
+    <div class="mp-err" id="mp-err-create"></div>
+    <button class="mp-btn mp-btn-back" style="margin-top:4px" onclick="MP.hideCreate()">← Quay lại</button>
   </div>
 
   <!-- Card: Danh sách phòng chờ -->
@@ -761,7 +767,7 @@ const TOWER_MAX_LEVEL = 5;
 const UPGRADE_COST_MULTS = [0, .5, .8, 1.5, 2.5]; // cost to go from lvl N to N+1 (index = current lvl)
 const UPGRADE_DMG_MULTS  = [1, 1.4, 2.1, 3.2, 5.0];
 const UPGRADE_RANGE_MULTS= [1, 1.15, 1.35, 1.55, 1.8];
-const UPGRADE_SCALE      = [1, 1.2, 1.45, 1.7, 2.0];
+const UPGRADE_SCALE      = [1, 1.1, 1.22, 1.35, 1.48];
 // Rate multiplier: lower = faster fire (applied to cooldown). Archer gets extra bonus via UPGRADE_ARCHER_RATE.
 const UPGRADE_RATE_MULTS = [1, 0.88, 0.75, 0.62, 0.50];
 // Archer-specific extra rate reduction (stacks with UPGRADE_RATE_MULTS)
@@ -791,12 +797,13 @@ const ENEMY_TYPES = [
 ];
 
 const BOSS_TYPES = [
-  { id:10, name:"Malachar's Puppet", color:'#8a1030', radius:12, hp:800,  spd:.8,  reward:120, phases:2 },
-  { id:11, name:'Void Serpent',      color:'#103050', radius:10, hp:1200, spd:1.2, reward:180, zigzag:true },
-  { id:12, name:'Iron Colossus',     color:'#304050', radius:14, hp:2000, spd:.5,  reward:250, armored:true },
-  { id:13, name:'The Twins',         color:'#600030', radius:10, hp:1500, spd:.9,  reward:300, twin:true },
-  { id:14, name:'Void Colossus',     color:'#200840', radius:16, hp:3000, spd:.6,  reward:400, phases:5 },
-  { id:15, name:'Malachar',          color:'#400010', radius:18, hp:5000, spd:.8,  reward:600, phases:7 }
+  { id:10, name:'Scorpion King',     color:'#8a1030', radius:14, hp:800,  spd:.75, reward:120 },                    // R5  — ground
+  { id:11, name:'Venomfang Serpent', color:'#1a5530', radius:12, hp:1400, spd:1.1, reward:180, aerial:true },        // R10 — aerial
+  { id:12, name:'Goblin Warlord',    color:'#7a4010', radius:10, hp:700,  spd:1.0, reward:100 },                    // R10 — ground secondary
+  { id:13, name:'Stone Titan',       color:'#607080', radius:16, hp:2200, spd:.45, reward:250 },                    // R15 — ground
+  { id:14, name:'Storm Drake',       color:'#2060b0', radius:13, hp:1600, spd:.9,  reward:220, aerial:true },        // R15 — aerial
+  { id:15, name:'Eternal Dragon',    color:'#600030', radius:22, hp:5000, spd:.8,  reward:600, aerial:true },        // R20 — aerial (final)
+  { id:16, name:'Shadow Colossus',   color:'#200840', radius:17, hp:3200, spd:.6,  reward:400 },                    // R20 — ground
 ];
 
 const WEATHERS = [
@@ -822,10 +829,10 @@ const ROUND_SPAWN = Array.from({length:20}, (_,ri) => {
   const isBoss = [5,10,15,20].includes(r);
   // bossMap: { round: [bossTypeIdx, ...] } — multiple entries = multiple bosses on different paths
   const bossMap = {
-    5:  [0],       // 1 boss — Malachar's Puppet (intro boss)
-    10: [1, 0],    // 2 bosses — Void Serpent leads, Puppet on second path
-    15: [2, 3],    // 2 bosses — Iron Colossus + The Twins simultaneously
-    20: [4, 2, 3]  // 3 bosses — Void Colossus + Iron Colossus + The Twins
+    5:  [0],       // Scorpion King
+    10: [1, 2],    // Venomfang Serpent (aerial) + Goblin Warlord
+    15: [3, 4],    // Stone Titan + Storm Drake (aerial)
+    20: [5, 6, 3]  // Eternal Dragon (aerial) + Shadow Colossus + Stone Titan
   };
   const bossIdxList = bossMap[r] ?? [-1];
   const bossIdx = bossIdxList[0]; // legacy compat
@@ -1528,7 +1535,12 @@ const Game = {
     this.paused = false;
     this.gamePhase = 'prep';
     this._syncCounter = 0;
+    this._fullSyncCounter = 0;
     this._guestSpawnQueueLen = 0;
+    this.eliteGateShown = false;
+    this.eliteGateRevealStart = null;
+    this._particlePool = [];
+    this._dmgPool = [];
   },
 
   resize() {
@@ -1632,9 +1644,15 @@ const Game = {
         boss.hp = boss.hp * hpM * bossHpScale;
         boss.maxHp = boss.hp;
         boss.t = 0; boss.spd = boss.spd * spdM; boss.slow = 1;
-        boss.pathIdx = bi % numPaths;
-        const pathPts = this.paths[boss.pathIdx];
-        boss.x = pathPts[0].x; boss.y = pathPts[0].y;
+        if(boss.aerial) {
+          const pIdx = bi % numPaths;
+          boss.x = (this.paths[pIdx][0].x || 0) - 30;
+          boss.y = this.paths[pIdx][0].y;
+        } else {
+          boss.pathIdx = bi % numPaths;
+          const pathPts = this.paths[boss.pathIdx];
+          boss.x = pathPts[0].x; boss.y = pathPts[0].y;
+        }
         boss.isBoss = true; boss.spawnId = Math.random()*1000;
         boss._id = `r${this.round}_boss${bi}`;
         this.spawnQueue.push({enemy: boss, delay: bi === 0 ? 60 : 90});
@@ -1695,6 +1713,12 @@ const Game = {
         const eliteDelay = e === 0 ? 90 : WAVE_GAP;
         this.spawnQueue.push({enemy: base, delay: eliteDelay});
       }
+      // Trigger elite path reveal animation (round 10 only, first time)
+      if(this.round === 10 && !this.eliteGateShown && !this.eliteGateRevealStart) {
+        this.eliteGateRevealStart = performance.now();
+      } else if(this.round > 10 && !this.eliteGateShown) {
+        this.eliteGateShown = true; this.bgDirty = true;
+      }
       // First time gate appears (round 10): dramatic announcement
       if(this.round === 10) {
         setTimeout(() => {
@@ -1716,8 +1740,8 @@ const Game = {
       }
     }
 
-    // Aerial wave: spawn flying enemies (Storm Wyvern / Siege Drake)
-    if(data.aerial && this.aerialY != null) {
+    // Aerial wave: spawn flying enemies (Storm Wyvern / Siege Drake) from same gates as ground enemies
+    if(data.aerial) {
       const aerialTypes = [7, 8]; // Storm Wyvern, Siege Drake
       const aerialCount = 4 + Math.floor(this.round / 4);
       for(let a=0; a<aerialCount; a++) {
@@ -1727,7 +1751,9 @@ const Game = {
         aen.t = 0; aen.spd = aen.spd * spdM; aen.slow = 1;
         aen.typeId = typeIdx; aen.spawnId = Math.random()*1000;
         aen.aerial = true;
-        aen.x = -30; aen.y = this.aerialY + (Math.random()-0.5)*30;
+        const pIdx = a % numPaths;
+        aen.x = (this.paths[pIdx][0].x || 0) - 20; // spawn slightly off-screen left, same gate as ground
+        aen.y = this.paths[pIdx][0].y;
         aen._id = `r${this.round}_air_${a}`;
         this.spawnQueue.push({enemy: aen, delay: a === 0 ? 90 : 30});
       }
@@ -1813,7 +1839,13 @@ const Game = {
     this.draw();
     if(this.isHostMP && this.gamePhase !== 'done') {
       this._syncCounter = (this._syncCounter||0) + 1;
-      if(this._syncCounter >= 5) { this._syncCounter = 0; MP.broadcastState(); }
+      this._fullSyncCounter = (this._fullSyncCounter||0) + 1;
+      if(this._syncCounter >= 2) {
+        this._syncCounter = 0;
+        const full = this._fullSyncCounter >= 10;
+        if(full) this._fullSyncCounter = 0;
+        MP.broadcastState(full);
+      }
     }
     this.animHandle = requestAnimationFrame(t=>this.loop(t));
   },
@@ -1840,14 +1872,37 @@ const Game = {
       for(let i=this.particles.length-1;i>=0;i--) {
         const p=this.particles[i];
         p.x+=p.vx; p.y+=p.vy; p.vy+=.1; p.vx*=.93; p.life-=.035;
-        if(p.life<=0) this.particles.splice(i,1);
+        if(p.life<=0) {
+          if(this._particlePool.length<400) this._particlePool.push(p);
+          this.particles[i]=this.particles[this.particles.length-1]; this.particles.pop();
+        }
       }
       for(let i=this.damageNums.length-1;i>=0;i--) {
         const n=this.damageNums[i]; n.x+=n.vx; n.y-=1.2; n.life-=.025;
-        if(n.life<=0) this.damageNums.splice(i,1);
+        if(n.life<=0) {
+          if(this._dmgPool.length<200) this._dmgPool.push(n);
+          this.damageNums[i]=this.damageNums[this.damageNums.length-1]; this.damageNums.pop();
+        }
       }
       if(this.screenShake>0) this.screenShake*=0.82;
       this.towers.forEach(tw=>{ if(tw.flash>0) tw.flash-=0.1; });
+      // client-side prediction: move enemies smoothly between state_syncs
+      if(this.gamePhase === 'wave') {
+        for(let i=this.enemies.length-1; i>=0; i--) {
+          const en = this.enemies[i];
+          if(en.aerial) {
+            en.x += en.spd * fps60 * 0.5;
+          } else {
+            const spd2 = en.spd * (en.slow||1) * fps60 * .006;
+            const ePath = en.elite ? (this.elitePath||this.path) : ((this.paths&&this.paths[en.pathIdx||0])||this.path);
+            if(ePath && ePath.length > 1) {
+              en.t = Math.min(en.t + spd2 / ePath.length, 0.999);
+              const pt = this.ptOnPath(en.t, en.elite ? 100 : (en.pathIdx||0));
+              if(pt) { en.x = pt.x; en.y = pt.y; }
+            }
+          }
+        }
+      }
       return;
     }
 
@@ -1896,10 +1951,10 @@ const Game = {
       if(en.aerial) {
         en.x += en.spd * fps60 * 0.5;
         if(en.x > this.W + 30) {
-          this.leakCount += 1;
+          this.leakCount += (en.isBoss ? 3 : 1);
           SFX.crystalHit();
-          this.addShake(4);
-          this.spawnParticles(this.W - 20, en.y, '#e05a2b', 8);
+          this.addShake(en.isBoss ? 8 : 4);
+          this.spawnParticles(this.W - 20, en.y, '#e05a2b', en.isBoss ? 16 : 8);
           this.enemies.splice(i, 1);
           this.updateHUD();
           this.updateQuotaHUD();
@@ -2059,14 +2114,20 @@ const Game = {
     for(let i=this.particles.length-1;i>=0;i--) {
       const p=this.particles[i];
       p.x+=p.vx; p.y+=p.vy; p.vy+=.1; p.vx*=.93; p.life-=.035;
-      if(p.life<=0) this.particles.splice(i,1);
+      if(p.life<=0) {
+        if(this._particlePool.length<400) this._particlePool.push(p);
+        this.particles[i]=this.particles[this.particles.length-1]; this.particles.pop();
+      }
     }
 
     // damage numbers
     for(let i=this.damageNums.length-1;i>=0;i--) {
       const n=this.damageNums[i];
       n.x+=n.vx; n.y-=1.2; n.life-=.025;
-      if(n.life<=0) this.damageNums.splice(i,1);
+      if(n.life<=0) {
+        if(this._dmgPool.length<200) this._dmgPool.push(n);
+        this.damageNums[i]=this.damageNums[this.damageNums.length-1]; this.damageNums.pop();
+      }
     }
 
     // screen shake decay
@@ -2109,7 +2170,11 @@ const Game = {
     en.hp -= dmg;
     // floating damage number
     const d = Math.round(dmg);
-    if(d > 0) this.damageNums.push({x:en.x,y:en.y-en.radius,txt:d,life:1,vx:(Math.random()-.5)*1.2,isCrit:dmg>30});
+    if(d > 0) {
+      const dn = this._dmgPool && this._dmgPool.length > 0 ? this._dmgPool.pop() : {};
+      dn.x=en.x; dn.y=en.y-en.radius; dn.txt=d; dn.life=1; dn.vx=(Math.random()-.5)*1.2; dn.isCrit=dmg>30;
+      this.damageNums.push(dn);
+    }
     if(en.hp <= 0) {
       SFX.enemyDie(!!en.isBoss, en.typeId||0);
       if(en.isBoss) { this.addShake(6); this.spawnParticles(en.x,en.y,en.color,20); }
@@ -2126,11 +2191,83 @@ const Game = {
   },
 
   spawnParticles(x,y,color,n) {
-    for(let i=0;i<n;i++) {
-      const a=Math.random()*Math.PI*2;
-      const s=.5+Math.random()*2.5;
-      this.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,color});
+    const MAX_P = 200;
+    const space = MAX_P - this.particles.length;
+    if(space <= 0) return;
+    const count = Math.min(n, space);
+    for(let i=0;i<count;i++) {
+      const a=Math.random()*Math.PI*2, s=.5+Math.random()*2.5;
+      const p = this._particlePool && this._particlePool.length > 0 ? this._particlePool.pop() : {};
+      p.x=x; p.y=y; p.vx=Math.cos(a)*s; p.vy=Math.sin(a)*s; p.life=1; p.color=color;
+      this.particles.push(p);
     }
+  },
+
+  _drawEliteGateReveal(c, progress) {
+    const path = this.elitePath;
+    if(!path || !path._al) return;
+    const totalLen = path._len || 1;
+    const targetLen = progress * totalLen;
+    let endX = path[0].x, endY = path[0].y;
+    c.save();
+    c.shadowColor = '#cc1010'; c.shadowBlur = 18;
+    // Base dark road
+    c.strokeStyle = '#2a0505'; c.lineWidth = 24; c.lineJoin = 'round'; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(path[0].x, path[0].y);
+    for(let i = 0; i < path.length - 1; i++) {
+      const segStart = path._al[i] || 0, segEnd = path._al[i+1] || 0, segLen = segEnd - segStart;
+      if(segStart >= targetLen) break;
+      if(segEnd <= targetLen) { c.lineTo(path[i+1].x, path[i+1].y); endX = path[i+1].x; endY = path[i+1].y; }
+      else { const t2 = (targetLen - segStart) / segLen; endX = path[i].x+(path[i+1].x-path[i].x)*t2; endY = path[i].y+(path[i+1].y-path[i].y)*t2; c.lineTo(endX, endY); break; }
+    }
+    c.stroke();
+    // Red highlight layer
+    c.strokeStyle = '#800808'; c.lineWidth = 12;
+    c.beginPath(); c.moveTo(path[0].x, path[0].y);
+    for(let i = 0; i < path.length - 1; i++) {
+      const segStart = path._al[i]||0, segEnd = path._al[i+1]||0, segLen = segEnd-segStart;
+      if(segStart >= targetLen) break;
+      if(segEnd <= targetLen) { c.lineTo(path[i+1].x, path[i+1].y); }
+      else { const t2=(targetLen-segStart)/segLen; c.lineTo(path[i].x+(path[i+1].x-path[i].x)*t2, path[i].y+(path[i+1].y-path[i].y)*t2); break; }
+    }
+    c.stroke();
+    // Center glow strip
+    c.strokeStyle = `rgba(200,30,20,${0.5+Math.sin(performance.now()*0.01)*0.25})`; c.lineWidth = 4;
+    c.beginPath(); c.moveTo(path[0].x, path[0].y);
+    for(let i = 0; i < path.length - 1; i++) {
+      const segStart = path._al[i]||0, segEnd = path._al[i+1]||0, segLen = segEnd-segStart;
+      if(segStart >= targetLen) break;
+      if(segEnd <= targetLen) c.lineTo(path[i+1].x, path[i+1].y);
+      else { const t2=(targetLen-segStart)/segLen; c.lineTo(path[i].x+(path[i+1].x-path[i].x)*t2, path[i].y+(path[i+1].y-path[i].y)*t2); break; }
+    }
+    c.stroke();
+    // Glowing front tip
+    c.shadowColor = '#ff5020'; c.shadowBlur = 28;
+    c.fillStyle = '#ff6030';
+    c.beginPath(); c.arc(endX, endY, 7 + Math.sin(performance.now()*0.015)*2, 0, Math.PI*2); c.fill();
+    // Spark particles along drawn path (simple, cheap)
+    if(Math.random() < 0.6) {
+      const t3 = Math.random() * progress;
+      const sp2 = this.ptOnPath(t3, 100);
+      if(sp2) this.spawnParticles(sp2.x, sp2.y, '#ff4020', 2);
+    }
+    // Portal at start — pops in quickly then pulses
+    const portalScale = Math.min(progress * 5, 1);
+    const pulse2 = 0.94 + Math.sin(performance.now()*0.008)*0.06;
+    c.shadowColor = '#cc0000'; c.shadowBlur = 20;
+    c.fillStyle = 'rgba(40,4,4,0.85)';
+    c.beginPath(); c.arc(path[0].x, path[0].y, 16*portalScale*pulse2, 0, Math.PI*2); c.fill();
+    c.strokeStyle = '#dd2020'; c.lineWidth = 2.5;
+    c.beginPath(); c.arc(path[0].x, path[0].y, 16*portalScale*pulse2, 0, Math.PI*2); c.stroke();
+    c.strokeStyle = '#ff5050'; c.lineWidth = 1; c.setLineDash([3,3]);
+    c.beginPath(); c.arc(path[0].x, path[0].y, 22*portalScale, 0, Math.PI*2); c.stroke();
+    c.setLineDash([]);
+    // Star label
+    if(portalScale > 0.5) {
+      c.fillStyle = '#ff8888'; c.font = 'bold 8px sans-serif'; c.textAlign = 'center';
+      c.fillText('★', path[0].x, path[0].y + 3);
+    }
+    c.restore();
   },
 
   buildBgCanvas() {
@@ -2257,22 +2394,27 @@ const Game = {
       c.fillText(pi===0?'⚠':'⚠', sx, sy+3);
     });
 
-    // ── Aerial lane (subtle sky corridor where flying enemies travel) ──
-    if(this.aerialY != null) {
-      const ay=this.aerialY;
-      // Faint cloud/sky lane
-      c.globalAlpha=0.09;
-      c.fillStyle='#88c8ff';
-      c.fillRect(0, ay-18, W, 36);
-      c.globalAlpha=1;
-      // Dashed center line
-      c.strokeStyle='rgba(96,192,255,0.18)'; c.lineWidth=1; c.setLineDash([12,8]);
-      c.beginPath(); c.moveTo(0,ay); c.lineTo(W,ay); c.stroke();
-      c.setLineDash([]);
-      // Sky lane entry portal
-      c.fillStyle='rgba(96,192,255,0.5)';
-      c.font='bold 8px sans-serif'; c.textAlign='left';
-      c.fillText('✈ SKY', 4, ay+3);
+    // ── Elite path (revealed at round 10+, drawn if already shown) ──
+    if(this.eliteGateShown && this.elitePath) {
+      const ep = this.elitePath;
+      c.save();
+      c.shadowColor='#aa0808'; c.shadowBlur=14;
+      c.strokeStyle='#2a0505'; c.lineWidth=24; c.lineJoin='round'; c.lineCap='round';
+      c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
+      c.strokeStyle='#5a0808'; c.lineWidth=14;
+      c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
+      c.strokeStyle='#900a0a'; c.lineWidth=5;
+      c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
+      // Portal at elite path start
+      const sp=ep[0];
+      c.shadowColor='#ff0000'; c.shadowBlur=18;
+      c.fillStyle='#1a0404'; c.beginPath(); c.arc(sp.x,sp.y,16,0,Math.PI*2); c.fill();
+      c.strokeStyle='#cc2020'; c.lineWidth=2; c.beginPath(); c.arc(sp.x,sp.y,16,0,Math.PI*2); c.stroke();
+      c.strokeStyle='#ff4040'; c.lineWidth=1; c.setLineDash([3,3]); c.beginPath(); c.arc(sp.x,sp.y,20,0,Math.PI*2); c.stroke();
+      c.setLineDash([]); c.shadowBlur=0;
+      c.fillStyle='#ff5050'; c.font='bold 8px sans-serif'; c.textAlign='center';
+      c.fillText('★', sp.x, sp.y+3);
+      c.restore();
     }
 
     // ── Gate zone ──
@@ -2314,6 +2456,14 @@ const Game = {
     // static background (cached)
     if(this.bgDirty) this.buildBgCanvas();
     c.drawImage(this.bgCanvas, 0, 0, W, H);
+
+    // elite gate path reveal animation (drawn on top of bg, before enemies)
+    if(this.eliteGateRevealStart != null && !this.eliteGateShown && this.elitePath) {
+      const elapsed = performance.now() - this.eliteGateRevealStart;
+      const progress = Math.min(1, elapsed / 3000);
+      this._drawEliteGateReveal(c, progress);
+      if(progress >= 1) { this.eliteGateShown = true; this.bgDirty = true; this.eliteGateRevealStart = null; }
+    }
 
     // trees decorative (animated, not cached)
     const path = this.path;
@@ -2370,20 +2520,29 @@ const Game = {
       }
     }
 
-    // tower range preview at cursor when placing
+    // tower range preview at cursor when placing — green=valid, red=blocked
     if(this.selectedTower>=0) {
       const tData=TOWERS_DATA[this.selectedTower];
       const mx=this.mouseX, my=this.mouseY;
-      if(tData.range>0 && mx>0 && my>0) {
-        c.strokeStyle=tData.color+'66'; c.lineWidth=1.5; c.setLineDash([5,3]);
-        c.beginPath(); c.arc(mx,my,tData.range,0,Math.PI*2); c.stroke();
-        c.setLineDash([]);
-        c.fillStyle=tData.color+'22';
-        c.beginPath(); c.arc(mx,my,tData.range,0,Math.PI*2); c.fill();
+      if(mx>0 && my>0) {
+        const tooClose=this.towers.some(tw=>Math.hypot(tw.x-mx,tw.y-my)<22);
+        const onPath=(this.paths||[this.path]).some(pp=>pp&&pp.some(pt=>Math.hypot(pt.x-mx,pt.y-my)<18));
+        const canPlace=!tooClose&&!onPath;
+        const iColor=canPlace?'#30ff60':'#ff3030';
+        if(tData.range>0) {
+          c.strokeStyle=canPlace?tData.color+'66':'#ff303066'; c.lineWidth=1.5; c.setLineDash([5,3]);
+          c.beginPath(); c.arc(mx,my,tData.range,0,Math.PI*2); c.stroke();
+          c.setLineDash([]);
+          c.fillStyle=canPlace?tData.color+'22':'#ff303022';
+          c.beginPath(); c.arc(mx,my,tData.range,0,Math.PI*2); c.fill();
+        }
+        c.shadowColor=iColor; c.shadowBlur=10;
+        c.strokeStyle=iColor; c.lineWidth=2.5;
+        c.beginPath(); c.arc(mx,my,10,0,Math.PI*2); c.stroke();
+        c.fillStyle=iColor+'55';
+        c.beginPath(); c.arc(mx,my,10,0,Math.PI*2); c.fill();
+        c.shadowBlur=0;
       }
-      // crosshair at cursor
-      c.strokeStyle=tData.color+'cc'; c.lineWidth=1.5;
-      c.beginPath(); c.arc(mx,my,8,0,Math.PI*2); c.stroke();
     }
 
     // projectiles
@@ -3137,32 +3296,269 @@ const Game = {
     }
 
     if(en.isBoss) {
-      // Boss: large pulsing circle with dramatic glow
       const bpulse=.92+Math.sin(t*3)*.08;
       const bossCol = en.color;
-      // outer aura
-      c.globalAlpha=0.25+Math.sin(t*4)*.12;
+      // shared outer aura
+      c.globalAlpha=0.2+Math.sin(t*4)*.1;
       c.fillStyle=bossCol;
-      c.beginPath(); c.arc(0,0,r*1.9*bpulse,0,Math.PI*2); c.fill();
+      c.beginPath(); c.arc(0,0,r*2.1*bpulse,0,Math.PI*2); c.fill();
       c.globalAlpha=1;
-      // body
-      c.fillStyle=bossCol;
-      c.beginPath(); c.arc(0,0,r*bpulse,0,Math.PI*2); c.fill();
-      // skull crown
-      c.strokeStyle='#ff3030'; c.lineWidth=2.5;
-      c.beginPath(); c.arc(0,0,r*bpulse+3,0,Math.PI*2); c.stroke();
-      // Red eyes
-      c.fillStyle='#ff2020';
-      c.beginPath(); c.arc(-r*.3,0,r*.18,0,Math.PI*2); c.fill();
-      c.beginPath(); c.arc(r*.3,0,r*.18,0,Math.PI*2); c.fill();
-      // Crown spikes
-      for(let s=0;s<5;s++){
-        const sa=-Math.PI*.7+s*Math.PI*.35;
-        c.strokeStyle='#ff4040'; c.lineWidth=1.5;
-        c.beginPath(); c.moveTo(Math.cos(sa)*(r*bpulse+2),Math.sin(sa)*(r*bpulse+2));
-        c.lineTo(Math.cos(sa)*(r*bpulse+7+Math.sin(t*6+s)*2),Math.sin(sa)*(r*bpulse+7+Math.sin(t*6+s)*2));
-        c.stroke();
+      c.shadowColor=bossCol; c.shadowBlur=14;
+      switch(en.id) {
+        case 10: { // Scorpion King — ground R5
+          // Segmented abdomen (curved tail)
+          c.strokeStyle=bossCol; c.lineWidth=r*.55;
+          c.beginPath(); c.moveTo(-r*.2,r*.3); c.quadraticCurveTo(-r*1.4,r*1.8,-r*.8,r*2.8); c.stroke();
+          c.beginPath(); c.moveTo(-r*.8,r*2.8); c.quadraticCurveTo(-r*1.2,r*3.6,0,r*3.3); c.stroke();
+          // Stinger glow
+          c.shadowColor='#ff6020'; c.shadowBlur=10;
+          c.fillStyle='#ff8040';
+          c.beginPath(); c.moveTo(0,r*3.3); c.lineTo(-r*.35,r*3.9); c.lineTo(r*.35,r*3.9); c.closePath(); c.fill();
+          c.shadowBlur=14; c.shadowColor=bossCol;
+          // Main body
+          c.fillStyle=bossCol;
+          c.beginPath(); c.ellipse(0,0,r*.9,r*1.1,0,0,Math.PI*2); c.fill();
+          // Claws
+          [[-1,0.4],[1,0.4]].forEach(([sx,sy])=>{
+            c.strokeStyle=bossCol; c.lineWidth=r*.4;
+            c.beginPath(); c.moveTo(sx*r*.7,sy*r); c.lineTo(sx*r*1.8,sy*r*.6); c.stroke();
+            c.strokeStyle='#c04020'; c.lineWidth=r*.22;
+            c.beginPath(); c.moveTo(sx*r*1.8,sy*r*.6); c.lineTo(sx*r*2.5,sy*r*.1); c.stroke();
+            c.beginPath(); c.moveTo(sx*r*1.8,sy*r*.6); c.lineTo(sx*r*2.4,sy*r*1.1); c.stroke();
+          });
+          // 6 legs
+          for(let l=0;l<3;l++){
+            const ly=(l-1)*r*.6;
+            [-1,1].forEach(sx=>{
+              c.strokeStyle='#701020'; c.lineWidth=r*.18;
+              c.beginPath(); c.moveTo(sx*r*.8,ly); c.lineTo(sx*r*2.0,ly+Math.sin(t*6+l)*r*.5); c.stroke();
+            });
+          }
+          // Eye cluster
+          [[-.28,-.35],[.28,-.35],[0,-.55]].forEach(([ex,ey])=>{
+            c.fillStyle='#ff2020';
+            c.beginPath(); c.arc(ex*r,ey*r,r*.2,0,Math.PI*2); c.fill();
+          });
+          break; }
+        case 11: { // Venomfang Serpent — aerial R10
+          // Sinuous body S-curve
+          c.strokeStyle=bossCol; c.lineWidth=r*.6;
+          c.beginPath(); c.moveTo(r*1.5,-r*.5); c.bezierCurveTo(r*.5,r*1.2,-r*.5,-r*1.2,-r*1.5,r*.5); c.stroke();
+          // Body scales pattern
+          c.strokeStyle='#40ff80'; c.lineWidth=r*.12;
+          for(let s=0;s<5;s++){const p=s/4; const bx=r*1.5+(-3*p*(1-p)*r*0+(-p)*r*2)*(1-1); c.beginPath(); c.arc(-r*1.5+r*3*p,r*.5-r*p*0,(r*.5+.1)*(1-p*.3),0,Math.PI*2); c.stroke();}
+          // Wings
+          c.fillStyle=bossCol+'80';
+          c.beginPath(); c.moveTo(0,-r*.3); c.quadraticCurveTo(-r*1.2,-r*2.2,-r*2.8,-r*1.8); c.quadraticCurveTo(-r*1.5,-r*.8,0,-r*.3); c.closePath(); c.fill();
+          c.beginPath(); c.moveTo(0,-r*.3); c.quadraticCurveTo(r*1.2,-r*2.2,r*2.8,-r*1.8); c.quadraticCurveTo(r*1.5,-r*.8,0,-r*.3); c.closePath(); c.fill();
+          // Head
+          c.fillStyle=bossCol;
+          c.beginPath(); c.ellipse(r*1.3,0,r*.65,r*.45,-.4,0,Math.PI*2); c.fill();
+          // Fangs
+          c.fillStyle='#d0ffd0'; c.strokeStyle='#40ff80'; c.lineWidth=.8;
+          c.beginPath(); c.moveTo(r*1.9,.2*r); c.lineTo(r*2.3,r*.7); c.lineTo(r*2.0,.2*r); c.closePath(); c.fill(); c.stroke();
+          c.beginPath(); c.moveTo(r*1.7,.2*r); c.lineTo(r*2.0,r*.7); c.lineTo(r*1.8,.2*r); c.closePath(); c.fill(); c.stroke();
+          // Venom glow eyes
+          c.shadowColor='#40ff80'; c.shadowBlur=8;
+          c.fillStyle='#40ff80';
+          c.beginPath(); c.arc(r*1.15,-.15*r,r*.22,0,Math.PI*2); c.fill();
+          c.beginPath(); c.arc(r*1.4,-.15*r,r*.22,0,Math.PI*2); c.fill();
+          break; }
+        case 12: { // Goblin Warlord — ground R10
+          // Legs
+          c.strokeStyle='#503808'; c.lineWidth=r*.3;
+          [[-1,1],[1,1]].forEach(([lx,ly])=>{ c.beginPath(); c.moveTo(lx*r*.4,r*.5); c.lineTo(lx*r*1.0,r*1.5); c.lineTo(lx*r*1.2,r*1.1); c.stroke(); });
+          // Body
+          c.fillStyle=bossCol;
+          c.beginPath(); c.ellipse(0,r*.1,r*.75,r*1.0,0,0,Math.PI*2); c.fill();
+          // Armor
+          c.strokeStyle='#c08030'; c.lineWidth=r*.22;
+          c.strokeRect(-r*.55,-r*.3,r*1.1,r*.8);
+          c.beginPath(); c.moveTo(-r*.55,-r*.3); c.lineTo(0,-r*.7); c.lineTo(r*.55,-r*.3); c.stroke();
+          // Arms + weapon
+          c.strokeStyle=bossCol; c.lineWidth=r*.28;
+          c.beginPath(); c.moveTo(-r*.65,-.1*r); c.lineTo(-r*1.35,.6*r); c.stroke();
+          c.strokeStyle='#c08030'; c.lineWidth=r*.2;
+          c.beginPath(); c.moveTo(r*.65,-.1*r); c.lineTo(r*1.4,-r*.8); c.stroke(); // weapon arm
+          c.fillStyle='#d0a040'; // axe head
+          c.beginPath(); c.moveTo(r*1.4,-r*.8); c.lineTo(r*1.05,-r*1.5); c.lineTo(r*1.75,-r*1.4); c.closePath(); c.fill();
+          // Head + helmet
+          c.fillStyle='#a05010';
+          c.beginPath(); c.ellipse(0,-r*.9,r*.55,r*.65,0,0,Math.PI*2); c.fill();
+          c.fillStyle='#d09030';
+          c.beginPath(); c.ellipse(0,-r*1.35,r*.6,r*.35,0,0,Math.PI*2); c.fill(); // helmet
+          c.strokeStyle='#f0c040'; c.lineWidth=r*.28; // horns
+          c.beginPath(); c.moveTo(-r*.25,-r*1.6); c.lineTo(-r*.4,-r*2.2); c.stroke();
+          c.beginPath(); c.moveTo(r*.25,-r*1.6); c.lineTo(r*.4,-r*2.2); c.stroke();
+          c.fillStyle='#ff6020';
+          c.beginPath(); c.arc(-r*.2,-r*.85,r*.2,0,Math.PI*2); c.fill();
+          c.beginPath(); c.arc(r*.2,-r*.85,r*.2,0,Math.PI*2); c.fill();
+          break; }
+        case 13: { // Stone Titan — ground R15
+          // Stone body
+          c.fillStyle='#445560';
+          c.beginPath(); c.ellipse(0,0,r*1.1,r*1.35,0,0,Math.PI*2); c.fill();
+          // Rock cracks with orange glow
+          c.strokeStyle=`rgba(255,140,40,${0.6+Math.sin(t*2)*.3})`; c.lineWidth=r*.18;
+          [[-.6,.2,.1,.9],[.5,-.3,-.1,.7],[0,-.6,.4,.1],[-.3,.6,.6,-.1]].forEach(([x1,y1,x2,y2])=>{
+            c.beginPath(); c.moveTo(x1*r,y1*r); c.lineTo(x2*r,y2*r); c.stroke();
+          });
+          // Glowing chest rune
+          c.shadowColor='#ff8020'; c.shadowBlur=12;
+          c.strokeStyle='#ff8020'; c.lineWidth=r*.14;
+          c.beginPath(); c.moveTo(0,-r*.4); c.lineTo(-r*.3,0); c.lineTo(0,r*.4); c.lineTo(r*.3,0); c.closePath(); c.stroke();
+          c.shadowBlur=14; c.shadowColor=bossCol;
+          // Arms
+          [[-1,0.1],[1,0.1]].forEach(([sx])=>{
+            c.fillStyle='#384858';
+            c.beginPath(); c.ellipse(sx*r*1.35,r*.1,r*.5,r*.65,sx*0.3,0,Math.PI*2); c.fill();
+            c.beginPath(); c.ellipse(sx*r*1.6,r*.9,r*.65,r*.55,sx*0.5,0,Math.PI*2); c.fill(); // fist
+          });
+          // Head
+          c.fillStyle='#505e6a';
+          c.beginPath(); c.ellipse(0,-r*1.1,r*.75,r*.7,0,0,Math.PI*2); c.fill();
+          // Stone crown
+          for(let s=0;s<5;s++){
+            const ca=-Math.PI*.6+s*Math.PI*.3;
+            c.fillStyle='#607080';
+            c.beginPath(); c.moveTo(Math.cos(ca)*r*.7,Math.sin(ca)*r*.65-r*1.1); c.lineTo(Math.cos(ca-0.15)*r*.7+Math.cos(ca)*r*.35,Math.sin(ca)*r*.65-r*1.1+Math.sin(ca)*r*.35-r*.45); c.lineTo(Math.cos(ca+0.15)*r*.7,Math.sin(ca)*r*.65-r*1.1); c.closePath(); c.fill();
+          }
+          // Eye slots
+          c.fillStyle=`rgba(255,160,40,${0.7+Math.sin(t*3)*.3})`;
+          c.beginPath(); c.ellipse(-r*.28,-r*1.12,r*.22,r*.14,0,0,Math.PI*2); c.fill();
+          c.beginPath(); c.ellipse(r*.28,-r*1.12,r*.22,r*.14,0,0,Math.PI*2); c.fill();
+          break; }
+        case 14: { // Storm Drake — aerial R15
+          // Wings with lightning
+          [[1,-1],[-1,-1]].forEach(([sx])=>{
+            c.fillStyle='#1848901a';
+            c.beginPath(); c.moveTo(sx*r*.3,-r*.5); c.quadraticCurveTo(sx*r*2.2,-r*2.8,sx*r*3.2,-r*2.2); c.quadraticCurveTo(sx*r*2.0,-r*.9,sx*r*.9,-r*.2); c.closePath(); c.fill();
+            c.strokeStyle='#4090e0'; c.lineWidth=.8; c.globalAlpha=.5;
+            for(let lw=0;lw<3;lw++){
+              const wx=sx*(r*.4+lw*r*.8), wy=-r*(1.2+lw*.5);
+              c.beginPath(); c.moveTo(wx,wy); c.lineTo(wx+sx*r*.3,wy+r*.4); c.lineTo(wx+sx*r*.7,wy+.1); c.stroke();
+            }
+            c.globalAlpha=1;
+          });
+          // Body
+          c.fillStyle=bossCol;
+          c.beginPath(); c.ellipse(0,0,r*.8,r*1.1,0,0,Math.PI*2); c.fill();
+          // Lightning crackle aura
+          c.shadowColor='#60c0ff'; c.shadowBlur=12;
+          c.strokeStyle='#80d0ff'; c.lineWidth=1.2;
+          for(let la=0;la<4;la++){
+            const aa=la/4*Math.PI*2+t*3;
+            c.globalAlpha=0.5+Math.sin(t*8+la)*.4;
+            c.beginPath(); c.moveTo(Math.cos(aa)*r*1.1,Math.sin(aa)*r*1.1); c.lineTo(Math.cos(aa+.3)*r*1.6+Math.random()*r*.4,Math.sin(aa+.3)*r*1.6); c.stroke();
+          }
+          c.globalAlpha=1; c.shadowBlur=14; c.shadowColor=bossCol;
+          // Head + neck
+          c.fillStyle='#184070';
+          c.beginPath(); c.ellipse(r*.4,-r*1.2,r*.6,r*.5,-.6,0,Math.PI*2); c.fill();
+          c.beginPath(); c.ellipse(r*1.1,-r*1.6,r*.45,r*.35,.3,0,Math.PI*2); c.fill(); // snout
+          // Eyes
+          c.shadowColor='#60c0ff'; c.shadowBlur=8;
+          c.fillStyle='#60c0ff';
+          c.beginPath(); c.arc(r*.55,-r*1.3,r*.22,0,Math.PI*2); c.fill();
+          // Horns + tail
+          c.strokeStyle='#3060a0'; c.lineWidth=r*.3;
+          c.beginPath(); c.moveTo(r*.2,-r*1.6); c.lineTo(r*.1,-r*2.2); c.stroke();
+          c.beginPath(); c.moveTo(r*.5,-r*1.5); c.lineTo(r*.6,-r*2.1); c.stroke();
+          c.beginPath(); c.moveTo(-r*.3,r*.7); c.quadraticCurveTo(-r*1.2,r*1.8,-r*1.8,r*1.2); c.stroke();
+          break; }
+        case 15: { // Eternal Dragon — aerial R20 FINAL BOSS
+          // Multiple wing pairs
+          for(let wp=0;wp<2;wp++){
+            const wscale=1-wp*.35, woff=wp*r*.8;
+            [[1],[-1]].forEach(([sx])=>{
+              c.fillStyle=`rgba(${sx>0?'80,20,0':'60,0,20'},0.55)`;
+              c.beginPath(); c.moveTo(sx*r*.4,-r*.3-woff); c.quadraticCurveTo(sx*r*(2.5-wp*.4),-r*(2.8+wp*.4)*wscale,sx*r*(3.6-wp*.5),-r*(2.0+wp*.3)*wscale); c.quadraticCurveTo(sx*r*(2.0-wp*.3),-r*(0.7+wp*.2)*wscale,sx*r*.9,-r*.1); c.closePath(); c.fill();
+              // Membrane veins
+              c.strokeStyle='#a03020'; c.lineWidth=.8; c.globalAlpha=.4;
+              for(let v=1;v<4;v++){
+                const va=v/4; const vx=sx*(r*.4+va*r*2.5*wscale), vy=(-r*.3-woff)+(-r*2.5*wscale)*va;
+                c.beginPath(); c.moveTo(sx*r*.4,-r*.3-woff); c.lineTo(vx,vy); c.stroke();
+              }
+              c.globalAlpha=1;
+            });
+          }
+          // Main body — elongated dragon
+          c.fillStyle=bossCol;
+          c.beginPath(); c.ellipse(0,0,r*.95,r*1.2,0,0,Math.PI*2); c.fill();
+          // Golden scale pattern
+          c.strokeStyle='#f0a000'; c.lineWidth=r*.12;
+          for(let sc=0;sc<8;sc++){
+            const sa=sc/8*Math.PI*2; const sr=r*(sc%2===0?.7:.5);
+            c.beginPath(); c.arc(Math.cos(sa)*sr,Math.sin(sa)*sr,r*.2,sa+.3,sa+Math.PI-.3); c.stroke();
+          }
+          // Tail
+          c.strokeStyle=bossCol; c.lineWidth=r*.5;
+          c.beginPath(); c.moveTo(-r*.3,r*.8); c.bezierCurveTo(-r*1.5,r*2.0,-r*2.2,r*1.0,-r*2.8,r*2.0); c.stroke();
+          c.lineWidth=r*.28;
+          c.beginPath(); c.moveTo(-r*2.8,r*2.0); c.lineTo(-r*3.3,r*2.8); c.stroke();
+          // Neck + head
+          c.fillStyle='#500020';
+          c.beginPath(); c.ellipse(r*.5,-r*1.2,r*.6,r*.55,-.5,0,Math.PI*2); c.fill();
+          c.beginPath(); c.ellipse(r*1.3,-r*1.7,r*.55,r*.45,.4,0,Math.PI*2); c.fill(); // snout
+          // Crown of horns
+          c.strokeStyle='#c0a000'; c.lineWidth=r*.3;
+          [[-r*.15,-r*1.55],[r*.1,-r*1.6],[r*.35,-r*1.55],[r*.55,-r*1.45],[-.1,-r*1.45]].forEach(([hx,hy],i)=>{
+            c.beginPath(); c.moveTo(hx,hy); c.lineTo(hx+(i-2)*r*.15,hy-r*.65); c.stroke();
+          });
+          // 4 glowing eyes
+          c.shadowColor='#ff4000'; c.shadowBlur=14;
+          [[r*.9,-r*1.65],[r*1.15,-r*1.75],[r*.75,-r*1.85],[r*1.05,-r*1.9]].forEach(([ex,ey],i)=>{
+            c.fillStyle=i<2?'#ff4000':'#ff8000';
+            c.beginPath(); c.arc(ex,ey,r*(i<2?.22:.15),0,Math.PI*2); c.fill();
+          });
+          // Fire breath aura (animated)
+          c.globalAlpha=0.45+Math.sin(t*6)*.25;
+          c.fillStyle='#ff6010';
+          c.beginPath(); c.arc(r*2.0,-r*1.7,r*(0.4+Math.sin(t*8)*.15),0,Math.PI*2); c.fill();
+          c.globalAlpha=1;
+          // Rotating energy rings
+          c.shadowColor='#f0a000'; c.shadowBlur=10;
+          c.strokeStyle='rgba(240,160,0,0.6)'; c.lineWidth=1.5;
+          c.beginPath(); c.arc(0,0,r*1.5,t*1.5,t*1.5+Math.PI*1.4); c.stroke();
+          c.strokeStyle='rgba(255,80,0,0.5)'; c.lineWidth=1;
+          c.beginPath(); c.arc(0,0,r*1.8,-t*2,-t*2+Math.PI*1.2); c.stroke();
+          break; }
+        case 16: { // Shadow Colossus — ground R20 secondary
+          // Shifting void body
+          c.globalAlpha=0.8+Math.sin(t*5)*.15;
+          c.fillStyle=bossCol;
+          c.beginPath();
+          const pts=[]; for(let v=0;v<10;v++){const va=v/10*Math.PI*2; const vr=r*(1.0+Math.sin(t*3+v*1.3)*.25); pts.push([Math.cos(va)*vr,Math.sin(va)*vr]);}
+          c.moveTo(pts[0][0],pts[0][1]); pts.slice(1).forEach(p=>c.lineTo(p[0],p[1])); c.closePath(); c.fill();
+          c.globalAlpha=1;
+          // Shadow tendrils
+          c.strokeStyle='#5010a0'; c.lineWidth=r*.28;
+          for(let te=0;te<6;te++){
+            const ta=te/6*Math.PI*2+t*.8;
+            const tx2=Math.cos(ta)*r*1.1, ty2=Math.sin(ta)*r*1.1;
+            const tx3=Math.cos(ta+.4)*r*(2.0+Math.sin(t*4+te)*.5), ty3=Math.sin(ta+.4)*r*(2.0+Math.sin(t*4+te)*.5);
+            c.beginPath(); c.moveTo(tx2,ty2); c.quadraticCurveTo((tx2+tx3)/2+Math.sin(t*5+te)*r*.3,(ty2+ty3)/2,tx3,ty3); c.stroke();
+          }
+          // Single massive eye
+          c.shadowColor='#a020ff'; c.shadowBlur=16;
+          c.fillStyle='#0a0014';
+          c.beginPath(); c.ellipse(0,-r*.15,r*.65,r*.45,0,0,Math.PI*2); c.fill();
+          c.fillStyle='#a020ff';
+          c.beginPath(); c.ellipse(0,-r*.15,r*.35,r*.28,0,0,Math.PI*2); c.fill();
+          c.fillStyle='#e060ff';
+          c.beginPath(); c.arc(0,-r*.15,r*.14,0,Math.PI*2); c.fill();
+          // Void pupils (slit)
+          c.fillStyle='#0a0014';
+          c.beginPath(); c.ellipse(0,-r*.15,r*.05,r*.28,0,0,Math.PI*2); c.fill();
+          break; }
+        default: { // fallback
+          c.fillStyle=bossCol;
+          c.beginPath(); c.arc(0,0,r*bpulse,0,Math.PI*2); c.fill();
+          c.strokeStyle='#ff3030'; c.lineWidth=2.5;
+          c.beginPath(); c.arc(0,0,r*bpulse+3,0,Math.PI*2); c.stroke();
+        }
       }
+      c.shadowBlur=0;
     } else {
       const hpRatio = en.hp/en.maxHp;
 
@@ -3841,6 +4237,7 @@ const MP = {
   open() {
     document.getElementById('mp-overlay').classList.remove('hidden');
     document.getElementById('mp-card-main').classList.remove('hidden');
+    document.getElementById('mp-card-create').classList.add('hidden');
     document.getElementById('mp-card-lobby').classList.add('hidden');
     document.getElementById('mp-card-rooms').classList.add('hidden');
     document.getElementById('mp-err').textContent='';
@@ -3884,7 +4281,7 @@ const MP = {
 
   create() {
     const roomPw = (document.getElementById('mp-room-pw')?.value||'').trim();
-    this.myName = (document.getElementById('mp-name').value.trim()||'Player');
+    this.myName = this.myName || (document.getElementById('mp-name').value.trim()||'Player');
     this.connect(() => {
       this.isHost = true;
       this.myNation = this.myNation || 0;
@@ -3982,6 +4379,7 @@ const MP = {
     this._stopRoomRefresh();
     this.roomCode = code;
     document.getElementById('mp-card-main').classList.add('hidden');
+    document.getElementById('mp-card-create').classList.add('hidden');
     document.getElementById('mp-card-rooms').classList.add('hidden');
     document.getElementById('mp-card-lobby').classList.remove('hidden');
     document.getElementById('lobby-code-display').textContent = code;
@@ -4094,6 +4492,23 @@ const MP = {
     document.getElementById('mp-err').textContent='';
   },
 
+  showCreate() {
+    const name = (document.getElementById('mp-name').value||'').trim();
+    if(!name) { this.setErr('Nhập tên trước khi tạo phòng.'); return; }
+    this.myName = name;
+    this.setErr('');
+    const nd = document.getElementById('create-name-display');
+    if(nd) nd.textContent = name;
+    document.getElementById('mp-card-main').classList.add('hidden');
+    document.getElementById('mp-card-create').classList.remove('hidden');
+    const epw = document.getElementById('mp-err-create'); if(epw) epw.textContent='';
+  },
+
+  hideCreate() {
+    document.getElementById('mp-card-create').classList.add('hidden');
+    document.getElementById('mp-card-main').classList.remove('hidden');
+  },
+
   showRoomBrowser() {
     const name = (document.getElementById('mp-name').value||'').trim();
     if(!name) { this.setErr('Nhập tên trước khi xem phòng.'); return; }
@@ -4126,13 +4541,22 @@ const MP = {
     const el = document.getElementById('rooms-list');
     if(!el) return;
     if(!list || list.length===0) {
-      el.innerHTML='<div style="text-align:center;color:#3a3858;font-size:13px;padding:20px 0">Không có phòng nào đang chờ</div>';
+      el.innerHTML='<div style="text-align:center;color:#3a3858;font-size:13px;padding:20px 0">Không có phòng nào</div>';
       return;
     }
     el.innerHTML = list.map(r=>{
       const mapName = MAPS_DATA[r.map]?.name || `Map ${r.map}`;
       const modeName = MODES[r.mode]?.name || `Mode ${r.mode}`;
       const lock = r.hasPassword ? '🔒 ' : '';
+      if(r.started) {
+        return `<div class="room-item" style="border-color:#2a3a20;opacity:0.88" onclick="MP.joinFromList('${r.code}',${!!r.hasPassword})">
+          <div class="ri-info">
+            <div class="ri-name">${lock}${r.code} <span style="color:#f5a030;font-size:10px;margin-left:4px">● Đang chơi</span></div>
+            <div class="ri-meta">🗺 ${mapName} · ⚔ ${modeName} · 👥 ${r.playerCount}</div>
+          </div>
+          <button class="ri-join" style="background:#0a2015;color:#40c060;border-color:#1a4025" onclick="event.stopPropagation();MP.joinFromList('${r.code}',${!!r.hasPassword})">Vào lại →</button>
+        </div>`;
+      }
       return `<div class="room-item" onclick="MP.joinFromList('${r.code}',${!!r.hasPassword})">
         <div class="ri-info">
           <div class="ri-name">${lock}${r.code}</div>
@@ -4177,7 +4601,7 @@ const MP = {
     }).catch(()=>{});
   },
 
-  setErr(t){ ['mp-err','mp-err-lobby'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=t; }); },
+  setErr(t){ ['mp-err','mp-err-lobby','mp-err-create'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=t; }); },
 
   // Broadcast a game event to others
   broadcastEvent(event) {
@@ -4222,9 +4646,9 @@ const MP = {
   },
 
   // ── Host-auth: send state snapshot to all guests ─────────
-  broadcastState() {
+  broadcastState(full=true) {
     if(!this.isHost||!this.ws) return;
-    this.send({type:'state_sync', state:this.getNetState()});
+    this.send({type:'state_sync', state:this.getNetState(full)});
   },
 
   // ── Guest: relay action to host ──────────────────────────
@@ -4233,33 +4657,39 @@ const MP = {
   },
 
   // ── Build authoritative state snapshot ──────────────────
-  getNetState() {
-    return {
+  getNetState(full=true) {
+    const state = {
       enemies: Game.enemies.map(en=>({
-        _id:en._id, t:en.t, x:en.x, y:en.y, hp:en.hp, maxHp:en.maxHp,
+        _id:en._id,
+        t:~~(en.t*10000)/10000,
+        x:~~en.x, y:~~en.y,
+        hp:~~en.hp, maxHp:~~en.maxHp,
         slow:en.slow||1, isBoss:en.isBoss||false, color:en.color, typeId:en.typeId,
         radius:en.radius, reward:en.reward, heals:en.heals||false,
         pathIdx:en.pathIdx||0, aerial:en.aerial||false
       })),
-      towers: Game.towers.map(tw=>({
+      crystalHP: Game.crystalHP,
+      gamePhase: Game.gamePhase,
+      spawnQueueLen: Game.spawnQueue.length,
+    };
+    if(full) {
+      state.towers = Game.towers.map(tw=>({
         x:tw.x, y:tw.y, typeId:tw.typeId, level:tw.level||1,
         angle:tw.angle||0, flash:tw.flash||0, goldTimer:tw.goldTimer||3600,
         ownerIdx:tw.ownerIdx!=null?tw.ownerIdx:0
-      })),
-      gold: Game.gold,
-      playerGold: [...Game.playerGold],
-      crystalHP: Game.crystalHP,
-      round: Game.round,
-      roundTimer: Game.roundTimer,
-      gamePhase: Game.gamePhase,
-      leakCount: Game.leakCount,
-      leakQuota: Game.leakQuota,
-      roundEvent: Game.roundEvent,
-      spawnQueueLen: Game.spawnQueue.length,
-      lifelinesUsed: [...Game.lifelinesUsed],
-      timeWarpActive: Game.timeWarpActive,
-      timeWarpTimer: Game.timeWarpTimer
-    };
+      }));
+      state.gold = Game.gold;
+      state.playerGold = [...Game.playerGold];
+      state.round = Game.round;
+      state.roundTimer = Game.roundTimer;
+      state.leakCount = Game.leakCount;
+      state.leakQuota = Game.leakQuota;
+      state.roundEvent = Game.roundEvent;
+      state.lifelinesUsed = [...Game.lifelinesUsed];
+      state.timeWarpActive = Game.timeWarpActive;
+      state.timeWarpTimer = Game.timeWarpTimer;
+    }
+    return state;
   },
 
   // ── Apply host state on guest ────────────────────────────
@@ -4280,9 +4710,18 @@ const MP = {
       if(prev) { Object.assign(prev,se); return prev; }
       return {...se,flash:0,pathIdx:se.pathIdx||0};
     });
-    Game.towers = s.towers.map(tw=>({...tw,cooldown:0,ownerIdx:tw.ownerIdx||0}));
+    if(s.towers) {
+      Game.towers = s.towers.map(tw=>({...tw,cooldown:0,ownerIdx:tw.ownerIdx||0}));
+      // Re-sync selected tower reference to prevent panel flicker after towers rebuild
+      if(Game.selectedPlacedTower) {
+        const ox=Game.selectedPlacedTower.x, oy=Game.selectedPlacedTower.y;
+        const reFound=Game.towers.find(tw=>Math.hypot(tw.x-ox,tw.y-oy)<5);
+        if(reFound) { Game.selectedPlacedTower=reFound; }
+        else { Game.selectedPlacedTower=null; document.getElementById('tower-panel').style.display='none'; }
+      }
+    }
     if(s.playerGold) { Game.playerGold=s.playerGold; Game.gold=s.playerGold[Game.mpPlayerIdx]||0; }
-    else { Game.gold = s.gold; }
+    else if(s.gold!=null) { Game.gold = s.gold; }
     if(s.crystalHP < Game.crystalHP) {
       SFX.crystalHit();
       Game.addShake(4);
@@ -4290,8 +4729,8 @@ const MP = {
     }
     Game.crystalHP = s.crystalHP;
     Game._guestSpawnQueueLen = s.spawnQueueLen||0;
-    // detect new round
-    if(s.round>0 && s.round!==Game.round) {
+    // detect new round (only in full sync)
+    if(s.round!=null && s.round>0 && s.round!==Game.round) {
       Game.round = s.round;
       Game.roundEvent = s.roundEvent||{};
       Game.leakCount = s.leakCount;
@@ -4303,7 +4742,15 @@ const MP = {
       SFX.playMusic([5,10,15,20].includes(s.round)?'boss':'battle');
       const swBtn=document.getElementById('start-wave-btn');
       if(swBtn) swBtn.classList.add('hidden');
-    } else {
+      // Elite gate reveal for guests
+      if(Game.elitePath) {
+        if(s.round === 10 && !Game.eliteGateShown && !Game.eliteGateRevealStart) {
+          Game.eliteGateRevealStart = performance.now();
+        } else if(s.round > 10 && !Game.eliteGateShown) {
+          Game.eliteGateShown = true; Game.bgDirty = true;
+        }
+      }
+    } else if(s.round!=null) {
       if(s.roundTimer!=null) Game.roundTimer = s.roundTimer;
       if(s.gamePhase!=null) {
         const prev=Game.gamePhase;
@@ -4313,8 +4760,17 @@ const MP = {
           const swBtn=document.getElementById('start-wave-btn'); if(swBtn) swBtn.classList.add('hidden');
         }
       }
-      Game.leakCount = s.leakCount;
-      Game.leakQuota = s.leakQuota;
+      if(s.leakCount!=null) Game.leakCount = s.leakCount;
+      if(s.leakQuota!=null) Game.leakQuota = s.leakQuota;
+    }
+    // always sync gamePhase from every packet (wave start transition)
+    if(s.gamePhase!=null && s.gamePhase!==Game.gamePhase && s.round==null) {
+      const prev=Game.gamePhase;
+      Game.gamePhase = s.gamePhase;
+      if(prev==='prep'&&s.gamePhase==='wave') {
+        const ph=document.getElementById('hud-phase'); if(ph) ph.textContent='⚔️';
+        const swBtn=document.getElementById('start-wave-btn'); if(swBtn) swBtn.classList.add('hidden');
+      }
     }
     // time warp sync
     if(s.timeWarpActive != null) Game.timeWarpActive = s.timeWarpActive;
