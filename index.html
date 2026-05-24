@@ -4010,7 +4010,9 @@ const MP = {
       leakQuota: Game.leakQuota,
       roundEvent: Game.roundEvent,
       spawnQueueLen: Game.spawnQueue.length,
-      lifelinesUsed: [...Game.lifelinesUsed]
+      lifelinesUsed: [...Game.lifelinesUsed],
+      timeWarpActive: Game.timeWarpActive,
+      timeWarpTimer: Game.timeWarpTimer
     };
   },
 
@@ -4068,6 +4070,9 @@ const MP = {
       Game.leakCount = s.leakCount;
       Game.leakQuota = s.leakQuota;
     }
+    // time warp sync
+    if(s.timeWarpActive != null) Game.timeWarpActive = s.timeWarpActive;
+    if(s.timeWarpTimer  != null) Game.timeWarpTimer  = s.timeWarpTimer;
     // lifeline UI sync (count-based)
     if(s.lifelinesUsed) {
       s.lifelinesUsed.forEach((count,i)=>{
