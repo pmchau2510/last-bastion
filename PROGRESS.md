@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-24) — last updated (solo starting gold +100)
+## Current State (2026-05-24) — last updated (MP guest enemy visibility fix)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,14 @@
 ---
 
 ## Completed Features
+
+### MP Guest Enemy Visibility Fix (2026-05-24)
+- **Root cause**: `spd` field was missing from `getNetState` enemy payload → guest prediction did `undefined * fps60 = NaN` → `en.t = NaN` → `ptOnPath(NaN)` returned `{x:NaN, y:NaN}` → canvas silently drew nothing
+- Added `spd:en.spd` to enemy sync payload so guest prediction can advance `en.t` correctly
+- Also added `elite:en.elite||false` (fixes path selection in guest prediction) and `id:en.id` (fixes boss skin rendering on guest)
+- Fixed `SFX.lifeline()`: was a 3-case switch (Shield/Orbital/TimeWarp); after removing all but Time Warp (now idx 0), it was playing Shield sound. Now always plays Time Warp whoosh-reverb sound.
+
+---
 
 ### Solo Starting Gold Buff (2026-05-24)
 - Solo: Standard 300→**400**, Hardcore 200→**300**, Endless 300→**400**, Challenge 250→**350**

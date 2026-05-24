@@ -4741,7 +4741,8 @@ const MP = {
         t:~~(en.t*10000)/10000,
         x:~~en.x, y:~~en.y,
         hp:~~en.hp, maxHp:~~en.maxHp,
-        slow:en.slow||1, isBoss:en.isBoss||false, color:en.color, typeId:en.typeId,
+        slow:en.slow||1, spd:en.spd, isBoss:en.isBoss||false, color:en.color, typeId:en.typeId,
+        id:en.id, elite:en.elite||false,
         radius:en.radius, reward:en.reward, heals:en.heals||false,
         pathIdx:en.pathIdx||0, aerial:en.aerial||false
       })),
@@ -5255,20 +5256,9 @@ const SFX = {
   // Lifeline dùng
   lifeline(idx) {
     this.resume();
-    switch (idx) {
-      case 0: // Shield — shimmering
-        [659, 784, 988, 1175].forEach((f, i) => setTimeout(() => this._osc('sine', f, 0.2, 0.12, null, 0.005, 0.06, 0.4, 0.14), i * 60));
-        break;
-      case 1: // Orbital Strike — massive boom
-        this._osc('sine', 40, 0.4, 0.8, null, 0.005, 0.2, 0.5, 0.4);
-        this._noise(0.5, 0.4, 150);
-        [300, 200, 100].forEach((f, i) => setTimeout(() => this._osc('sine', f, 0.2, 0.25), i * 100));
-        break;
-      case 2: // Time Warp — whoosh reverb
-        for (let i = 0; i < 8; i++) {
-          setTimeout(() => this._osc('sine', 400 + i * 80, 0.1 + i*0.015, 0.25, null, 0.005, 0.08, 0.3, 0.18), i * 40);
-        }
-        break;
+    // Time Warp (idx 0) — whoosh reverb
+    for (let i = 0; i < 8; i++) {
+      setTimeout(() => this._osc('sine', 400 + i * 80, 0.1 + i*0.015, 0.25, null, 0.005, 0.08, 0.3, 0.18), i * 40);
     }
   },
 
