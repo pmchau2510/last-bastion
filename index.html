@@ -1170,10 +1170,17 @@ const MODES = [
     pills:[{t:'20s chuẩn bị',g:false},{t:'10 mạng',g:false},{t:'+50% thưởng',g:true}] },
   { name:'Endless',   icon:'♾️', badge:'Vô tận', bdgClass:'mb-2',
     desc:'Chơi đến khi tinh thể vỡ. Sau round 20 quái tăng 8%/round.',
-    pills:[{t:'Không kết thúc',g:false},{t:'Leaderboard',g:true},{t:'Khó tăng dần',g:false}] },
+    pills:[{t:'Không kết thúc',g:false},{t:'Sau R20 khó hơn',g:false},{t:'Khó tăng dần',g:false}] },
   { name:'Challenge', icon:'🎯', badge:'Đặc biệt', bdgClass:'mb-3',
     desc:'20 round với điều kiện ngẫu nhiên bí ẩn — chỉ biết khi bắt đầu.',
-    pills:[{t:'Điều kiện ẩn',g:false},{t:'Thưởng ×2',g:true},{t:'Skin đặc biệt',g:true}] }
+    pills:[{t:'Điều kiện ẩn',g:false},{t:'Thưởng ×2',g:true},{t:'Quái khó hơn',g:false}] }
+];
+
+const CHALLENGE_MODS = [
+  { id:'speed', name:'Tốc độ tử thần', icon:'💨', desc:'Quái nhanh hơn 35%',    spdX:1.35 },
+  { id:'horde', name:'Đại quân',        icon:'👾', desc:'Số lượng quái +60%',     countX:1.6 },
+  { id:'tank',  name:'Thiết giáp',      icon:'🛡', desc:'Quái máu cao hơn 40%',  hpX:1.4 },
+  { id:'rush',  name:'Tấn công nhanh',  icon:'⚡', desc:'Chỉ 15 giây chuẩn bị', prepT:15 },
 ];
 
 const ModeSelect = {
@@ -1475,6 +1482,7 @@ const Game = {
     this.selectedPlacedTower = null;
     this.closeTowerPanel();
     this.reset();
+    if(modeIdx === 3) this.challengeMod = CHALLENGE_MODS[Math.floor(Math.random()*CHALLENGE_MODS.length)];
     this.resize();
     // Remove old resize listener if any
     if(this._resizeHandler) window.removeEventListener('resize', this._resizeHandler);
@@ -1554,6 +1562,7 @@ const Game = {
     this._guestSpawnQueueLen = 0;
     this.eliteGateShown = false;
     this.eliteGateRevealStart = null;
+    this.challengeMod = null;
     this._particlePool = [];
     this._dmgPool = [];
   },
@@ -1644,13 +1653,16 @@ const Game = {
     // Endless: after R20 enemies scale 8%/round HP and +1 count per 3 rounds
     const endlessR = (this.modeIdx === 2 && this.round > 20) ? this.round - 20 : 0;
     const endlessHpX = endlessR > 0 ? Math.pow(1.08, endlessR) : 1;
+    const chalHpX = this.modeIdx === 3 && this.challengeMod?.hpX ? this.challengeMod.hpX : 1;
     const modeHpX = this.modeIdx === 1 ? 1.2 : this.modeIdx === 3 ? 1.1 : 1;
-    const hpM = data.hpMult * endlessHpX * modeHpX * (ev.hpMult || 1);
-    const modeSpdX = this.modeIdx === 3 ? 1.15 : 1; // Challenge: +15% speed
+    const hpM = data.hpMult * endlessHpX * modeHpX * chalHpX * (ev.hpMult || 1);
+    const chalSpdX = this.modeIdx === 3 && this.challengeMod?.spdX ? this.challengeMod.spdX : 1;
+    const modeSpdX = (this.modeIdx === 3 ? 1.15 : 1) * chalSpdX;
     const spdM = (ev.spdMult || 1) * modeSpdX;
     const isBoss = data.isBoss;
     const endlessCountExtra = endlessR > 0 ? Math.floor(endlessR / 3) : 0;
-    const perG = Math.round((data.perGate + (this.modeIdx === 1 ? 3 : 0) + endlessCountExtra) * (ev.countMult || 1));
+    const chalCountX = this.modeIdx === 3 && this.challengeMod?.countX ? this.challengeMod.countX : 1;
+    const perG = Math.round((data.perGate + (this.modeIdx === 1 ? 3 : 0) + endlessCountExtra) * (ev.countMult || 1) * chalCountX);
     const allT=[0,1,2,3,4,5,6];
     const typePool = ev.allTypes ? allT : data.types;
 
@@ -1800,7 +1812,8 @@ const Game = {
     }
     this.updateWeatherHUD();
 
-    const prepT = [45, 20, 45, 35][this.modeIdx] ?? 45; // Standard:45s Hardcore:20s Endless:45s Challenge:35s
+    const basePrepT = [45, 20, 45, 35][this.modeIdx] ?? 45; // Standard:45s Hardcore:20s Endless:45s Challenge:35s
+    const prepT = (this.modeIdx === 3 && this.challengeMod?.prepT) ? this.challengeMod.prepT : basePrepT;
     this.gamePhase = prepT > 0 ? 'prep' : 'wave';
     this.roundTimer = prepT * 60;
     this.spawnTimer = 0;
@@ -1816,6 +1829,24 @@ const Game = {
       this.updateWaveReadyBar();
     }
     this.announceRound();
+    // Challenge mode: reveal the modifier on round 1
+    if(this.modeIdx === 3 && this.round === 1 && this.challengeMod) {
+      const cm = this.challengeMod;
+      setTimeout(() => {
+        const el = document.getElementById('elite-gate-announce');
+        if(el) {
+          el.style.color='#ffd700'; el.style.textShadow='0 0 18px #ff8800,0 0 35px #aa4400';
+          el.style.borderColor='#cc8800';
+          el.textContent=`${cm.icon} ${cm.name.toUpperCase()} — ${cm.desc}`;
+          el.classList.add('show');
+        }
+        this.addShake(12); SFX.eliteGate?.();
+        setTimeout(() => {
+          const el2 = document.getElementById('elite-gate-announce');
+          if(el2) { el2.classList.remove('show'); el2.style.color=''; el2.style.textShadow=''; el2.style.borderColor=''; }
+        }, 5000);
+      }, 1500);
+    }
     this.updateHUD();
     SFX.roundStart(this.round);
     const isBossRound = [5,10,15,20].includes(this.round);
@@ -4799,6 +4830,7 @@ const MP = {
       state.lifelinesUsed = [...Game.lifelinesUsed];
       state.timeWarpActive = Game.timeWarpActive;
       state.timeWarpTimer = Game.timeWarpTimer;
+      state.challengeMod = Game.challengeMod || null;
     }
     return state;
   },
@@ -4844,6 +4876,8 @@ const MP = {
     }
     Game.crystalHP = s.crystalHP;
     Game._guestSpawnQueueLen = s.spawnQueueLen||0;
+    // sync challenge mod from host (full sync only)
+    if(s.challengeMod !== undefined) Game.challengeMod = s.challengeMod;
     // detect new round (only in full sync)
     if(s.round!=null && s.round>0 && s.round!==Game.round) {
       Game.round = s.round;
@@ -4860,6 +4894,24 @@ const MP = {
       const swBtn=document.getElementById('start-wave-btn');
       if(swBtn) swBtn.classList.add('hidden');
       Game.updateWaveReadyBar();
+      // Challenge mode: reveal modifier to guest on round 1
+      if(Game.modeIdx === 3 && s.round === 1 && Game.challengeMod) {
+        const cm = Game.challengeMod;
+        setTimeout(() => {
+          const el = document.getElementById('elite-gate-announce');
+          if(el) {
+            el.style.color='#ffd700'; el.style.textShadow='0 0 18px #ff8800,0 0 35px #aa4400';
+            el.style.borderColor='#cc8800';
+            el.textContent=`${cm.icon} ${cm.name.toUpperCase()} — ${cm.desc}`;
+            el.classList.add('show');
+          }
+          Game.addShake(12); SFX.eliteGate?.();
+          setTimeout(() => {
+            const el2 = document.getElementById('elite-gate-announce');
+            if(el2) { el2.classList.remove('show'); el2.style.color=''; el2.style.textShadow=''; el2.style.borderColor=''; }
+          }, 5000);
+        }, 1500);
+      }
       // Elite gate reveal + announcement for guests
       if(Game.elitePath) {
         if(s.round === 10 && !Game.eliteGateShown && !Game.eliteGateRevealStart) {

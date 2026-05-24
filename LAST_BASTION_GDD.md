@@ -97,7 +97,15 @@ Tất cả map được thiết kế với **đường đi dài + nhiều làn**
 | 0 | **Standard** | **45 giây** / round | ✅ | Cân bằng, khuyên dùng, 20 mạng |
 | 1 | **Hardcore** | **20 giây** / round | ✅ | Chuẩn bị thật nhanh, +50% thưởng, 10 mạng |
 | 2 | **Endless** | **45 giây** / round | ✅ | Không kết thúc, sau round 20 quái +9%/round |
-| 3 | **Challenge** | **35 giây** / round | ✅ | Điều kiện ẩn ngẫu nhiên, thưởng ×2 |
+| 3 | **Challenge** | **35 giây** / round (hoặc 15s với Rush mod) | ✅ (hoặc bị khóa với noSell mod) | Điều kiện ẩn ngẫu nhiên, thưởng ×2, quái khó hơn |
+
+**Challenge mode — Điều kiện ẩn (CHALLENGE_MODS):**  
+Khi bắt đầu round 1, một điều kiện ngẫu nhiên được tiết lộ (banner vàng + shake):
+- 💨 **Tốc độ tử thần** — tốc độ quái ×1.35
+- 👾 **Đại quân** — số lượng quái ×1.6
+- 🛡 **Thiết giáp** — HP quái ×1.4 (chồng lên +10% Challenge base → tổng ×1.54)
+- ⚡ **Tấn công nhanh** — chỉ 15 giây chuẩn bị mỗi round
+- 🔒 **Cam kết xây dựng** — không thể bán tháp suốt game
 
 > `prepT = [45, 20, 45, 35][modeIdx]` — tất cả mode đều có thời gian chuẩn bị.  
 > Bán tháp được phép ở **mọi chế độ** (bao gồm Hardcore từ v9.0). Hoàn 60% tổng chi phí.
@@ -538,7 +546,8 @@ Menu
 
 - [ ] Mở khóa Void Nexus sau khi thắng 5 map
 - [ ] Leaderboard Endless (score theo round sống được)
-- [ ] Challenge mode: điều kiện ẩn ngẫu nhiên thật sự
+- [ ] Leaderboard Endless thật sự (score theo round sống được)
+- [x] Challenge mode: điều kiện ẩn ngẫu nhiên — ĐÃ TRIỂN KHAI v9.2
 - [ ] Skin tháp đặc biệt từ Challenge reward
 - [ ] Ashfield Ruins: ô núi lửa buff Lửa lên Cấp 4
 - [ ] Tidal Docks: thu hẹp bản đồ khi thủy triều dâng
@@ -551,6 +560,7 @@ Menu
 
 | Phiên bản | Ngày | Thay đổi chính |
 |-----------|------|---------------|
+| v9.2 | 2026-05-24 | Challenge mode điều kiện ẩn (CHALLENGE_MODS ×5); enemy HP exponential curve; boss per gate; elite gate boss R10+; projectile sync guest; announcements trên cả host+guest; mode reward bonuses; Endless post-R20 real scaling |
 | v9.1 | 2026-05-24 | Solo starting gold +100 mọi mode (Standard 400, Hardcore 300, Endless 400, Challenge 350) |
 | v9.0 | 2026-05-24 | Tower placement segment-distance check + elitePath; bán tháp mọi chế độ; chỉ Time Warp lifeline; xóa Quota HUD; fullscreen menu-only + iOS toast; split sync MP (2/10 frame) |
 | v8.0 | 2026-05-24 | Aerial enemy system (Storm Wyvern + Siege Drake), Phòng Không (id:10), T.Nhiên per-round, HUD collapse, hero row removed, 7-column grid |

@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-24) — last updated (MP guest enemy visibility fix)
+## Current State (2026-05-24) — last updated (Challenge mode, balance, MP bug fixes)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,54 @@
 ---
 
 ## Completed Features
+
+### Challenge Mode Random Modifier + Mode Balance Audit (2026-05-24)
+
+#### Challenge Mode — Điều kiện ẩn (implemented)
+- `CHALLENGE_MODS` array: 5 random conditions revealed at start of round 1
+  - 💨 **Tốc độ tử thần** — enemy speed ×1.35
+  - 👾 **Đại quân** — enemy count ×1.6
+  - 🛡 **Thiết giáp** — enemy HP ×1.4
+  - ⚡ **Tấn công nhanh** — prep time 15s instead of 35s
+  - 🔒 **Cam kết xây dựng** — cannot sell towers (all sell paths blocked)
+- `challengeMod` picked randomly in `init()` (after `reset()`) for `modeIdx === 3`
+- Revealed via gold `#elite-gate-announce` banner at 1500ms into round 1, with shake + SFX
+- **noSell**: `sellTower()`, `sellSelectedTower()`, `showTowerPanel()` sell button, and host MP `sell_tower` handler all respect `challengeMod.noSell`
+- **MP sync**: `challengeMod` included in full state sync (`getNetState`) → guests receive via `applyNetState` and also see the round-1 reveal banner
+
+#### Mode balance fixes
+- **Enemy HP scaling**: changed from linear `1 + ri*0.09` → exponential `Math.pow(1.07, ri)` → R10=2.0×, R15=2.76×, R20=3.87×
+- **Kill reward with mode bonus**: `rewardMult`: Standard/Endless=1×, Hardcore=1.5×, Challenge=2×
+- **Hardcore**: +20% enemy HP, +3 enemies/gate, +50% reward — all active
+- **Endless post-R20**: real scaling `Math.pow(1.08, endlessR)` per round above 20 (was dead code `hp *= 1`)
+- **Challenge base**: +10% HP, +15% speed; plus the random mod multiplied on top
+- **Boss per gate**: iterates `numPaths`, assigns boss from `bossIdxList` round-robin — every gate gets a boss on boss rounds
+- **Elite gate boss** (R10+): 2× HP of primary boss, spawns on elite path
+
+#### Announcement fixes (MP)
+- Extracted `announceEliteGate(round)` shared method — both host (`startRound()`) and guest (`applyNetState()`) call it
+- Challenge mod reveal banner also shown to guests via `applyNetState()` new-round block
+- Guest receives all announcements: round start, elite gate, aerial wave, challenge mod
+
+#### Host restart propagation
+- `Game.restart()`: host broadcasts `host_restart` event → all guests restart automatically without clicking
+
+#### Pill label corrections
+- Endless: "Leaderboard" → "Sau R20 khó hơn" (implemented feature, accurate label)
+- Challenge: "Skin đặc biệt" → "Quái khó hơn" (accurate label for what the mode actually does)
+
+#### Projectile sync for guests
+- `getNetState` includes up to 30 projectiles with trail data in every partial sync
+- `applyNetState` rebuilds `Game.projectiles` for visual rendering — guests now see bullet trails and health bars
+
+#### iOS/Android compatibility audit
+- `webkitAudioContext` fallback ✓, `ctx.resume()` ✓, silent unlock buffer ✓
+- `roundRect` has `_rr()` polyfill (try-catch + fallback) — all 44 uses safe on iOS
+- `ellipse()` supported from iOS 9.1+ ✓
+- `touchend passive:false`, `touchmove passive:true` ✓
+- SFX.init triggered on both `click` and `touchstart` ✓
+
+---
 
 ### MP Guest Enemy Visibility Fix (2026-05-24)
 - **Root cause**: `spd` field was missing from `getNetState` enemy payload → guest prediction did `undefined * fps60 = NaN` → `en.t = NaN` → `ptOnPath(NaN)` returned `{x:NaN, y:NaN}` → canvas silently drew nothing
