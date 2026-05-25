@@ -215,6 +215,8 @@ wss.on('connection', ws => {
       // ── Game events ──────────────────────────────────────────
       case 'game_event': {
         if (!myRoom) break;
+        // Track game-over so we can clean up when host disconnects
+        if (myIdx === 0 && msg.event?.type === 'game_over') myRoom.gameOver = true;
         broadcast(myRoom, { type: 'game_event', from: myIdx, event: msg.event }, ws);
         break;
       }
@@ -257,17 +259,27 @@ wss.on('connection', ws => {
     if (!myRoom || myIdx < 0) return;
 
     if (myRoom.started) {
+      // Host left after game ended → delete the room from the list immediately
+      if (myIdx === 0 && myRoom.gameOver) {
+        rooms.delete(myCode);
+        return;
+      }
       // Mid-game disconnect: keep the slot, mark disconnected
       const slot = myRoom.players[myIdx];
       if (slot) {
         slot.disconnected = true;
         slot.dcTime = Date.now();
-        // Cleanup after 10 minutes if not reconnected
-        slot._dcTimer = setTimeout(() => {
-          if (!slot.disconnected) return; // already reconnected
-          myRoom.players.splice(myIdx, 1);
-          if (myRoom.players.length === 0) rooms.delete(myCode);
-        }, 10 * 60 * 1000);
+        // If host disconnected mid-game, the game can't continue — delete room after short grace
+        if (myIdx === 0) {
+          slot._dcTimer = setTimeout(() => { rooms.delete(myCode); }, 30 * 1000);
+        } else {
+          // Cleanup after 10 minutes if not reconnected
+          slot._dcTimer = setTimeout(() => {
+            if (!slot.disconnected) return; // already reconnected
+            myRoom.players.splice(myIdx, 1);
+            if (myRoom.players.length === 0) rooms.delete(myCode);
+          }, 10 * 60 * 1000);
+        }
         broadcast(myRoom, {
           type: 'player_disconnected',
           idx: myIdx,

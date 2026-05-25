@@ -110,37 +110,33 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 /* ===== GAME HUD ===== */
 #game-hud{position:absolute;top:0;left:0;width:100%;display:flex;flex-direction:column;pointer-events:none}
 #game-hud *{pointer-events:auto}
-.hud-top{background:#06080fdd;padding:6px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1f35;backdrop-filter:blur(4px)}
-.hud-left{display:flex;align-items:center;gap:8px}
-.hud-round{background:#1a1f35;border:1px solid #2a3050;border-radius:7px;padding:3px 9px;font-size:13px;font-weight:600;color:#c8bef5}
+.hud-top{background:rgba(4,6,18,0.55);padding:3px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid rgba(40,55,90,0.35)}
+.hud-left{display:flex;align-items:center;gap:6px}
+.hud-round{background:rgba(26,31,53,0.7);border:1px solid rgba(42,48,80,0.8);border-radius:7px;padding:2px 8px;font-size:12px;font-weight:600;color:#c8bef5}
 .hud-round em{color:#5a5878;font-style:normal;font-weight:400}
 .hud-boss-warn{font-size:10px;color:#e05a2b;font-weight:600;animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
-.hud-res{display:flex;gap:8px}
-.hud-r{display:flex;align-items:center;gap:3px;font-size:13px;font-weight:600}
+.hud-weather-inline{display:flex;align-items:center;gap:3px;font-size:10px;color:#4a7aaa;background:rgba(10,14,30,0.5);border:1px solid rgba(30,45,70,0.5);border-radius:6px;padding:2px 7px}
+.w-bonus{font-size:9px;color:#9b5aee;background:rgba(26,16,64,0.8);padding:1px 5px;border-radius:4px;border:.5px solid #3a2060;margin-left:3px}
+.hud-res{display:flex;gap:6px}
+.hud-r{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:600}
 .hud-gold{color:#f5c842;display:flex;align-items:center;gap:3px}
-.gc{display:inline-block;width:12px;height:12px;background:radial-gradient(circle at 38% 35%,#fff9c0,#f5c842 45%,#c87800);border-radius:50%;border:1.5px solid #a06000;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.5),inset 0 1px 1px rgba(255,255,180,.5)}
+.gc{display:inline-block;width:11px;height:11px;background:radial-gradient(circle at 38% 35%,#fff9c0,#f5c842 45%,#c87800);border-radius:50%;border:1.5px solid #a06000;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.5),inset 0 1px 1px rgba(255,255,180,.5)}
 .hud-crystal{color:#60c8ff}
-.hud-pause{background:none;border:1px solid #2a3050;border-radius:7px;padding:4px 8px;font-size:16px;color:#5a5878;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-width:36px;min-height:36px}
-.hud-start-wave{background:#2a6a10;border:1px solid #4a9a20;border-radius:7px;padding:4px 10px;font-family:'Exo 2',system-ui,sans-serif;font-size:13px;font-weight:600;color:#80e050;cursor:pointer;animation:pulseGreen 1.2s ease-in-out infinite}
+.hud-pause{background:rgba(10,14,30,0.6);border:1px solid rgba(42,48,80,0.6);border-radius:7px;padding:3px 7px;font-size:14px;color:#5a5878;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-width:38px;min-height:38px}
+.hud-start-wave{background:#2a6a10;border:1px solid #4a9a20;border-radius:7px;padding:3px 9px;font-family:'Exo 2',system-ui,sans-serif;font-size:12px;font-weight:600;color:#80e050;cursor:pointer;animation:pulseGreen 1.2s ease-in-out infinite}
 .hud-start-wave.hidden{display:none}
 .hud-start-wave:active{transform:scale(.95)}
 @keyframes pulseGreen{0%,100%{box-shadow:0 0 0 0 #4a9a2066}60%{box-shadow:0 0 0 5px #4a9a2000}}
-#wave-ready-bar{display:flex;align-items:center;gap:6px;background:rgba(5,8,20,0.9);border:1px solid #1a2a50;border-radius:8px;padding:3px 8px;font-size:10px;margin-left:6px}
+#wave-ready-bar{display:flex;align-items:center;gap:5px;background:rgba(5,8,20,0.75);border:1px solid #1a2a50;border-radius:7px;padding:2px 7px;font-size:10px;margin-left:4px}
 #wave-ready-bar.hidden{display:none}
-.wpr-slot{display:flex;align-items:center;gap:3px;border-radius:5px;padding:2px 5px;cursor:pointer;transition:background .15s}
+.wpr-slot{display:flex;align-items:center;gap:3px;border-radius:5px;padding:2px 4px;cursor:pointer;transition:background .15s}
 .wpr-slot.is-me{border:1px solid #2a4070}
 .wpr-slot.is-me:hover{background:#0a1530}
 .wpr-ready{color:#30e060}
 .wpr-wait{color:#606070}
 .hud-start-wave.all-ready{background:#1a7a20;animation:pulseGold 0.8s ease-in-out infinite}
 @keyframes pulseGold{0%,100%{box-shadow:0 0 0 0 #40ff6066}60%{box-shadow:0 0 0 6px #40ff6000}}
-
-
-.hud-weather{background:#06090fcc;padding:2px 10px;display:flex;align-items:center;gap:5px;border-bottom:1px solid #0d1525;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
-.w-icon{font-size:12px}
-.w-name{font-size:10px;color:#4a6a90;flex:1}
-.w-bonus{font-size:9px;color:#9b5aee;background:#1a1040;padding:1px 6px;border-radius:4px;border:.5px solid #3a2060}
 
 /* ===== BOTTOM HUD ===== */
 #game-bottom{position:absolute;bottom:0;left:0;width:100%;background:#06080fdd;border-top:1px solid #1a1f35;backdrop-filter:blur(4px)}
@@ -205,16 +201,6 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 #win-modal .modal-title{color:#80e060}
 #lose-modal .modal-title{color:#e87060}
 
-/* ===== TUTORIAL TOOLTIP ===== */
-#tut-tip{position:absolute;bottom:0;left:0;right:0;background:#07090fee;border-top:1px solid #2a3060;padding:12px 14px 14px;z-index:50}
-#tut-tip.hidden{display:none}
-.tut-step{font-size:10px;color:#7b4fee;font-weight:600;margin-bottom:4px;letter-spacing:.08em}
-.tut-title{font-family:'Cinzel',serif;font-size:14px;color:#e8e0f5;margin-bottom:5px}
-.tut-desc{font-size:12px;color:#7a6a98;line-height:1.5;margin-bottom:10px}
-.tut-nav{display:flex;gap:8px}
-.tut-skip{font-size:12px;color:#3a3050;cursor:pointer;padding:6px 0;background:none;border:none;font-family:'Exo 2',system-ui,sans-serif}
-.tut-next{flex:1;background:#7b4fee;border:none;border-radius:9px;padding:8px;font-family:'Exo 2',system-ui,sans-serif;font-size:13px;font-weight:600;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
-.tut-next:active{transform:scale(.97)}
 
 /* ===== HIGHLIGHT RING ===== */
 @keyframes pulseRing{0%{opacity:.9;transform:scale(1)}70%{opacity:0;transform:scale(1.8)}100%{opacity:0}}
@@ -325,9 +311,9 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 .hud-boss-warn.hidden{display:none!important}
 #game-canvas{display:none}
 /* ===== Collapsible top HUD ===== */
-#hud-rows{overflow:hidden;max-height:120px;transition:max-height .28s ease,opacity .2s ease}
+#hud-rows{overflow:hidden;max-height:60px;transition:max-height .28s ease,opacity .2s ease}
 #hud-rows.hud-collapsed{max-height:0;opacity:0;pointer-events:none}
-#hud-tab{align-self:flex-end;background:#12163aee;border:1px solid #5a3aaa;border-top:none;border-radius:0 0 8px 8px;padding:2px 12px 4px;font-size:12px;color:#c4a0ff;cursor:pointer;pointer-events:auto;user-select:none;margin-right:10px;letter-spacing:.06em;transition:opacity .2s;font-weight:600;text-shadow:0 0 8px #7b4fee88}
+#hud-tab{align-self:flex-end;background:rgba(18,22,58,0.7);border:1px solid rgba(90,58,170,0.6);border-top:none;border-radius:0 0 8px 8px;padding:1px 10px 3px;font-size:11px;color:#c4a0ff;cursor:pointer;pointer-events:auto;user-select:none;margin-right:10px;letter-spacing:.06em;transition:opacity .2s;font-weight:600;text-shadow:0 0 8px #7b4fee88;backdrop-filter:blur(6px)}
 #hud-tab:active{opacity:.7}
 /* ===== Orientation lock (portrait) ===== */
 #rotate-msg{display:none;position:fixed;inset:0;z-index:9999;background:#07090f;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:30px}
@@ -342,8 +328,7 @@ body{position:fixed;width:100%;height:100%}
 #game-canvas{position:fixed;top:0;left:0}
 
 /* ===== WebKit backdrop-filter prefix ===== */
-.hud-top,#game-bottom{-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
-.hud-weather{-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.hud-top,#game-bottom,#hud-tab{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .chat-msg,.qc-btn{-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 
 /* ===== iOS momentum scroll ===== */
@@ -392,8 +377,7 @@ body{position:fixed;width:100%;height:100%}
   <div class="menu-title">LAST BASTION</div>
   <div class="menu-sub">BẢO VỆ ĐẾN HƠI THỞ CUỐI CÙNG</div>
   <div class="menu-btns">
-    <button class="btn-primary" onclick="App.checkFirst()">⚔️ &nbsp;Bắt đầu chiến đấu</button>
-    <button class="btn-secondary" onclick="App.startTutorial()">📖 &nbsp;Hướng dẫn chơi</button>
+    <button class="btn-primary" onclick="App.showMapSelect()">⚔️ &nbsp;Bắt đầu chiến đấu</button>
     <button class="btn-secondary" onclick="MP.open()">👥 &nbsp;Nhiều người chơi</button>
   </div>
 </div>
@@ -441,8 +425,9 @@ body{position:fixed;width:100%;height:100%}
   <div id="hud-rows">
     <div class="hud-top">
       <div class="hud-left">
-        <div class="hud-round">Round <span id="hud-round">1</span><em>/20</em> <span id="hud-phase" style="margin-left:5px;font-size:11px;color:#5a8aff;font-weight:400"></span></div>
+        <div class="hud-round">Round <span id="hud-round">1</span><em>/20</em> <span id="hud-phase" style="margin-left:4px;font-size:11px;color:#5a8aff;font-weight:400"></span></div>
         <div class="hud-boss-warn hidden" id="boss-warn">⚠ BOSS</div>
+        <div class="hud-weather-inline"><span id="w-icon">⛅</span><span id="w-name" style="font-size:10px;color:#4a7aaa"></span><span class="w-bonus hidden" id="w-bonus"></span></div>
       </div>
       <div class="hud-res">
         <div class="hud-r hud-gold"><i class="gc"></i><span id="hud-gold">200</span></div>
@@ -451,13 +436,7 @@ body{position:fixed;width:100%;height:100%}
       <button class="hud-start-wave hidden" id="start-wave-btn" onclick="Game.startWaveNow()">▶ Bắt đầu</button>
       <div id="wave-ready-bar" class="hidden"></div>
       <button class="hud-pause" onclick="Game.pause()">⏸</button>
-      <button class="hud-pause" id="mute-btn" onclick="const m=SFX.toggle();this.textContent=m?'🔇':'🔊'" style="margin-left:4px">🔊</button>
-      <button class="hud-pause hidden" id="give-gold-btn" onclick="Game.showGiveDonateMenu()" style="margin-left:4px;font-size:11px" title="Cho vàng cho đồng đội">💰</button>
-    </div>
-    <div class="hud-weather">
-      <div class="w-icon" id="w-icon">⛅</div>
-      <div class="w-name" id="w-name">Thời tiết bình thường</div>
-      <div class="w-bonus hidden" id="w-bonus">+buff</div>
+      <button class="hud-pause hidden" id="give-gold-btn" onclick="Game.showGiveDonateMenu()" style="margin-left:3px;font-size:10px" title="Cho vàng cho đồng đội">💰</button>
     </div>
   </div>
   <button id="hud-tab" onclick="Game.toggleHUD()">▲ Thu</button>
@@ -484,18 +463,6 @@ body{position:fixed;width:100%;height:100%}
 <!-- ELITE GATE ANNOUNCE -->
 <div id="elite-gate-announce"></div>
 
-<!-- TUTORIAL TIP -->
-<div id="tut-tip" class="hidden">
-  <div class="tut-step" id="tut-step-lbl">BƯỚC 1 / 8</div>
-  <div class="tut-title" id="tut-tip-title"></div>
-  <div class="tut-desc" id="tut-tip-desc"></div>
-  <div class="tut-nav">
-    <button class="tut-skip" onclick="Tutorial.skip()">Bỏ qua hướng dẫn</button>
-    <button class="tut-next" id="tut-next-btn" onclick="Tutorial.next()">
-      <span id="tut-next-txt">Tiếp theo</span> →
-    </button>
-  </div>
-</div>
 
 <!-- PAUSE MODAL -->
 <div class="modal-overlay hidden" id="pause-modal">
@@ -704,48 +671,62 @@ const MAPS_DATA = [
       W => [{x:0,y:145},{x:45,y:145},{x:85,y:145},{x:120,y:85},{x:162,y:85},{x:202,y:145},{x:242,y:85},{x:272,y:145},{x:W-8,y:118}]
     ]
   },
-  // Map 3 — Diagonal W/M wave (mirrored peak-valley pattern)
-  { id:3, name:'Ashfield Ruins', diff:4, size:'44×30', gates:3, weather:'Nắng to cố định',
-    tip:'Đường sóng đôi hình W/M — tháp đặt ở đỉnh sóng để bắn được 2 chiều. Cinder Warrior từ Round 10.',
-    suggest:'Lửa + T.Nhiên',
-    tags:['Tàn tích','Sóng đôi','Cổng Tro Tàn'],
-    bgColor:'#120604', pathColor:'#281004', pathLight:'#3c1808',
-    enemyColors:['#783020','#502018','#584838','#482818','#502820','#602820','#485838'],
+  // Map 3 — TEAM: Thornwall Crossing (4 normal lanes + 2 elite lanes, fits screen)
+  { id:3, name:'Thornwall Crossing', diff:3, size:'Team 4+2', gates:4, weather:'Ngẫu nhiên',
+    tip:'Map đội — 4 làn S-curve + 2 cổng đặc biệt xuất hiện từ Round 10. Mỗi người phụ trách 1-2 làn. Cinder Warrior từ R10.',
+    suggest:'Mỗi người 1 hướng',
+    tags:['👥 Đội','4 làn','2 Cổng Đặc Biệt'],
+    bgColor:'#0a0e04', pathColor:'#2a1e08', pathLight:'#3c2c10',
+    enemyColors:['#706030','#504820','#685838','#504028','#603820','#702820','#586048'],
     eliteEnemy:{name:'Cinder Warrior',color:'#c03000',glowColor:'#ff5500',hpMult:1.8,spdMult:1.15,rewardMult:2.5,radius:10},
-    elitePathFn: W=>[{x:0,y:80},{x:55,y:52},{x:95,y:84},{x:138,y:52},{x:178,y:84},{x:222,y:52},{x:262,y:80},{x:W-8,y:64}],
+    elitePathFns: [
+      W=>[{x:0,y:38},{x:48,y:20},{x:95,y:42},{x:142,y:20},{x:188,y:42},{x:235,y:20},{x:272,y:38},{x:W-8,y:28}],
+      W=>[{x:0,y:120},{x:48,y:102},{x:95,y:124},{x:142,y:102},{x:188,y:124},{x:235,y:102},{x:272,y:120},{x:W-8,y:110}]
+    ],
     pathFns: [
-      W => [{x:0,y:12},{x:38,y:12},{x:75,y:65},{x:118,y:12},{x:158,y:12},{x:198,y:65},{x:242,y:12},{x:278,y:12},{x:W-8,y:30}],
-      W => [{x:0,y:145},{x:38,y:145},{x:75,y:92},{x:118,y:145},{x:158,y:145},{x:198,y:92},{x:242,y:145},{x:278,y:145},{x:W-8,y:128}]
+      W => [{x:0,y:12},{x:52,y:12},{x:92,y:32},{x:138,y:12},{x:180,y:32},{x:225,y:12},{x:265,y:32},{x:W-8,y:20}],
+      W => [{x:0,y:60},{x:50,y:60},{x:88,y:80},{x:132,y:60},{x:175,y:80},{x:218,y:60},{x:258,y:80},{x:W-8,y:68}],
+      W => [{x:0,y:98},{x:50,y:98},{x:90,y:78},{x:135,y:98},{x:178,y:78},{x:222,y:98},{x:262,y:78},{x:W-8,y:90}],
+      W => [{x:0,y:145},{x:52,y:145},{x:92,y:125},{x:138,y:145},{x:180,y:125},{x:225,y:145},{x:265,y:125},{x:W-8,y:136}]
     ]
   },
-  // Map 4 — 3-lane staircase (each lane with unique pattern)
-  { id:4, name:'Crimson Rift', diff:4, size:'46×30', gates:5, weather:'Nhật thực định kỳ',
-    tip:'3 làn riêng biệt — làn trên cầu thang, làn giữa S-curve, làn dưới zigzag. Cần bao phủ toàn bộ. Void Reaper từ Round 10.',
+  // Map 4 — TEAM: Crimson Delta (4 lanes with complex patterns + 2 elite)
+  { id:4, name:'Crimson Delta', diff:4, size:'Team 4+2', gates:4, weather:'Nhật thực định kỳ',
+    tip:'Map đội nâng cao — 2 làn cầu thang + 2 làn S-curve đảo + 2 cổng đặc biệt. Void Reaper từ R10.',
     suggest:'AoE + Sét chain',
-    tags:['3 làn','Mê cung','Cổng Hư Không'],
+    tags:['👥 Đội','Cầu thang+S','2 Cổng Đặc Biệt'],
     bgColor:'#0c0408', pathColor:'#240a14', pathLight:'#341220',
     enemyColors:['#880830','#601050','#584058','#301840','#200840','#800030','#483060'],
     eliteEnemy:{name:'Void Reaper',color:'#cc0040',glowColor:'#ff2080',hpMult:2.0,spdMult:1.35,rewardMult:3.0,radius:9},
-    elitePathFn: W=>[{x:0,y:52},{x:55,y:30},{x:98,y:55},{x:145,y:30},{x:188,y:55},{x:232,y:30},{x:268,y:50},{x:W-8,y:38}],
+    elitePathFns: [
+      W=>[{x:0,y:40},{x:50,y:22},{x:100,y:46},{x:150,y:22},{x:198,y:46},{x:248,y:22},{x:274,y:40},{x:W-8,y:30}],
+      W=>[{x:0,y:118},{x:50,y:100},{x:100,y:124},{x:150,y:100},{x:198,y:124},{x:248,y:100},{x:274,y:118},{x:W-8,y:108}]
+    ],
     pathFns: [
-      W => [{x:0,y:10},{x:48,y:10},{x:48,y:50},{x:98,y:50},{x:148,y:10},{x:198,y:10},{x:198,y:50},{x:248,y:50},{x:280,y:10},{x:W-8,y:28}],
-      W => [{x:0,y:88},{x:48,y:88},{x:85,y:65},{x:130,y:65},{x:172,y:88},{x:215,y:65},{x:255,y:88},{x:282,y:65},{x:W-8,y:76}],
-      W => [{x:0,y:142},{x:48,y:142},{x:82,y:118},{x:128,y:118},{x:168,y:142},{x:208,y:118},{x:248,y:142},{x:280,y:118},{x:W-8,y:130}]
+      W => [{x:0,y:10},{x:42,y:10},{x:42,y:32},{x:92,y:32},{x:148,y:10},{x:198,y:10},{x:198,y:32},{x:248,y:32},{x:280,y:10},{x:W-8,y:20}],
+      W => [{x:0,y:62},{x:48,y:62},{x:88,y:80},{x:132,y:62},{x:175,y:80},{x:218,y:62},{x:258,y:80},{x:280,y:62},{x:W-8,y:70}],
+      W => [{x:0,y:98},{x:48,y:98},{x:88,y:80},{x:132,y:98},{x:175,y:80},{x:218,y:98},{x:258,y:80},{x:280,y:98},{x:W-8,y:88}],
+      W => [{x:0,y:145},{x:42,y:145},{x:42,y:125},{x:92,y:125},{x:148,y:145},{x:198,y:145},{x:198,y:125},{x:248,y:125},{x:280,y:145},{x:W-8,y:135}]
     ]
   },
-  // Map 5 — Double W-maze (most complex, 5 oscillations per lane)
-  { id:5, name:'Void Nexus', diff:5, size:'48×32', gates:6, weather:'Chaos',
-    tip:'Đường mê cung hình W kép — cầu thang + đảo chiều liên tục. Phức tạp nhất, cần đặt tháp dày đặc. Nexus Horror từ Round 10.',
+  // Map 5 — TEAM: Void Nexus (hardest team map, complex 4-lane maze + 2 elite)
+  { id:5, name:'Void Nexus', diff:5, size:'Team 4+2', gates:4, weather:'Chaos',
+    tip:'Map đội khó nhất — 4 làn mê cung W kép + 2 cổng đặc biệt. Nexus Horror từ R10. Cần phối hợp toàn đội.',
     suggest:'Cần đủ tất cả',
-    tags:['🔒 Khóa','Mê cung W','Cổng Vực Thẳm'],
+    tags:['👥 Đội','🔒 Khóa','Mê cung kép','2 Cổng Đặc Biệt'],
     locked: true,
     bgColor:'#020204', pathColor:'#100818', pathLight:'#181028',
     enemyColors:['#280850','#180838','#302850','#180440','#100428','#300858','#201040'],
     eliteEnemy:{name:'Nexus Horror',color:'#6000c0',glowColor:'#aa44ff',hpMult:2.2,spdMult:1.3,rewardMult:3.0,radius:11},
-    elitePathFn: W=>[{x:0,y:76},{x:52,y:48},{x:92,y:80},{x:135,y:48},{x:175,y:80},{x:220,y:48},{x:262,y:76},{x:W-8,y:60}],
+    elitePathFns: [
+      W=>[{x:0,y:44},{x:52,y:24},{x:102,y:48},{x:155,y:24},{x:205,y:48},{x:255,y:24},{x:275,y:44},{x:W-8,y:32}],
+      W=>[{x:0,y:124},{x:52,y:105},{x:102,y:128},{x:155,y:105},{x:205,y:128},{x:255,y:105},{x:275,y:124},{x:W-8,y:114}]
+    ],
     pathFns: [
-      W => [{x:0,y:12},{x:36,y:12},{x:36,y:58},{x:80,y:58},{x:80,y:12},{x:130,y:12},{x:172,y:58},{x:215,y:12},{x:258,y:58},{x:278,y:12},{x:W-8,y:34}],
-      W => [{x:0,y:145},{x:36,y:145},{x:36,y:98},{x:80,y:98},{x:80,y:145},{x:130,y:145},{x:172,y:98},{x:215,y:145},{x:258,y:98},{x:278,y:145},{x:W-8,y:122}]
+      W => [{x:0,y:12},{x:35,y:12},{x:35,y:35},{x:82,y:35},{x:82,y:12},{x:132,y:12},{x:175,y:35},{x:220,y:12},{x:262,y:35},{x:278,y:12},{x:W-8,y:22}],
+      W => [{x:0,y:65},{x:42,y:65},{x:82,y:48},{x:128,y:65},{x:168,y:48},{x:212,y:65},{x:252,y:48},{x:278,y:65},{x:W-8,y:55}],
+      W => [{x:0,y:102},{x:42,y:102},{x:82,y:120},{x:128,y:102},{x:168,y:120},{x:212,y:102},{x:252,y:120},{x:278,y:102},{x:W-8,y:112}],
+      W => [{x:0,y:148},{x:35,y:148},{x:35,y:128},{x:82,y:128},{x:82,y:148},{x:132,y:148},{x:175,y:128},{x:220,y:148},{x:262,y:128},{x:278,y:148},{x:W-8,y:138}]
     ]
   }
 ];
@@ -769,7 +750,7 @@ const TOWERS_DATA = [
 
 // Tower upgrade constants (5 levels)
 const TOWER_MAX_LEVEL = 5;
-const UPGRADE_COST_MULTS = [0, .5, .9, 2.0, 4.0]; // cost to go from lvl N to N+1 (index = current lvl) — tier 4-5 significantly more expensive
+const UPGRADE_COST_MULTS = [0, 0.8, 2.5, 7.0, 18.0]; // cost to go from lvl N to N+1 (index = current lvl)
 const UPGRADE_DMG_MULTS  = [1, 1.35, 1.9, 2.8, 4.2]; // max 4.2× (was 5.0) — cheap towers no longer one-shot bosses
 const UPGRADE_RANGE_MULTS= [1, 1.15, 1.35, 1.55, 1.8];
 const UPGRADE_SCALE      = [1, 1.1, 1.22, 1.35, 1.48];
@@ -859,7 +840,6 @@ const STATE = {
   screen: 'menu',
   mapIdx: 0,
   modeIdx: 0,
-  isTutorial: false,
   isMultiplayer: false,
   lobbyCode: '',
   lobbyPlayers: []
@@ -876,21 +856,6 @@ const App = {
     STATE.screen = id;
   },
   showMenu() { App.showScreen('menu'); MapRenderer.stopAnim(); SFX.playMusic('menu'); },
-  checkFirst() {
-    const firstTime = !localStorage.getItem('lb_played');
-    STATE.isTutorial = firstTime;
-    if (firstTime) localStorage.setItem('lb_played','1');
-    App.showMapSelect();
-  },
-  startTutorial() {
-    STATE.isTutorial = true;
-    STATE.mapIdx = 0;
-    STATE.modeIdx = 0;
-    MapRenderer.stopAnim();
-    App.showScreen('game-canvas');
-    document.getElementById('game-canvas').style.display='block';
-    Game.init(0, 0, true);
-  },
   showMapSelect() {
     App.showScreen('map-select');
     MapSelect.init();
@@ -1016,7 +981,8 @@ const MapRenderer = {
     const c = cv.getContext('2d');
     const t0 = Date.now();
     const rawPaths = (mapData.pathFns||[mapData.pathFn]).map(fn => fn(W));
-    const rawEpts = mapData.elitePathFn ? mapData.elitePathFn(W) : null;
+    const rawEliteFns = mapData.elitePathFns || (mapData.elitePathFn ? [mapData.elitePathFn] : null);
+    const rawEptsArr = rawEliteFns ? rawEliteFns.map(fn => fn(W)) : null;
     const spawnLabels = 'ABCDEFGH';
 
     function buildAL(pts) {
@@ -1041,9 +1007,11 @@ const MapRenderer = {
     const sp = p => ({x: p.x, y: p.y * previewSY + previewOY});
     const allPaths = rawPaths.map(pts => pts.map(sp));
     const path = allPaths[0];
-    const epts = rawEpts ? rawEpts.map(sp) : null;
+    const eptsArr = rawEptsArr ? rawEptsArr.map(rp => rp.map(sp)) : null;
+    const epts = eptsArr ? eptsArr[0] : null; // first elite path for backward compat
     const allALs = allPaths.map(buildAL);
-    const eliteAL = epts ? buildAL(epts) : null;
+    const eliteALs = eptsArr ? eptsArr.map(buildAL) : null;
+    const eliteAL = eliteALs ? eliteALs[0] : null;
     const enemies = [{t:.1},{t:.25},{t:.42},{t:.58},{t:.74}];
 
     function frame() {
@@ -1083,38 +1051,36 @@ const MapRenderer = {
         c.fillText(spawnLabels[pi]||String(pi+1), pts[0].x+7, pts[0].y+2.5);
       });
 
-      // Elite path (unlocked at round 10)
-      if(epts) {
+      // Elite paths (unlocked at round 10)
+      if(eptsArr) {
         const ecol = mapData.eliteEnemy?.color || '#cc2020';
         const eglow = mapData.eliteEnemy?.glowColor || '#ff4400';
-        // dark base road
-        c.strokeStyle='#3a0000'; c.lineWidth=18; c.lineJoin='round'; c.lineCap='round'; c.setLineDash([]);
-        c.beginPath(); c.moveTo(epts[0].x,epts[0].y); epts.slice(1).forEach(p=>c.lineTo(p.x,p.y)); c.stroke();
-        // red dashed overlay
-        c.strokeStyle=ecol; c.lineWidth=9; c.setLineDash([7,5]);
-        c.beginPath(); c.moveTo(epts[0].x,epts[0].y); epts.slice(1).forEach(p=>c.lineTo(p.x,p.y)); c.stroke();
-        c.setLineDash([]);
-        // spawn marker (star)
-        c.fillStyle=ecol; c.beginPath(); c.arc(epts[0].x+7,epts[0].y,6,0,Math.PI*2); c.fill();
-        c.fillStyle='#fff'; c.font='bold 8px sans-serif'; c.textAlign='center';
-        c.fillText('★', epts[0].x+7, epts[0].y+2.8);
-        // R10+ badge
-        c.fillStyle='#55000099';
-        c.beginPath(); c.roundRect?c.roundRect(epts[0].x,epts[0].y-20,22,9,3):c.fillRect(epts[0].x,epts[0].y-20,22,9); c.fill();
-        c.fillStyle='#ffaaaa'; c.font='bold 6px sans-serif'; c.textAlign='center';
-        c.fillText('R10+', epts[0].x+11, epts[0].y-13.5);
-        // animated elite enemy preview
-        if(animated) {
-          const prog = ((now*.035)+.15)%1;
-          const pt = ptOnPath(prog, epts, eliteAL);
-          const bob = Math.sin(now*3.5)*1.5;
-          c.shadowColor=eglow; c.shadowBlur=10;
-          c.fillStyle=ecol;
-          c.beginPath(); c.arc(pt.x,pt.y+bob,5,0,Math.PI*2); c.fill();
-          c.shadowBlur=0;
-          c.fillStyle='#181820'; c.fillRect(pt.x-6,pt.y+bob-11,12,2.5);
-          c.fillStyle=ecol; c.fillRect(pt.x-6,pt.y+bob-11,12,2.5);
-        }
+        eptsArr.forEach((ep, epI) => {
+          const al = eliteALs[epI];
+          c.strokeStyle='#3a0000'; c.lineWidth=18; c.lineJoin='round'; c.lineCap='round'; c.setLineDash([]);
+          c.beginPath(); c.moveTo(ep[0].x,ep[0].y); ep.slice(1).forEach(p=>c.lineTo(p.x,p.y)); c.stroke();
+          c.strokeStyle=ecol; c.lineWidth=9; c.setLineDash([7,5]);
+          c.beginPath(); c.moveTo(ep[0].x,ep[0].y); ep.slice(1).forEach(p=>c.lineTo(p.x,p.y)); c.stroke();
+          c.setLineDash([]);
+          c.fillStyle=ecol; c.beginPath(); c.arc(ep[0].x+7,ep[0].y,6,0,Math.PI*2); c.fill();
+          c.fillStyle='#fff'; c.font='bold 8px sans-serif'; c.textAlign='center';
+          c.fillText('★', ep[0].x+7, ep[0].y+2.8);
+          c.fillStyle='#55000099';
+          c.beginPath(); c.roundRect?c.roundRect(ep[0].x,ep[0].y-20,22,9,3):c.fillRect(ep[0].x,ep[0].y-20,22,9); c.fill();
+          c.fillStyle='#ffaaaa'; c.font='bold 6px sans-serif'; c.textAlign='center';
+          c.fillText('R10+', ep[0].x+11, ep[0].y-13.5);
+          if(animated) {
+            const prog = ((now*.035*(1+epI*.3))+.15)%1;
+            const pt = ptOnPath(prog, ep, al);
+            const bob = Math.sin(now*3.5+epI)*1.5;
+            c.shadowColor=eglow; c.shadowBlur=10;
+            c.fillStyle=ecol;
+            c.beginPath(); c.arc(pt.x,pt.y+bob,5,0,Math.PI*2); c.fill();
+            c.shadowBlur=0;
+            c.fillStyle='#181820'; c.fillRect(pt.x-6,pt.y+bob-11,12,2.5);
+            c.fillStyle=ecol; c.fillRect(pt.x-6,pt.y+bob-11,12,2.5);
+          }
+        });
       }
 
       // gate zone
@@ -1232,7 +1198,7 @@ const ModeSelect = {
       MapRenderer.stopAnim();
       App.showScreen('game-canvas');
       document.getElementById('game-canvas').style.display='block';
-      Game.init(STATE.mapIdx, STATE.modeIdx, STATE.isTutorial, false, 0, [], nationIdx);
+      Game.init(STATE.mapIdx, STATE.modeIdx, false, false, 0, [], nationIdx);
     });
   }
 };
@@ -1390,59 +1356,6 @@ const ReconnectHelper = {
 };
 
 // ============================================================
-//  TUTORIAL
-// ============================================================
-const TUTORIAL_STEPS = [
-  { title:'Bản đồ chiến đấu', desc:'Quái xuất hiện từ Cổng đỏ trái, đi theo đường mòn về Tinh Thể bên phải. Xây tháp dọc đường để chặn chúng!', step:'1/8' },
-  { title:'Vàng và Mạng sống', desc:'💰 Vàng kiếm khi giết quái — dùng xây/nâng cấp tháp ngay trong trận.\n🛡 Mạng sống — bạn có 20 mạng cả ván, đừng để quái lọt qua!', step:'2/8' },
-  { title:'Cách xây tháp', desc:'Nhấn tháp ở thanh dưới để chọn, sau đó nhấn ô trống trên bản đồ để đặt. Tháp tự bắn trong tầm của nó.', step:'3/8' },
-  { title:'Cửa Tử & Mạng Sống', desc:'Mọi quái đổ về Cửa Tử bên phải. Bạn có 20 mạng (10 ở Hard) cho cả ván — mỗi quái lọt qua tiêu thụ 1 mạng. Hết mạng là thua!', step:'4/8' },
-  { title:'Thời tiết thay đổi', desc:'Mỗi 3 round thời tiết đổi — buff hoặc debuff tháp. Giông bão tăng Sét, Nắng to tăng Lửa. Điều chỉnh chiến lược theo thời tiết!', step:'5/8' },
-  { title:'Time Warp — Chiêu đặc biệt', desc:'🌀 Time Warp: Làm chậm toàn bộ quái 80% trong 6 giây. Dùng tối đa 2 lần/ván — hãy giữ cho những lúc nguy cấp nhất!', step:'6/8' },
-  { title:'Khi nào thắng/thua?', desc:'✅ THẮNG: Sống sót qua 20 round không hết mạng.\n❌ THUA: 20 quái lọt qua cả ván (Hard: 10 con). Boss lọt qua tốn 3 mạng!', step:'7/8' },
-  { title:'Sẵn sàng chiến đấu!', desc:'Bắt đầu với map Ironhold Pass — dễ nhất. Xây Tháp Cung dọc 2 bên đường, tích vàng mua Đại Bác cho đoạn cuối. Chúc may mắn! 🏰', step:'8/8', last:true }
-];
-
-const Tutorial = {
-  step: 0,
-  active: false,
-  start() {
-    this.step = 0;
-    this.active = true;
-    this.show();
-  },
-  show() {
-    const s = TUTORIAL_STEPS[this.step];
-    document.getElementById('tut-tip').classList.remove('hidden');
-    document.getElementById('tut-step-lbl').textContent = 'BƯỚC ' + s.step;
-    document.getElementById('tut-tip-title').textContent = s.title;
-    document.getElementById('tut-tip-desc').textContent = s.desc;
-    const btn = document.getElementById('tut-next-btn');
-    const txt = document.getElementById('tut-next-txt');
-    if(s.last) {
-      btn.style.background='#2a6a20';
-      txt.textContent = 'Bắt đầu chơi!';
-    } else {
-      btn.style.background='#7b4fee';
-      txt.textContent = 'Tiếp theo';
-    }
-  },
-  next() {
-    if(this.step < TUTORIAL_STEPS.length - 1) {
-      this.step++;
-      this.show();
-    } else {
-      this.skip();
-    }
-  },
-  skip() {
-    this.active = false;
-    document.getElementById('tut-tip').classList.add('hidden');
-    Game.tutorialDone();
-  }
-};
-
-// ============================================================
 //  GAME ENGINE
 // ============================================================
 const Game = {
@@ -1468,7 +1381,7 @@ const Game = {
   bgCanvas: null, bgCtx: null, bgDirty: true,
   _resizeHandler: null,
 
-  init(mapIdx, modeIdx, isTutorial, isMP=false, mpIdx=0, mpPlayers=[], nationIdx=0) {
+  init(mapIdx, modeIdx, _unused, isMP=false, mpIdx=0, mpPlayers=[], nationIdx=0) {
     this.isMP=isMP; this.isHostMP=isMP&&mpIdx===0; this.isGuestMP=isMP&&mpIdx!==0;
     this.mpPlayerIdx=mpIdx; this.mpPlayers=mpPlayers;
     this.nationIdx=nationIdx;
@@ -1517,14 +1430,7 @@ const Game = {
     this.buildLifelines();
     this.updateHUD();
 
-    if(isTutorial) {
-      Tutorial.start();
-      this.gamePhase = 'paused_tutorial';
-    } else {
-      Tutorial.active = false;
-      document.getElementById('tut-tip').classList.add('hidden');
-      this.startRound();
-    }
+    this.startRound();
 
     cancelAnimationFrame(this.animHandle);
     this.lastTime = performance.now();
@@ -1534,14 +1440,17 @@ const Game = {
   reset() {
     this.towers = [];
     this.enemies = [];
+    this.escorts = []; // boss escort units (mage/guard/warlock)
+    this._ruinedCells = []; // {x,y,timer} — cells blocked after boss destroys tower (5s)
     this.projectiles = [];
     this.particles = [];
     this.damageNums = [];
+    this._towerDestroyFX = [];
     this.screenShake = 0;
     this.roundEvent = {};
     this.spawnQueue = [];
     this.spawnTimer = 0;
-    const startGold = this.isMP ? [200,150,200,200][this.modeIdx] : [400,300,400,350][this.modeIdx];
+    const startGold = this.isMP ? [200,150,200,200][this.modeIdx] : [600,600,600,600][this.modeIdx];
     this.gold = startGold;
     this.playerGold = Array(4).fill(startGold);
     this.crystalHP = 100;
@@ -1577,7 +1486,8 @@ const Game = {
     this.cv.height = this.H * dpr;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // compute paths (multi-path support)
-    const topH = 95;
+    const hudEl = document.getElementById('hud-rows');
+    const topH = hudEl ? Math.max(48, hudEl.offsetHeight + 2) : 58;
     const botH = 78;
     const mapH = this.H - topH - botH;
     const mapY = topH;
@@ -1593,13 +1503,20 @@ const Game = {
       return p;
     });
     this.path = this.paths[0]; // backward-compat alias
-    // Elite path uses same scale/offset so it fits within the same Y space
-    if(this.mapData.elitePathFn) {
-      this.elitePath = this.mapData.elitePathFn(this.W).map(p=>({ x: p.x, y: p.y * scaleY + offY }));
-      this._buildArcLengths(this.elitePath);
+    // Elite paths — support both single elitePathFn and array elitePathFns
+    const eliteFns = this.mapData.elitePathFns
+      ? this.mapData.elitePathFns
+      : (this.mapData.elitePathFn ? [this.mapData.elitePathFn] : null);
+    if(eliteFns) {
+      this.elitePaths = eliteFns.map(fn => {
+        const ep = fn(this.W).map(p=>({ x: p.x, y: p.y * scaleY + offY }));
+        this._buildArcLengths(ep);
+        return ep;
+      });
     } else {
-      this.elitePath = null;
+      this.elitePaths = null;
     }
+    this.elitePath = this.elitePaths ? this.elitePaths[0] : null; // backward-compat alias
     // Aerial path: straight horizontal at center of map height, used by flying enemies
     this.aerialY = mapY + mapH * 0.5;
     this.bgDirty = true;
@@ -1617,7 +1534,9 @@ const Game = {
   },
 
   ptOnPath(t, pi=0) {
-    const path = (pi===100) ? (this.elitePath||this.path) : ((this.paths&&this.paths[pi])||this.path);
+    let path;
+    if(pi >= 100) path = (this.elitePaths && this.elitePaths[pi-100]) || this.elitePath || this.path;
+    else path = (this.paths && this.paths[pi]) || this.path;
     // Arc-length parameterization: t maps uniformly to pixel distance
     if(path._al) {
       const target = t * path._len;
@@ -1655,7 +1574,11 @@ const Game = {
     const endlessHpX = endlessR > 0 ? Math.pow(1.08, endlessR) : 1;
     const chalHpX = this.modeIdx === 3 && this.challengeMod?.hpX ? this.challengeMod.hpX : 1;
     const modeHpX = this.modeIdx === 1 ? 1.2 : this.modeIdx === 3 ? 1.1 : 1;
-    const hpM = data.hpMult * endlessHpX * modeHpX * chalHpX * (ev.hpMult || 1);
+    // Multiplayer: +50% base HP for all enemies
+    const mpHpX = this.isMP ? 1.5 : 1;
+    // MP boss multiplier: ×3 for bosses before special gate (R5), ×9 for bosses R10+
+    const mpBossHpX = this.isMP ? (this.round >= 10 ? 9 : 3) : 1;
+    const hpM = data.hpMult * endlessHpX * modeHpX * chalHpX * (ev.hpMult || 1) * mpHpX;
     const chalSpdX = this.modeIdx === 3 && this.challengeMod?.spdX ? this.challengeMod.spdX : 1;
     const modeSpdX = (this.modeIdx === 3 ? 1.15 : 1) * chalSpdX;
     const spdM = (ev.spdMult || 1) * modeSpdX;
@@ -1674,7 +1597,7 @@ const Game = {
         const bIdx = idxList[pi % idxList.length];
         const boss = {...BOSS_TYPES[Math.min(bIdx, BOSS_TYPES.length-1)]};
         const bossHpScale = pi === 0 ? 1 : 0.75;
-        boss.hp = boss.hp * hpM * bossHpScale;
+        boss.hp = boss.hp * hpM * bossHpScale * mpBossHpX;
         boss.maxHp = boss.hp;
         boss.t = 0; boss.spd = boss.spd * spdM; boss.slow = 1;
         if(boss.aerial) {
@@ -1688,22 +1611,29 @@ const Game = {
         boss.isBoss = true; boss.spawnId = Math.random()*1000;
         boss._id = `r${this.round}_boss${pi}`;
         this.spawnQueue.push({enemy: boss, delay: pi === 0 ? 60 : 90});
+        // Spawn 1 escort per boss
+        this._queueEscort(boss._id, boss.maxHp, boss.pathIdx, pi === 0 ? 80 : 110);
       }
-      // Elite gate boss: appears from round 10+ — 2x HP of the primary boss
-      if(this.round >= 10 && this.elitePath && this.mapData.eliteEnemy) {
+      // Elite gate boss(es): appears from round 10+ — 2x HP of primary boss (×3 in MP)
+      if(this.round >= 10 && this.elitePaths && this.mapData.eliteEnemy) {
         const eed = this.mapData.eliteEnemy;
-        const primaryBoss = {...BOSS_TYPES[Math.min(idxList[0], BOSS_TYPES.length-1)]};
-        primaryBoss.hp = primaryBoss.hp * hpM * 2;
-        primaryBoss.maxHp = primaryBoss.hp;
-        primaryBoss.t = 0; primaryBoss.spd = primaryBoss.spd * spdM * 0.9; primaryBoss.slow = 1;
-        primaryBoss.pathIdx = 100; primaryBoss.elite = true;
-        primaryBoss.color = eed.color; primaryBoss.glowColor = eed.glowColor;
-        primaryBoss.radius = (eed.radius || 9) + 5;
-        primaryBoss.reward = primaryBoss.reward * 2;
-        primaryBoss.isBoss = true; primaryBoss.spawnId = Math.random()*1000;
-        primaryBoss._id = `r${this.round}_boss_elite`;
-        primaryBoss.x = this.elitePath[0].x; primaryBoss.y = this.elitePath[0].y;
-        this.spawnQueue.push({enemy: primaryBoss, delay: 120});
+        this.elitePaths.forEach((elitePath, epIdx) => {
+          const primaryBoss = {...BOSS_TYPES[Math.min(idxList[0], BOSS_TYPES.length-1)]};
+          const eliteBossX = this.isMP ? 3 : 2;
+          primaryBoss.hp = primaryBoss.hp * hpM * eliteBossX * mpBossHpX;
+          primaryBoss.maxHp = primaryBoss.hp;
+          primaryBoss.t = 0; primaryBoss.spd = primaryBoss.spd * spdM * 0.9; primaryBoss.slow = 1;
+          primaryBoss.pathIdx = 100 + epIdx; primaryBoss.elite = true; primaryBoss.eliteIdx = epIdx;
+          primaryBoss.color = eed.color; primaryBoss.glowColor = eed.glowColor;
+          primaryBoss.radius = (eed.radius || 9) + 5;
+          primaryBoss.reward = primaryBoss.reward * 2;
+          primaryBoss.isBoss = true; primaryBoss.spawnId = Math.random()*1000;
+          primaryBoss._id = `r${this.round}_boss_elite${epIdx}`;
+          primaryBoss.x = elitePath[0].x; primaryBoss.y = elitePath[0].y;
+          const delay = 120 + epIdx * 30;
+          this.spawnQueue.push({enemy: primaryBoss, delay});
+          this._queueEscort(primaryBoss._id, primaryBoss.maxHp, 100 + epIdx, 140 + epIdx * 20);
+        });
       }
     }
 
@@ -1740,27 +1670,28 @@ const Game = {
       this.spawnQueue.push({enemy: en, delay});
     });
 
-    // Elite gate: appears from round 10+ if map has an elite path
-    if(this.round >= 10 && this.elitePath && this.mapData.eliteEnemy) {
+    // Elite gate(s): appears from round 10+ if map has elite paths
+    if(this.round >= 10 && this.elitePaths && this.mapData.eliteEnemy) {
       const eed = this.mapData.eliteEnemy;
       const eliteCount = Math.min(3 + Math.floor((this.round - 10) / 3), 8);
-      for(let e=0; e<eliteCount; e++) {
-        const base = {...ENEMY_TYPES[6]}; // base on Behemoth
-        base.hp = base.hp * hpM * eed.hpMult;
-        base.maxHp = base.hp;
-        base.t = 0; base.spd = base.spd * spdM * eed.spdMult; base.slow = 1;
-        base.pathIdx = 100; // elite path marker
-        base.elite = true;
-        base.color = eed.color; base.glowColor = eed.glowColor;
-        base.radius = eed.radius || 9;
-        base.reward = Math.round((ENEMY_TYPES[6].reward) * eed.rewardMult);
-        base.typeId = 99; base.spawnId = Math.random()*1000;
-        base._id = `r${this.round}_elite_${e}`;
-        base.x = this.elitePath[0].x; base.y = this.elitePath[0].y;
-        // Elite enemies spawn after main wave first batch, staggered
-        const eliteDelay = e === 0 ? 90 : WAVE_GAP;
-        this.spawnQueue.push({enemy: base, delay: eliteDelay});
-      }
+      this.elitePaths.forEach((elitePath, epIdx) => {
+        for(let e=0; e<eliteCount; e++) {
+          const base = {...ENEMY_TYPES[6]};
+          const eliteEnemyHpX = this.isMP ? 8 : 1;
+          base.hp = base.hp * hpM * eed.hpMult * eliteEnemyHpX;
+          base.maxHp = base.hp;
+          base.t = 0; base.spd = base.spd * spdM * eed.spdMult; base.slow = 1;
+          base.pathIdx = 100 + epIdx; base.elite = true; base.eliteIdx = epIdx;
+          base.color = eed.color; base.glowColor = eed.glowColor;
+          base.radius = eed.radius || 9;
+          base.reward = Math.round((ENEMY_TYPES[6].reward) * eed.rewardMult);
+          base.typeId = 99; base.spawnId = Math.random()*1000;
+          base._id = `r${this.round}_elite${epIdx}_${e}`;
+          base.x = elitePath[0].x; base.y = elitePath[0].y;
+          const eliteDelay = e === 0 ? (90 + epIdx * 45) : WAVE_GAP;
+          this.spawnQueue.push({enemy: base, delay: eliteDelay});
+        }
+      });
       // Trigger elite path reveal animation (round 10 only, first time)
       if(this.round === 10 && !this.eliteGateShown && !this.eliteGateRevealStart) {
         this.eliteGateRevealStart = performance.now();
@@ -1882,7 +1813,7 @@ const Game = {
   },
 
   announceEliteGate(round) {
-    if(!this.elitePath || !this.mapData?.eliteEnemy) return;
+    if(!this.elitePaths || !this.mapData?.eliteEnemy) return;
     const eed = this.mapData.eliteEnemy;
     if(round === 10) {
       setTimeout(() => {
@@ -1903,24 +1834,21 @@ const Game = {
     }
   },
 
-  tutorialDone() {
-    this.gamePhase = 'prep';
-    this.startRound();
-  },
-
   loop(ts) {
     const dt = Math.min((ts - this.lastTime)/1000, .05);
     this.lastTime = ts;
-    if(!this.paused && this.gamePhase !== 'paused_tutorial') this.update(dt);
+    if(!this.paused) this.update(dt);
     this.draw();
     if(this.isHostMP && this.gamePhase !== 'done') {
       this._syncCounter = (this._syncCounter||0) + 1;
       this._fullSyncCounter = (this._fullSyncCounter||0) + 1;
-      if(this._syncCounter >= 2) {
+      // Throttle sync rate when many enemies to avoid flooding guest WebSocket buffers
+      const syncRate = this.enemies.length > 80 ? 3 : 2;
+      if(this._syncCounter >= syncRate) {
         this._syncCounter = 0;
         const full = this._fullSyncCounter >= 10;
         if(full) this._fullSyncCounter = 0;
-        MP.broadcastState(full);
+        try { MP.broadcastState(full); } catch(e) { console.error('broadcastState err:', e); }
       }
     }
     this.animHandle = requestAnimationFrame(t=>this.loop(t));
@@ -1953,13 +1881,6 @@ const Game = {
           this.particles[i]=this.particles[this.particles.length-1]; this.particles.pop();
         }
       }
-      for(let i=this.damageNums.length-1;i>=0;i--) {
-        const n=this.damageNums[i]; n.x+=n.vx; n.y-=1.2; n.life-=.025;
-        if(n.life<=0) {
-          if(this._dmgPool.length<200) this._dmgPool.push(n);
-          this.damageNums[i]=this.damageNums[this.damageNums.length-1]; this.damageNums.pop();
-        }
-      }
       if(this.screenShake>0) this.screenShake*=0.82;
       this.towers.forEach(tw=>{ if(tw.flash>0) tw.flash-=0.1; });
       // client-side prediction: move enemies smoothly between state_syncs
@@ -1970,10 +1891,11 @@ const Game = {
             en.x += en.spd * fps60 * 0.5;
           } else {
             const spd2 = en.spd * (en.slow||1) * fps60 * .006;
-            const ePath = en.elite ? (this.elitePath||this.path) : ((this.paths&&this.paths[en.pathIdx||0])||this.path);
+            const eliteI = en.eliteIdx||0;
+            const ePath = en.elite ? ((this.elitePaths && this.elitePaths[eliteI]) || this.elitePath || this.path) : ((this.paths&&this.paths[en.pathIdx||0])||this.path);
             if(ePath && ePath.length > 1) {
               en.t = Math.min(en.t + spd2 / ePath.length, 0.999);
-              const pt = this.ptOnPath(en.t, en.elite ? 100 : (en.pathIdx||0));
+              const pt = this.ptOnPath(en.t, en.elite ? (100 + eliteI) : (en.pathIdx||0));
               if(pt) { en.x = pt.x; en.y = pt.y; }
             }
           }
@@ -2038,9 +1960,10 @@ const Game = {
         continue;
       }
       const spd = en.spd * en.slow * fps60 * .006;
-      const ePath = en.elite ? (this.elitePath||this.path) : ((this.paths&&this.paths[en.pathIdx||0])||this.path);
+      const eliteI2 = en.eliteIdx||0;
+      const ePath = en.elite ? ((this.elitePaths && this.elitePaths[eliteI2]) || this.elitePath || this.path) : ((this.paths&&this.paths[en.pathIdx||0])||this.path);
       en.t = Math.min(en.t + spd / ePath.length, 1);
-      const pt = this.ptOnPath(en.t, en.elite ? 100 : (en.pathIdx||0));
+      const pt = this.ptOnPath(en.t, en.elite ? (100 + eliteI2) : (en.pathIdx||0));
       en.x = pt.x; en.y = pt.y;
       if(this.timeWarpActive) {
         en.slow = Math.min(en.slow, 0.22); // hold slow while warp is active
@@ -2066,6 +1989,29 @@ const Game = {
         if(nearby.length) { const t=nearby[Math.floor(Math.random()*nearby.length)]; t.hp=Math.min(t.maxHp, t.hp+5); }
       }
       if(en.slow < 1) en.slow = Math.min(1, en.slow + .01*fps60);
+
+      // Boss tower-destroy skill — from round 10, every 5s a boss destroys a random nearby tower
+      if(en.isBoss && this.round >= 10) {
+        en._destroyTimer = (en._destroyTimer || 300) - fps60;
+        if(en._destroyTimer <= 0) {
+          en._destroyTimer = 300;
+          const BOSS_ATTACK_R = 85;
+          const nearby = this.towers.filter(tw => Math.hypot(tw.x-en.x, tw.y-en.y) < BOSS_ATTACK_R);
+          if(nearby.length > 0) {
+            const victim = nearby[Math.floor(Math.random() * nearby.length)];
+            this.destroyTowerByBoss(victim);
+          }
+        }
+      }
+    }
+
+    // escort tick (only on host)
+    if(this.isHostMP || !this.isMP) this._tickEscorts(fps60);
+
+    // ruined cells countdown
+    for(let i = this._ruinedCells.length - 1; i >= 0; i--) {
+      this._ruinedCells[i].timer -= fps60;
+      if(this._ruinedCells[i].timer <= 0) this._ruinedCells.splice(i, 1);
     }
 
     // towers fire
@@ -2097,6 +2043,21 @@ const Game = {
       // Rate upgrade: archer gets extra rate bonus stacked on top of global rate mult
       const rateMult = UPGRADE_RATE_MULTS[lvl-1] * (tw.typeId===0 ? UPGRADE_ARCHER_RATE[lvl-1] : 1);
       const isAntiAir = tData.antiAir;
+      // Guards are priority targets — they protect bosses
+      if(!isAntiAir) {
+        const guardTargets = this.escorts.filter(es =>
+          es.type === 'guard' && Math.hypot(es.x-tw.x, es.y-tw.y) < range && es.hp > 0
+        );
+        if(guardTargets.length > 0) {
+          guardTargets.sort((a,b)=>b.t-a.t);
+          const gt = guardTargets[0];
+          tw.angle = Math.atan2(gt.y-tw.y, gt.x-tw.x); tw.flash=1;
+          const dmg = tData.dmg * UPGRADE_DMG_MULTS[lvl-1];
+          gt.hp -= dmg;
+          tw.cooldown = tData.rate * UPGRADE_RATE_MULTS[lvl-1] / 16.7;
+          return;
+        }
+      }
       const targets = this.enemies.filter(en=>{
         if(Math.hypot(en.x-tw.x,en.y-tw.y)>range) return false;
         return isAntiAir ? en.aerial : !en.aerial; // anti-air hits only aerial; others hit only ground
@@ -2194,16 +2155,6 @@ const Game = {
       }
     }
 
-    // damage numbers
-    for(let i=this.damageNums.length-1;i>=0;i--) {
-      const n=this.damageNums[i];
-      n.x+=n.vx; n.y-=1.2; n.life-=.025;
-      if(n.life<=0) {
-        if(this._dmgPool.length<200) this._dmgPool.push(n);
-        this.damageNums[i]=this.damageNums[this.damageNums.length-1]; this.damageNums.pop();
-      }
-    }
-
     // screen shake decay
     if(this.screenShake>0) this.screenShake*=0.82;
 
@@ -2236,20 +2187,15 @@ const Game = {
 
   damageEnemy(en, dmg) {
     en.hp -= dmg;
-    // floating damage number
-    const d = Math.round(dmg);
-    if(d > 0) {
-      const dn = this._dmgPool && this._dmgPool.length > 0 ? this._dmgPool.pop() : {};
-      dn.x=en.x; dn.y=en.y-en.radius; dn.txt=d; dn.life=1; dn.vx=(Math.random()-.5)*1.2; dn.isCrit=dmg>30;
-      this.damageNums.push(dn);
-    }
     if(en.hp <= 0) {
+      // Check if a warlock escort can resurrect this boss
+      if(en.isBoss && this._checkWarlockResurrect(en)) return;
       SFX.enemyDie(!!en.isBoss, en.typeId||0);
       if(en.isBoss) { this.addShake(6); this.spawnParticles(en.x,en.y,en.color,20); }
       else this.spawnParticles(en.x,en.y,en.color,8);
       const baseReward = (en.reward || 10) + (en.isBoss ? 50 : 0);
       const rewardMult = this.modeIdx === 1 ? 1.5 : this.modeIdx === 3 ? 2.0 : 1;
-      const reward = Math.round(baseReward * rewardMult);
+      const reward = Math.round(baseReward * rewardMult * 0.65);
       // each player earns the reward independently
       for(let gi=0;gi<this.playerGold.length;gi++) this.playerGold[gi]=(this.playerGold[gi]||0)+reward;
       this.gold = this.playerGold[this.mpPlayerIdx];
@@ -2273,8 +2219,8 @@ const Game = {
     }
   },
 
-  _drawEliteGateReveal(c, progress) {
-    const path = this.elitePath;
+  _drawEliteGateReveal(c, progress, path) {
+    if(!path) path = this.elitePath;
     if(!path || !path._al) return;
     const totalLen = path._len || 1;
     const targetLen = progress * totalLen;
@@ -2464,27 +2410,47 @@ const Game = {
       c.fillText(pi===0?'⚠':'⚠', sx, sy+3);
     });
 
-    // ── Elite path (revealed at round 10+, drawn if already shown) ──
-    if(this.eliteGateShown && this.elitePath) {
-      const ep = this.elitePath;
-      c.save();
-      c.shadowColor='#aa0808'; c.shadowBlur=14;
-      c.strokeStyle='#2a0505'; c.lineWidth=24; c.lineJoin='round'; c.lineCap='round';
-      c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
-      c.strokeStyle='#5a0808'; c.lineWidth=14;
-      c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
-      c.strokeStyle='#900a0a'; c.lineWidth=5;
-      c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
-      // Portal at elite path start
-      const sp=ep[0];
-      c.shadowColor='#ff0000'; c.shadowBlur=18;
-      c.fillStyle='#1a0404'; c.beginPath(); c.arc(sp.x,sp.y,16,0,Math.PI*2); c.fill();
-      c.strokeStyle='#cc2020'; c.lineWidth=2; c.beginPath(); c.arc(sp.x,sp.y,16,0,Math.PI*2); c.stroke();
-      c.strokeStyle='#ff4040'; c.lineWidth=1; c.setLineDash([3,3]); c.beginPath(); c.arc(sp.x,sp.y,20,0,Math.PI*2); c.stroke();
-      c.setLineDash([]); c.shadowBlur=0;
-      c.fillStyle='#ff5050'; c.font='bold 8px sans-serif'; c.textAlign='center';
-      c.fillText('★', sp.x, sp.y+3);
-      c.restore();
+    // ── Elite path ghost hint (before R10 reveal — subtle ground shadow) ──
+    if(!this.eliteGateShown && this.elitePaths) {
+      const pc = this.mapData.pathColor || '#2a1e08';
+      this.elitePaths.forEach(ep => {
+        c.save();
+        c.lineJoin='round'; c.lineCap='round';
+        // Faint dark base — like slightly disturbed ground
+        c.globalAlpha = 0.18;
+        c.strokeStyle = pc; c.lineWidth = 20;
+        c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
+        // Very faint dashed center — barely visible texture
+        c.globalAlpha = 0.09;
+        c.strokeStyle = '#000000'; c.lineWidth = 7; c.setLineDash([14, 10]);
+        c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
+        c.setLineDash([]);
+        c.globalAlpha = 1;
+        c.restore();
+      });
+    }
+
+    // ── Elite paths (revealed at round 10+, drawn if already shown) ──
+    if(this.eliteGateShown && this.elitePaths) {
+      this.elitePaths.forEach(ep => {
+        c.save();
+        c.shadowColor='#aa0808'; c.shadowBlur=14;
+        c.strokeStyle='#2a0505'; c.lineWidth=24; c.lineJoin='round'; c.lineCap='round';
+        c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
+        c.strokeStyle='#5a0808'; c.lineWidth=14;
+        c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
+        c.strokeStyle='#900a0a'; c.lineWidth=5;
+        c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
+        const sp=ep[0];
+        c.shadowColor='#ff0000'; c.shadowBlur=18;
+        c.fillStyle='#1a0404'; c.beginPath(); c.arc(sp.x,sp.y,16,0,Math.PI*2); c.fill();
+        c.strokeStyle='#cc2020'; c.lineWidth=2; c.beginPath(); c.arc(sp.x,sp.y,16,0,Math.PI*2); c.stroke();
+        c.strokeStyle='#ff4040'; c.lineWidth=1; c.setLineDash([3,3]); c.beginPath(); c.arc(sp.x,sp.y,20,0,Math.PI*2); c.stroke();
+        c.setLineDash([]); c.shadowBlur=0;
+        c.fillStyle='#ff5050'; c.font='bold 8px sans-serif'; c.textAlign='center';
+        c.fillText('★', sp.x, sp.y+3);
+        c.restore();
+      });
     }
 
     // ── Gate zone ──
@@ -2528,10 +2494,10 @@ const Game = {
     c.drawImage(this.bgCanvas, 0, 0, W, H);
 
     // elite gate path reveal animation (drawn on top of bg, before enemies)
-    if(this.eliteGateRevealStart != null && !this.eliteGateShown && this.elitePath) {
+    if(this.eliteGateRevealStart != null && !this.eliteGateShown && this.elitePaths) {
       const elapsed = performance.now() - this.eliteGateRevealStart;
       const progress = Math.min(1, elapsed / 3000);
-      this._drawEliteGateReveal(c, progress);
+      this.elitePaths.forEach(ep => this._drawEliteGateReveal(c, progress, ep));
       if(progress >= 1) { this.eliteGateShown = true; this.bgDirty = true; this.eliteGateRevealStart = null; }
     }
 
@@ -2596,8 +2562,8 @@ const Game = {
       const mx=this.mouseX, my=this.mouseY;
       if(mx>0 && my>0) {
         const tooClose=this.towers.some(tw=>Math.hypot(tw.x-mx,tw.y-my)<22);
-        const onPath=onAnyPath(mx,my,this.paths||[this.path],this.elitePath,20);
-        const canPlace=!tooClose&&!onPath;
+        const onPath=onAnyPath(mx,my,this.paths||[this.path],this.elitePaths,20);
+        const canPlace=!tooClose&&!onPath&&!this._isRuined(mx,my);
         const iColor=canPlace?'#30ff60':'#ff3030';
         if(tData.range>0) {
           c.strokeStyle=canPlace?tData.color+'66':'#ff303066'; c.lineWidth=1.5; c.setLineDash([5,3]);
@@ -2621,6 +2587,9 @@ const Game = {
     // enemies
     this.enemies.forEach(en=>this.drawEnemy(c,en));
 
+    // escorts
+    this._drawEscorts(c);
+
     // particles
     this.particles.forEach(p=>{
       c.globalAlpha=p.life;
@@ -2629,16 +2598,48 @@ const Game = {
     });
     c.globalAlpha=1;
 
-    // floating damage numbers
-    this.damageNums.forEach(n=>{
-      c.globalAlpha=n.life;
-      c.font=`bold ${n.isCrit?15:11}px 'Exo 2',sans-serif`;
-      c.textAlign='center';
-      c.fillStyle=n.isCrit?'#ffe040':'#ff8040';
-      if(n.isCrit) { c.strokeStyle='#60100080'; c.lineWidth=3; c.strokeText(n.txt,n.x,n.y); }
-      c.fillText(n.txt,n.x,n.y);
-    });
-    c.globalAlpha=1;
+    // ruined cells — blocked 5s after boss destroys tower
+    if(this._ruinedCells && this._ruinedCells.length) {
+      const now = performance.now() * 0.001;
+      this._ruinedCells.forEach(r => {
+        const prog = r.timer / 300; // 1→0 over 5s
+        // dark rubble base
+        c.globalAlpha = 0.55 * prog + 0.25;
+        c.fillStyle = '#1a0800';
+        c.beginPath(); c.arc(r.x, r.y, 14, 0, Math.PI*2); c.fill();
+        // pulsing red border
+        c.globalAlpha = (0.5 + 0.4 * Math.sin(now * 4)) * prog;
+        c.strokeStyle = '#cc2200'; c.lineWidth = 2;
+        c.beginPath(); c.arc(r.x, r.y, 14, 0, Math.PI*2); c.stroke();
+        // countdown arc (drains clockwise)
+        c.globalAlpha = 0.8 * prog;
+        c.strokeStyle = '#ff6600'; c.lineWidth = 3;
+        c.beginPath();
+        c.arc(r.x, r.y, 11, -Math.PI/2, -Math.PI/2 + Math.PI*2*prog);
+        c.stroke();
+        // X mark
+        c.globalAlpha = 0.7 * prog;
+        c.strokeStyle = '#ff3300'; c.lineWidth = 2;
+        c.beginPath(); c.moveTo(r.x-5,r.y-5); c.lineTo(r.x+5,r.y+5); c.stroke();
+        c.beginPath(); c.moveTo(r.x+5,r.y-5); c.lineTo(r.x-5,r.y+5); c.stroke();
+      });
+      c.globalAlpha = 1;
+    }
+
+    // tower destruction FX rings
+    if(this._towerDestroyFX) {
+      for(let i=this._towerDestroyFX.length-1;i>=0;i--) {
+        const fx=this._towerDestroyFX[i];
+        fx.r += 3; fx.life -= 0.05;
+        if(fx.life <= 0) { this._towerDestroyFX.splice(i,1); continue; }
+        c.globalAlpha=fx.life;
+        c.strokeStyle='#ff5500'; c.lineWidth=3;
+        c.beginPath(); c.arc(fx.x,fx.y,fx.r,0,Math.PI*2); c.stroke();
+        c.strokeStyle='#ffaa00'; c.lineWidth=1.5;
+        c.beginPath(); c.arc(fx.x,fx.y,fx.r*0.6,0,Math.PI*2); c.stroke();
+        c.globalAlpha=1;
+      }
+    }
 
     // close screen shake transform
     if((this.screenShake||0)>0.3) c.restore();
@@ -2648,6 +2649,44 @@ const Game = {
       c.fillStyle='rgba(0,0,28,0.38)';
       c.fillRect(0,0,this.W,this.H);
     }
+  },
+
+  _drawEscorts(c) {
+    if(!this.escorts || !this.escorts.length) return;
+    this.escorts.forEach(es => {
+      const alpha = es.life ?? 1;
+      c.globalAlpha = alpha;
+      if(es.type === 'guard') {
+        // Guard: dark armored mini-unit with HP bar
+        c.fillStyle = '#445566'; c.strokeStyle='#88aacc'; c.lineWidth=1.5;
+        c.beginPath(); c.arc(es.x, es.y, 7, 0, Math.PI*2); c.fill(); c.stroke();
+        c.fillStyle='#223344';
+        c.fillRect(es.x-4, es.y-2, 8, 5);
+        // HP bar
+        const hpFrac = Math.max(0, es.hp / es.maxHp);
+        c.fillStyle='#222'; c.fillRect(es.x-7, es.y-12, 14, 3);
+        c.fillStyle=hpFrac>0.5?'#44cc44':'#cc4444'; c.fillRect(es.x-7, es.y-12, 14*hpFrac, 3);
+      } else if(es.type === 'mage') {
+        // Mage: purple floating orb with glow
+        const pulse = 0.7 + 0.3*Math.sin(Date.now()/400);
+        c.shadowColor='#aa44ff'; c.shadowBlur=12*pulse;
+        c.fillStyle='#cc88ff'; c.strokeStyle='#7700cc'; c.lineWidth=1.5;
+        c.beginPath(); c.arc(es.x, es.y, 7, 0, Math.PI*2); c.fill(); c.stroke();
+        c.fillStyle='#ffffff88';
+        c.beginPath(); c.arc(es.x-2, es.y-2, 3, 0, Math.PI*2); c.fill();
+        c.shadowBlur=0;
+      } else if(es.type === 'warlock') {
+        // Warlock: dark purple with eerie glow
+        const flicker = 0.6 + 0.4*Math.sin(Date.now()/300);
+        c.shadowColor='#440066'; c.shadowBlur=10*flicker;
+        c.fillStyle='#662288'; c.strokeStyle='#aa00ff'; c.lineWidth=1.5;
+        c.beginPath(); c.arc(es.x, es.y, 7, 0, Math.PI*2); c.fill(); c.stroke();
+        c.fillStyle='#ff44ff88';
+        c.beginPath(); c.arc(es.x, es.y, 3, 0, Math.PI*2); c.fill();
+        c.shadowBlur=0;
+      }
+      c.globalAlpha=1;
+    });
   },
 
   drawTower(c,tw) {
@@ -3878,7 +3917,7 @@ const Game = {
   },
 
   handleTap(e) {
-    if(this.paused || this.gamePhase==='paused_tutorial') return;
+    if(this.paused) return;
     const rect=this.cv.getBoundingClientRect();
     const tx=e.clientX-rect.left, ty=e.clientY-rect.top;
     // check if tap on existing tower
@@ -3886,6 +3925,7 @@ const Game = {
     if(hit) {
       if(this.selectedPlacedTower===hit) { this.closeTowerPanel(); return; }
       this.selectedTower=-1;
+      this._setPlacingMode(false);
       document.querySelectorAll('.tp').forEach(t=>t.classList.remove('selected'));
       this.selectedPlacedTower=hit;
       this.showTowerPanel(hit, tx, ty);
@@ -3899,8 +3939,8 @@ const Game = {
       const myGold = this.isMP ? this.playerGold[this.mpPlayerIdx] : this.gold;
       if(myGold < tData.cost) { this.flashLowGold(); return; }
       const tooClose=this.towers.some(tw=>Math.hypot(tw.x-tx,tw.y-ty)<22);
-      const onPath=onAnyPath(tx,ty,this.paths||[this.path],this.elitePath,20);
-      if(tooClose||onPath) return;
+      const onPath=onAnyPath(tx,ty,this.paths||[this.path],this.elitePaths,20);
+      if(tooClose||onPath||this._isRuined(tx,ty)) return;
       if(this.isGuestMP) {
         MP.sendInput('place_tower', {x:tx, y:ty, typeId:this.selectedTower});
         SFX.placeTower(this.selectedTower);
@@ -3913,6 +3953,7 @@ const Game = {
         this.updateHUD();
       }
       this.selectedTower=-1;
+      this._setPlacingMode(false);
       document.querySelectorAll('.tp').forEach(t=>t.classList.remove('selected'));
     }
   },
@@ -4055,10 +4096,27 @@ const Game = {
     SFX.uiClick();
   },
 
+  _setPlacingMode(active) {
+    const bot = document.getElementById('game-bottom');
+    if(!bot) return;
+    if(active) {
+      this._botWasVisible = !bot.classList.contains('hidden');
+      bot.classList.add('hidden');
+    } else {
+      if(this._botWasVisible) bot.classList.remove('hidden');
+      this._botWasVisible = false;
+    }
+  },
+
   selectTower(id) {
     this.selectedTower = this.selectedTower===id ? -1 : id;
     document.querySelectorAll('.tp').forEach(t=>t.classList.toggle('selected', t.id===`tp-${id}`&&this.selectedTower>=0));
-    if(this.selectedTower>=0) { this.selectedPlacedTower=null; this.closeTowerPanel(); }
+    if(this.selectedTower>=0) {
+      this.selectedPlacedTower=null; this.closeTowerPanel();
+      this._setPlacingMode(true);
+    } else {
+      this._setPlacingMode(false);
+    }
   },
 
   selectHero(idx) {
@@ -4107,9 +4165,10 @@ const Game = {
 
   buildLifelines() {
     const row=document.getElementById('lifeline-row');
+    if(this.isGuestMP) { row.innerHTML=''; return; }
     const ll=[{icon:'🌀',name:'Time Warp',cls:'ll-0'}];
     row.innerHTML=ll.map((l,i)=>`
-      <div class="ll ${l.cls}" onclick="Game.useLifeline(${i})" title="${this.isGuestMP?'Chỉ Host mới dùng được':'Chiêu thức đặc biệt (2 lần/trận)'}">
+      <div class="ll ${l.cls}" onclick="Game.useLifeline(${i})" title="Chiêu thức đặc biệt (2 lần/trận)">
         <div class="ll-icon">${l.icon}</div>
         <div class="ll-name">${l.name}</div>
         <div class="ll-count">2/2</div>
@@ -4127,6 +4186,143 @@ const Game = {
       const t=TOWERS_DATA[id];
       if(t) el.classList.toggle('disabled', t.cost>displayGold);
     });
+  },
+
+  // ── ESCORT SYSTEM ────────────────────────────────────────
+  _queueEscort(bossId, bossMaxHp, pathIdx, delay) {
+    const types = ['mage', 'guard', 'warlock'];
+    const type = types[Math.floor(Math.random() * 3)];
+    setTimeout(() => {
+      if(this.gamePhase === 'done') return;
+      const boss = this.enemies.find(e => e._id === bossId);
+      if(!boss) return;
+      if(type === 'guard') {
+        for(let g = 0; g < 3; g++) {
+          this.escorts.push({
+            type:'guard', bossId, pathIdx, t: boss.t,
+            x: boss.x - 20 - g*12, y: boss.y,
+            hp: bossMaxHp * 0.3, maxHp: bossMaxHp * 0.3,
+            _id: bossId + '_guard' + g, spd: (boss.spd||1)*1.15,
+            slow: 1, life: 1, glowLife: 0
+          });
+        }
+      } else if(type === 'mage') {
+        this.escorts.push({
+          type:'mage', bossId, pathIdx,
+          x: boss.x + 25, y: boss.y - 15,
+          _id: bossId + '_mage', buffTimer: 180,
+          retreating: false, retreatT: 0, life: 1
+        });
+      } else {
+        this.escorts.push({
+          type:'warlock', bossId, pathIdx,
+          x: boss.x - 25, y: boss.y + 15,
+          _id: bossId + '_warlock',
+          resurrectUsed: false, vanishing: false, vanishT: 0, life: 1
+        });
+      }
+    }, delay * 16.7);
+  },
+
+  _tickEscorts(fps60) {
+    const bosses = this.enemies.filter(e => e.isBoss);
+    for(let i = this.escorts.length - 1; i >= 0; i--) {
+      const es = this.escorts[i];
+      const boss = this.enemies.find(e => e._id === es.bossId);
+
+      if(es.type === 'guard') {
+        if(!boss) { this.escorts.splice(i,1); continue; }
+        // Guards move along boss path slightly ahead
+        es.t = (es.t||0) + (boss.spd||1) * es.slow * 1.1 * fps60 / 1000;
+        const path = es.pathIdx >= 100 ? (this.elitePaths?.[es.pathIdx-100] || this.elitePath) : (this.paths||[this.path])[es.pathIdx||0];
+        if(path) { const pos = this._getPosOnPath(path, es.t); if(pos) { es.x=pos.x; es.y=pos.y; } }
+        if(es.hp <= 0) {
+          this.spawnParticles(es.x, es.y, '#888888', 10); this.escorts.splice(i,1);
+        }
+
+      } else if(es.type === 'mage') {
+        if(vanishingMage(es, bosses, this, fps60)) { this.escorts.splice(i,1); continue; }
+        if(boss) { es.x += (boss.x + 28 - es.x) * 0.08; es.y += (boss.y - 18 - es.y) * 0.08; }
+        es.buffTimer = (es.buffTimer||180) - fps60;
+        if(es.buffTimer <= 0) {
+          es.buffTimer = 180; // every 3s
+          const target = boss || bosses[0];
+          if(target) { target.hp = Math.min(target.maxHp, target.hp + target.maxHp * 0.05); }
+        }
+
+      } else if(es.type === 'warlock') {
+        if(!boss && !es.resurrectUsed) {
+          // Boss just died — resurrect it if we can find it still in the list (might already be removed)
+          // Resurrection is handled in damageEnemy below via _pendingResurrect
+          es.resurrectUsed = true;
+        }
+        if(es.vanishing) {
+          es.vanishT += fps60 * 0.04; es.life = Math.max(0, 1 - es.vanishT);
+          if(es.life <= 0) { this.escorts.splice(i,1); continue; }
+        } else if(boss) {
+          es.x += (boss.x - 28 - es.x) * 0.08; es.y += (boss.y + 18 - es.y) * 0.08;
+        } else if(es.resurrectUsed) {
+          es.vanishing = true;
+        }
+      }
+    }
+    function vanishingMage(es, bosses, game, fps60) {
+      if(bosses.length === 0) {
+        es.retreating = true;
+        if(!es._retreatStarted) { es._retreatStarted=true; game.spawnParticles(es.x,es.y,'#a060ff',15); }
+      }
+      if(es.retreating) {
+        es.x -= 2 * fps60; es.life = Math.max(0, es.life - 0.02 * fps60);
+        return es.life <= 0;
+      }
+      return false;
+    }
+  },
+
+  // Called from damageEnemy — check if a warlock can resurrect this boss
+  _checkWarlockResurrect(en) {
+    const warlock = this.escorts.find(es => es.type === 'warlock' && es.bossId === en._id && !es.resurrectUsed && !es.vanishing);
+    if(warlock) {
+      warlock.resurrectUsed = true;
+      en.hp = 1; // keep boss alive during 500ms resurrection window
+      setTimeout(() => {
+        en.hp = en.maxHp * 0.8;
+        this.spawnParticles(en.x, en.y, '#cc44ff', 20);
+      }, 500);
+      return true; // block death
+    }
+    // All bosses dead — start mage retreat for mages buffing this boss
+    const mage = this.escorts.find(es => es.type === 'mage' && es.bossId === en._id);
+    if(mage && !mage.retreating) {
+      const otherBoss = this.enemies.find(e => e.isBoss && e._id !== en._id);
+      if(otherBoss) mage.bossId = otherBoss._id; // redirect to another boss
+    }
+    // Vanish warlock that already used resurrection
+    this.escorts.filter(es => es.type === 'warlock' && es.bossId === en._id).forEach(w => { w.vanishing=true; });
+    return false;
+  },
+
+  destroyTowerByBoss(tw) {
+    const idx = this.towers.indexOf(tw);
+    if(idx < 0) return;
+    const {x, y} = tw;
+    this.towers.splice(idx, 1);
+    // Explosion animation
+    this.spawnParticles(x, y, '#ff3300', 20);
+    this.spawnParticles(x, y, '#ff8800', 12);
+    this.spawnParticles(x, y, '#ffcc00', 8);
+    this.addShake(6);
+    // Draw destruction flash ring that expands and fades
+    this._towerDestroyFX = this._towerDestroyFX || [];
+    this._towerDestroyFX.push({x, y, r: 5, life: 1});
+    // Block this cell for 5s (300 frames)
+    this._ruinedCells.push({x, y, timer: 300});
+    if(this.selectedPlacedTower === tw) { this.selectedPlacedTower=null; document.getElementById('tower-panel').style.display='none'; }
+    if(this.isHostMP) MP.broadcastEvent({type:'boss_destroy_tower', x, y});
+  },
+
+  _isRuined(x, y) {
+    return this._ruinedCells.some(r => Math.hypot(r.x - x, r.y - y) < 22);
   },
 
   _showRoundBonus(bonus) {
@@ -4159,7 +4355,6 @@ const Game = {
     document.getElementById('lose-modal').classList.add('hidden');
     document.getElementById('game-hud').classList.add('hidden');
     document.getElementById('game-bottom').classList.add('hidden');
-    document.getElementById('tut-tip').classList.add('hidden');
     document.getElementById('game-canvas').style.display='none';
     const ph=document.getElementById('hud-phase'); if(ph) ph.textContent='';
     const swb=document.getElementById('start-wave-btn'); if(swb) swb.classList.add('hidden');
@@ -4288,8 +4483,11 @@ function ptSegDist(px, py, ax, ay, bx, by) {
   const t=Math.max(0, Math.min(1, ((px-ax)*dx+(py-ay)*dy)/lenSq));
   return Math.hypot(px-(ax+t*dx), py-(ay+t*dy));
 }
-function onAnyPath(tx, ty, paths, elitePath, threshold) {
-  const all = elitePath ? [...paths, elitePath] : paths;
+function onAnyPath(tx, ty, paths, elitePaths, threshold) {
+  // Only block elite paths once they have been revealed (R10+)
+  const eliteArr = Array.isArray(elitePaths) ? elitePaths : (elitePaths ? [elitePaths] : []);
+  const activeElite = Game.eliteGateShown ? eliteArr : [];
+  const all = [...paths, ...activeElite];
   return all.some(pp => {
     if(!pp||pp.length<2) return false;
     for(let i=0;i<pp.length-1;i++) {
@@ -4384,7 +4582,7 @@ const MP = {
       onOpen();
     };
     this.ws.onerror = () => this.setErr('Lỗi kết nối. Kiểm tra server đang chạy không?');
-    this.ws.onmessage = e => this.handle(JSON.parse(e.data));
+    this.ws.onmessage = e => { try { this.handle(JSON.parse(e.data)); } catch(err) { console.error('WS msg err:', err); } };
     this.ws.onclose = () => {
       if(this._pingTimer) { clearInterval(this._pingTimer); this._pingTimer=null; }
       if(Game.gamePhase && Game.gamePhase!=='done') {
@@ -4776,6 +4974,16 @@ const MP = {
         }
         break;
       }
+      case 'boss_destroy_tower': {
+        // Guest: play visual FX + block cell for 5s
+        Game.spawnParticles(event.x, event.y, '#ff3300', 20);
+        Game.spawnParticles(event.x, event.y, '#ff8800', 12);
+        Game.addShake(6);
+        if(!Game._towerDestroyFX) Game._towerDestroyFX=[];
+        Game._towerDestroyFX.push({x:event.x, y:event.y, r:5, life:1});
+        Game._ruinedCells.push({x:event.x, y:event.y, timer:300});
+        break;
+      }
     }
   },
 
@@ -4801,7 +5009,7 @@ const MP = {
         slow:en.slow||1, spd:en.spd, isBoss:en.isBoss||false, color:en.color, typeId:en.typeId,
         id:en.id, elite:en.elite||false, glowColor:en.glowColor||null, spawnId:en.spawnId||0,
         radius:en.radius, reward:en.reward, heals:en.heals||false,
-        pathIdx:en.pathIdx||0, aerial:en.aerial||false
+        pathIdx:en.pathIdx||0, eliteIdx:en.eliteIdx||0, aerial:en.aerial||false
       })),
       projectiles: Game.projectiles.slice(0,30).map(p=>({
         x:~~p.x, y:~~p.y,
@@ -4813,6 +5021,11 @@ const MP = {
       crystalHP: Game.crystalHP,
       gamePhase: Game.gamePhase,
       spawnQueueLen: Game.spawnQueue.length,
+      escorts: Game.escorts.map(es=>({
+        type:es.type, bossId:es.bossId, x:~~es.x, y:~~es.y,
+        hp:~~(es.hp||0), maxHp:~~(es.maxHp||0), t:es.t||0,
+        life:es.life??1, _id:es._id
+      })),
     };
     if(full) {
       state.towers = Game.towers.map(tw=>({
@@ -4831,6 +5044,7 @@ const MP = {
       state.timeWarpActive = Game.timeWarpActive;
       state.timeWarpTimer = Game.timeWarpTimer;
       state.challengeMod = Game.challengeMod || null;
+      state.weather = Game.weather;
     }
     return state;
   },
@@ -4856,6 +5070,10 @@ const MP = {
     // sync visual projectiles so guest sees bullets
     if(s.projectiles) {
       Game.projectiles = s.projectiles.map(p=>({...p, trail:p.trail||[], targetEnemy:null}));
+    }
+    // sync boss escorts (visual on guest, host is authoritative)
+    if(s.escorts) {
+      Game.escorts = s.escorts.map(es=>({...es}));
     }
     if(s.towers) {
       Game.towers = s.towers.map(tw=>({...tw,cooldown:0,ownerIdx:tw.ownerIdx||0}));
@@ -4913,7 +5131,7 @@ const MP = {
         }, 1500);
       }
       // Elite gate reveal + announcement for guests
-      if(Game.elitePath) {
+      if(Game.elitePaths) {
         if(s.round === 10 && !Game.eliteGateShown && !Game.eliteGateRevealStart) {
           Game.eliteGateRevealStart = performance.now();
         } else if(s.round > 10 && !Game.eliteGateShown) {
@@ -4948,8 +5166,13 @@ const MP = {
     // time warp sync
     if(s.timeWarpActive != null) Game.timeWarpActive = s.timeWarpActive;
     if(s.timeWarpTimer  != null) Game.timeWarpTimer  = s.timeWarpTimer;
-    // lifeline UI sync (count-based)
-    if(s.lifelinesUsed) {
+    // weather sync — keep guest HUD in sync with host
+    if(s.weather != null && s.weather !== Game.weather) {
+      Game.weather = s.weather;
+      Game.updateWeatherHUD();
+    }
+    // lifeline UI sync (count-based) — only update if ll elements exist (host only)
+    if(s.lifelinesUsed && !Game.isGuestMP) {
       s.lifelinesUsed.forEach((count,i)=>{
         if(count!==Game.lifelinesUsed[i]) {
           Game.lifelinesUsed[i]=count;
@@ -4973,8 +5196,9 @@ const MP = {
         const guestGold=Game.playerGold[fromIdx]||0;
         if(!tData||guestGold<tData.cost) break;
         if(Game.towers.some(tw=>Math.hypot(tw.x-data.x,tw.y-data.y)<22)) break;
+        if(Game._isRuined(data.x,data.y)) break;
         const paths=Game.paths||[Game.path];
-        if(onAnyPath(data.x,data.y,paths,Game.elitePath,20)) break;
+        if(onAnyPath(data.x,data.y,paths,Game.elitePaths,20)) break;
         Game.playerGold[fromIdx]-=tData.cost;
         Game.towers.push({x:data.x,y:data.y,typeId:data.typeId,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:fromIdx});
         SFX.placeTower(data.typeId);

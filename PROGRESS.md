@@ -4,6 +4,69 @@
 
 ---
 
+## Current State (2026-05-25) — last updated (v9.3: MP balance, boss mechanics, team maps, gold buff)
+
+**Branch:** `main`  
+**Server:** `node server.js` → `http://localhost:3000`
+
+---
+
+## Completed Features
+
+### v9.3 Sprint — MP Balance, Boss Mechanics, Team Maps Redesign (2026-05-25)
+
+#### Starting Gold Buff — Tất cả chế độ solo (2026-05-25)
+- Tất cả 4 chế độ solo đều bắt đầu với **600 vàng** (trước: Standard 400, Hardcore 300, Endless 400, Challenge 350)
+- MP giữ nguyên: `[200, 150, 200, 200]`
+
+#### 2 Bug Fixes (2026-05-25 — review session)
+1. **Guard chết double particles** — bỏ `spawnParticles` thừa trong tower targeting loop (chỉ giữ trong `_tickEscorts`)
+2. **Warlock resurrection race condition** — thêm `en.hp = 1` ngay sau khi warlock chặn boss chết, ngăn projectile frame kế giết boss thật sự trước khi 500ms timeout kịp restore 80% HP
+
+#### Bugs Fixed (v9.3 sprint)
+1. **R19 disconnect** — try/catch trên WS `onmessage` handler; throttle sync rate khi >80 enemies (rate=3 thay vì 2) — `index.html` line ~1854 + ~4554
+2. **Announcement sync** — `state.weather = Game.weather` trong `getNetState` full sync; `applyNetState` apply weather với `updateWeatherHUD()`
+3. **Room không xóa sau game over** — `server.js` close handler: nếu `myIdx === 0 && myRoom.gameOver` → `rooms.delete(myCode)` ngay lập tức
+4. **Floating damage numbers** — xóa hoàn toàn: push trong `damageEnemy()`, update loop, render section
+
+#### Balance Updates (v9.3)
+- **MP HP scaling** — `mpHpX=1.5` (tất cả quái), `mpBossHpX = round>=10 ? 9 : 3`, elite enemy `×8`, elite boss thêm `×3`. Chỉ áp dụng MP, solo không đổi.
+- **Economy** — `UPGRADE_COST_MULTS=[0,0.8,2.5,7.0,18.0]` (geometric ~3× mỗi bậc); kill reward `×0.65`
+
+#### Boss Mechanics (v9.3)
+- **Tower-destroy skill** — Từ R10, mỗi 5s boss phá ngẫu nhiên 1 trụ trong bán kính 85px: particles đỏ/cam/vàng + ring FX + shake 6; guest nhận `boss_destroy_tower` event → FX ngay, tower xóa qua next state_sync
+- **Boss escort system** — 3 loại hộ vệ, random 1 loại per boss, xuất hiện từ mọi round boss:
+  - **Pháp sư (Mage)**: không bị bắn, buff +5% HP boss mỗi 3s, redirect sang boss khác nếu boss mình chết, retreat animation khi tất cả boss chết
+  - **Vệ binh (Guard)**: 3 con × 30% boss HP mỗi con, tháp ưu tiên bắn guard trước boss, có HP bar
+  - **Phù thủy (Warlock)**: không bị bắn, resurrect boss 1 lần với 80% HP, vanish animation sau khi boss thực sự chết
+
+#### UX / UI (v9.3)
+- **Tower auto-hide** — `_setPlacingMode(active)` ẩn/hiện `#game-bottom` khi đang đặt tháp
+- **Time Warp ẩn guest** — `buildLifelines()` early return nếu `isGuestMP`
+- **Elite path ghost hint** — vẽ trên bgCanvas trước R10: `pathColor` opacity 0.18 (20px) + nét đứt đen opacity 0.09 (7px); không block placement
+- **Elite path không chặn trước R10** — `onAnyPath()` chỉ include elite paths khi `eliteGateShown === true`
+- **Tutorial removed** — xóa hoàn toàn `TUTORIAL_STEPS`, `Tutorial` object, `paused_tutorial` phase, CSS/HTML/menu button
+- **Floating pill HUD** — HUD top từ solid 2-row ~60px → transparent single-row overlay ~34px; `backdrop-filter:blur(10px)`; `topH` giảm từ 95 xuống còn dynamic (`hudEl.offsetHeight + 2`); iOS notch safe: `padding-top:max(4px,env(safe-area-inset-top))`
+- **Nút loa (mute) bị xóa** — bỏ `#mute-btn` khỏi HUD HTML và `SFX.toggle()` call; âm thanh không còn toggle được từ in-game
+- **topH dynamic** — `const topH = hudEl ? Math.max(48, hudEl.offsetHeight + 2) : 58`; fix iOS notch chồng lên đường quái
+
+#### Map Redesign — Team Maps 3, 4, 5 (v9.3)
+- **Multi-elite-path architecture** — `elitePathFns[]` array; `Game.elitePaths[]`; `ptOnPath(t, pi>=100)` → `elitePaths[pi-100]`; `en.eliteIdx` synced; backward compat với maps 0-2 dùng `elitePathFn` singular
+- **Map 3 — Thornwall Crossing** — 4 S-curve pathFns + 2 elitePathFns, diff:3, gates:4
+- **Map 4 — Crimson Delta** — 4 pathFns (staircase+S) + 2 elitePathFns, diff:4, gates:4
+- **Map 5 — Void Nexus** — 4 W-maze pathFns + 2 elitePathFns, diff:5, locked, gates:4
+- **MapRenderer preview** — cập nhật render nhiều elite paths trong lobby preview
+
+#### Architecture Notes (quan trọng cho sessions sau)
+- `Game.elitePaths[]` — authoritative array; `Game.elitePath = elitePaths[0]` là alias backward compat
+- `MAPS_DATA[3-5]` dùng `elitePathFns: [fn1, fn2]`; maps 0-2 vẫn dùng `elitePathFn` singular
+- `en.eliteIdx` — which elite path (0 hoặc 1) cho multi-elite routing
+- `pathIdx >= 100` convention: 100 = elite path 0, 101 = elite path 1
+- `_tickEscorts` chỉ chạy trên host (`isHostMP || !isMP`); guest chỉ render x/y từ state sync
+- Warlock resurrection: `_checkWarlockResurrect(en)` trong `damageEnemy()`; đặt `en.hp=1` để giữ boss sống trong 500ms window
+
+---
+
 ## Current State (2026-05-24) — last updated (Challenge mode, balance, MP bug fixes)
 
 **Branch:** `main`  
@@ -520,7 +583,7 @@
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Entire game (HTML + CSS + JS, ~4350 lines) |
+| `index.html` | Entire game (HTML + CSS + JS, ~5750 lines) |
 | `server.js` | Node.js WebSocket signaling server |
 | `LAST_BASTION_GDD.md` | Game Design Document |
 | `PROGRESS.md` | This file — session context tracker |
