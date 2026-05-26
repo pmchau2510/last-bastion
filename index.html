@@ -2653,37 +2653,65 @@ const Game = {
 
   _drawEscorts(c) {
     if(!this.escorts || !this.escorts.length) return;
+    const now = Date.now();
     this.escorts.forEach(es => {
       const alpha = es.life ?? 1;
       c.globalAlpha = alpha;
+      const {x, y} = es;
+
       if(es.type === 'guard') {
-        // Guard: dark armored mini-unit with HP bar
-        c.fillStyle = '#445566'; c.strokeStyle='#88aacc'; c.lineWidth=1.5;
-        c.beginPath(); c.arc(es.x, es.y, 7, 0, Math.PI*2); c.fill(); c.stroke();
-        c.fillStyle='#223344';
-        c.fillRect(es.x-4, es.y-2, 8, 5);
+        // Shield shape
+        c.shadowColor='#aaddff'; c.shadowBlur=10;
+        c.fillStyle='#334455'; c.strokeStyle='#99ccee'; c.lineWidth=2;
+        c.beginPath();
+        c.moveTo(x, y-10); c.lineTo(x+9, y-4); c.lineTo(x+9, y+4);
+        c.lineTo(x, y+11); c.lineTo(x-9, y+4); c.lineTo(x-9, y-4);
+        c.closePath(); c.fill(); c.stroke();
+        // cross emblem
+        c.fillStyle='#aaddff';
+        c.fillRect(x-1, y-6, 2, 12); c.fillRect(x-5, y-1, 10, 2);
+        c.shadowBlur=0;
         // HP bar
         const hpFrac = Math.max(0, es.hp / es.maxHp);
-        c.fillStyle='#222'; c.fillRect(es.x-7, es.y-12, 14, 3);
-        c.fillStyle=hpFrac>0.5?'#44cc44':'#cc4444'; c.fillRect(es.x-7, es.y-12, 14*hpFrac, 3);
+        c.fillStyle='#111'; c.fillRect(x-9, y-17, 18, 3);
+        c.fillStyle=hpFrac>0.5?'#44ee44':'#ee4444'; c.fillRect(x-9, y-17, 18*hpFrac, 3);
+        // label
+        c.fillStyle='#aaddff'; c.font='bold 7px sans-serif'; c.textAlign='center';
+        c.fillText('HỘ VỆ', x, y-19);
+
       } else if(es.type === 'mage') {
-        // Mage: purple floating orb with glow
-        const pulse = 0.7 + 0.3*Math.sin(Date.now()/400);
-        c.shadowColor='#aa44ff'; c.shadowBlur=12*pulse;
-        c.fillStyle='#cc88ff'; c.strokeStyle='#7700cc'; c.lineWidth=1.5;
-        c.beginPath(); c.arc(es.x, es.y, 7, 0, Math.PI*2); c.fill(); c.stroke();
-        c.fillStyle='#ffffff88';
-        c.beginPath(); c.arc(es.x-2, es.y-2, 3, 0, Math.PI*2); c.fill();
+        // Diamond shape with bright purple glow
+        const pulse = 0.7 + 0.3*Math.sin(now/350);
+        c.shadowColor='#cc44ff'; c.shadowBlur=18*pulse;
+        c.fillStyle='#bb66ff'; c.strokeStyle='#ffffff'; c.lineWidth=1.5;
+        c.beginPath();
+        c.moveTo(x, y-11); c.lineTo(x+8, y); c.lineTo(x, y+11); c.lineTo(x-8, y);
+        c.closePath(); c.fill(); c.stroke();
+        // inner gem
+        c.fillStyle='#ffffff99';
+        c.beginPath(); c.moveTo(x,y-5); c.lineTo(x+4,y); c.lineTo(x,y+5); c.lineTo(x-4,y); c.closePath(); c.fill();
         c.shadowBlur=0;
+        // label
+        c.fillStyle='#dd99ff'; c.font='bold 7px sans-serif'; c.textAlign='center';
+        c.fillText('PHÁP SƯ', x, y-14);
+
       } else if(es.type === 'warlock') {
-        // Warlock: dark purple with eerie glow
-        const flicker = 0.6 + 0.4*Math.sin(Date.now()/300);
-        c.shadowColor='#440066'; c.shadowBlur=10*flicker;
-        c.fillStyle='#662288'; c.strokeStyle='#aa00ff'; c.lineWidth=1.5;
-        c.beginPath(); c.arc(es.x, es.y, 7, 0, Math.PI*2); c.fill(); c.stroke();
-        c.fillStyle='#ff44ff88';
-        c.beginPath(); c.arc(es.x, es.y, 3, 0, Math.PI*2); c.fill();
+        // Skull cross shape with crimson glow
+        const flicker = 0.65 + 0.35*Math.sin(now/280);
+        c.shadowColor='#cc0044'; c.shadowBlur=16*flicker;
+        c.fillStyle='#550022'; c.strokeStyle='#ff2266'; c.lineWidth=2;
+        c.beginPath(); c.arc(x, y, 10, 0, Math.PI*2); c.fill(); c.stroke();
+        // skull symbol
+        c.fillStyle='#ff6699';
+        c.beginPath(); c.arc(x, y-1, 5, Math.PI, 0); c.fill();
+        c.fillRect(x-5, y-1, 10, 5);
+        c.fillStyle='#550022';
+        c.beginPath(); c.arc(x-2, y+1, 1.5, 0, Math.PI*2); c.fill();
+        c.beginPath(); c.arc(x+2, y+1, 1.5, 0, Math.PI*2); c.fill();
         c.shadowBlur=0;
+        // label
+        c.fillStyle='#ff6699'; c.font='bold 7px sans-serif'; c.textAlign='center';
+        c.fillText('THUẬT SĨ', x, y-13);
       }
       c.globalAlpha=1;
     });
