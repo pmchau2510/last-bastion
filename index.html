@@ -527,7 +527,7 @@ body{position:fixed;width:100%;height:100%}
 </div>
 
 <!-- DISCONNECT OVERLAY — shown when guest disconnects mid-game -->
-<div id="disconnect-overlay" class="hidden" style="position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px">
+<div id="disconnect-overlay" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.7);align-items:center;justify-content:center;flex-direction:column;gap:16px">
   <div style="background:#0d1828;border:1px solid #2a4060;border-radius:14px;padding:28px 36px;text-align:center;max-width:340px">
     <div style="font-size:32px;margin-bottom:8px">📡</div>
     <div id="dc-overlay-text" style="color:#c8d8ff;font-size:15px;font-weight:600;margin-bottom:6px">Đang chờ người chơi kết nối lại...</div>
@@ -899,11 +899,33 @@ const App = {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if(isIOS) {
-      const t=document.createElement('div');
-      t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1030;border:1px solid #4a3080;color:#c0a0ff;padding:8px 16px;border-radius:10px;font-size:12px;z-index:999;pointer-events:none;text-align:center;max-width:260px';
-      t.textContent='iOS không hỗ trợ toàn màn hình. Thêm vào màn hình chính (Add to Home Screen) để chơi toàn màn hình.';
-      document.body.appendChild(t);
-      setTimeout(()=>t.remove(),4000);
+      // PWA standalone mode (opened from Home Screen icon) — try native fullscreen (iOS 16.4+)
+      if(navigator.standalone) {
+        const inFS = document.fullscreenElement || document.webkitFullscreenElement;
+        if(!inFS) {
+          const req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+          if(req) { req.call(document.documentElement).catch(()=>{}); return; }
+        } else {
+          const ex = document.exitFullscreen || document.webkitExitFullscreen;
+          if(ex) { ex.call(document).catch(()=>{}); return; }
+        }
+      }
+      // Not in PWA mode — show Add to Home Screen guide
+      if(document.getElementById('ios-fs-guide')) return;
+      const overlay = document.createElement('div');
+      overlay.id = 'ios-fs-guide';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.75);display:flex;align-items:flex-end;justify-content:center;padding-bottom:24px';
+      overlay.innerHTML = `
+        <div style="background:#0d1020;border:1px solid #3a2070;border-radius:16px;padding:20px 24px;max-width:300px;text-align:center;color:#c0b0f0;font-size:13px;line-height:1.6">
+          <div style="font-size:28px;margin-bottom:8px">📲</div>
+          <div style="font-size:15px;font-weight:600;color:#e0d0ff;margin-bottom:10px">Chơi toàn màn hình trên iOS</div>
+          <div>Bấm nút <span style="display:inline-flex;align-items:center;gap:3px;background:#1a1a30;border:1px solid #4a3080;border-radius:6px;padding:2px 7px;font-size:16px">⎙</span> ở thanh Safari</div>
+          <div style="margin:6px 0">rồi chọn <strong style="color:#fff">"Thêm vào màn hình chính"</strong></div>
+          <div style="color:#7060a0;font-size:11px;margin-bottom:14px">Mở app từ icon → toàn màn hình tự động</div>
+          <button onclick="document.getElementById('ios-fs-guide').remove()" style="background:#3a2070;color:#e0d0ff;border:none;border-radius:8px;padding:8px 24px;font-size:13px;cursor:pointer">Đã hiểu</button>
+        </div>`;
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', e => { if(e.target === overlay) overlay.remove(); });
       return;
     }
     const inFS = document.fullscreenElement || document.webkitFullscreenElement;
@@ -4678,7 +4700,7 @@ const MP = {
           const pl = msg.info?.players?.[wp.idx];
           if(pl && !pl.disconnected) {
             const ov = document.getElementById('disconnect-overlay');
-            if(ov && !ov.classList.contains('hidden')) {
+            if(ov && ov.style.display !== 'none') {
               document.getElementById('dc-overlay-text').textContent=`✅ ${wp.name} đã kết nối lại!`;
               document.getElementById('dc-overlay-sub').textContent='Bấm tiếp tục để resume game';
               document.getElementById('dc-resume-btn').classList.remove('hidden');
@@ -4713,6 +4735,7 @@ const MP = {
       case 'reconnected': {
         this.myIdx = msg.idx;
         this.roomInfo = msg.info;
+        this.isHost = (msg.idx === 0); // restore host flag for broadcastState()
         document.getElementById('mp-overlay').classList.add('hidden');
         MapRenderer.stopAnim();
         App.showScreen('game-canvas');
@@ -5016,14 +5039,15 @@ const MP = {
     document.getElementById('dc-overlay-text').textContent=`⏳ Đang chờ ${name} kết nối lại...`;
     document.getElementById('dc-overlay-sub').textContent='Game đang tạm dừng';
     document.getElementById('dc-resume-btn').classList.add('hidden');
-    document.getElementById('dc-skip-btn').classList.remove('hidden');
-    // Only host sees skip button
-    if(!this.isHost) document.getElementById('dc-skip-btn').classList.add('hidden');
-    ov.classList.remove('hidden');
+    const skipBtn=document.getElementById('dc-skip-btn');
+    skipBtn.classList.remove('hidden');
+    if(!this.isHost) skipBtn.classList.add('hidden');
+    ov.style.display='flex';
   },
 
   hideDisconnectOverlay() {
-    document.getElementById('disconnect-overlay')?.classList.add('hidden');
+    const ov=document.getElementById('disconnect-overlay');
+    if(ov) ov.style.display='none';
     Game._waitingForPlayer=null;
   },
 
@@ -5064,6 +5088,12 @@ const MP = {
             `Đã để lọt ${event.leakCount||Game.leakCount} quái tại Round ${r}. ${r<10?'Hãy xây tháp nhiều hơn ngay từ đầu!':r<20?'Bạn đã chơi tốt! Thêm tháp AoE cho giai đoạn giữa.':'Gần thắng rồi! Cải thiện phòng thủ Cửa Tử.'}`;
           document.getElementById('lose-modal').classList.remove('hidden');
         }
+        break;
+      }
+      case 'host_left': {
+        ReconnectHelper.clear();
+        Game.quit();
+        setTimeout(() => alert('Host đã ngắt kết nối. Game bị hủy.'), 100);
         break;
       }
       case 'host_restart': {

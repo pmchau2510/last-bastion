@@ -111,18 +111,11 @@ wss.on('connection', ws => {
         const room = rooms.get(code);
         if (!room) { ws.send(JSON.stringify({ type: 'error', msg: 'Không tìm thấy phòng.' })); break; }
 
-        // ── Password check ──────────────────────────────────────
-        if (room.password && room.password !== (msg.password || '')) {
-          ws.send(JSON.stringify({ type: 'error', msg: 'Mật khẩu phòng không đúng.' }));
-          break;
-        }
-
-        // ── Reconnect: check if a disconnected slot matches this name ──
+        // ── Reconnect: check before password (rejoining player already authenticated) ──
         if (room.started) {
           const dcIdx = room.players.findIndex(p => p.disconnected && p.name === (msg.name || '').trim());
           if (dcIdx >= 0) {
             const slot = room.players[dcIdx];
-            // Clear reconnect cleanup timer if set
             if (slot._dcTimer) { clearTimeout(slot._dcTimer); delete slot._dcTimer; }
             slot.ws = ws;
             slot.disconnected = false;
@@ -140,6 +133,12 @@ wss.on('connection', ws => {
           break;
         }
 
+        // ── Password check (lobby join only) ────────────────────
+        if (room.password && room.password !== (msg.password || '')) {
+          ws.send(JSON.stringify({ type: 'error', msg: 'Mật khẩu phòng không đúng.' }));
+          break;
+        }
+
         if (room.players.length >= 4) { ws.send(JSON.stringify({ type: 'error', msg: 'Phòng đã đầy (tối đa 4 người).' })); break; }
         myIdx = room.players.length;
         room.players.push({ ws, name: msg.name || `Player ${myIdx+1}`, hero: msg.hero || 'Kael', nation: msg.nation || 0, ready: false, disconnected: false });
@@ -151,14 +150,14 @@ wss.on('connection', ws => {
 
       // ── Cập nhật hero / ready ───────────────────────────────
       case 'set_hero': {
-        if (!myRoom || myIdx < 0) break;
+        if (!myRoom || myIdx < 0 || !myRoom.players[myIdx]) break;
         myRoom.players[myIdx].hero = msg.hero;
         broadcast(myRoom, { type: 'room_update', info: roomInfo(myRoom, myCode) });
         break;
       }
 
       case 'set_ready': {
-        if (!myRoom || myIdx < 0) break;
+        if (!myRoom || myIdx < 0 || !myRoom.players[myIdx]) break;
         myRoom.players[myIdx].ready = msg.ready;
         broadcast(myRoom, { type: 'room_update', info: roomInfo(myRoom, myCode) });
         break;
@@ -166,7 +165,7 @@ wss.on('connection', ws => {
 
       // ── Cập nhật nation ─────────────────────────────────────
       case 'set_nation': {
-        if (!myRoom || myIdx < 0) break;
+        if (!myRoom || myIdx < 0 || !myRoom.players[myIdx]) break;
         myRoom.players[myIdx].nation = msg.nation || 0;
         broadcast(myRoom, { type: 'room_update', info: roomInfo(myRoom, myCode) });
         break;
@@ -267,30 +266,31 @@ wss.on('connection', ws => {
         rooms.delete(myCode);
         return;
       }
-      // Mid-game disconnect: keep the slot, mark disconnected
       const slot = myRoom.players[myIdx];
       if (slot) {
-        slot.disconnected = true;
-        slot.dcTime = Date.now();
-        // If host disconnected mid-game, the game can't continue — delete room after short grace
         if (myIdx === 0) {
-          slot._dcTimer = setTimeout(() => { rooms.delete(myCode); }, 30 * 1000);
+          // Host left mid-game → cancel the room immediately, kick all guests
+          broadcast(myRoom, {
+            type: 'game_event',
+            from: 0,
+            event: { type: 'host_left' }
+          }, ws);
+          rooms.delete(myCode);
         } else {
-          // Cleanup after 10 minutes if not reconnected
+          // Guest disconnect: keep slot, allow reconnect for 10 minutes
+          slot.disconnected = true;
+          slot.dcTime = Date.now();
           slot._dcTimer = setTimeout(() => {
-            if (!slot.disconnected) return; // already reconnected
+            if (!slot.disconnected) return;
             myRoom.players.splice(myIdx, 1);
             if (myRoom.players.length === 0) rooms.delete(myCode);
           }, 10 * 60 * 1000);
-        }
-        broadcast(myRoom, {
-          type: 'player_disconnected',
-          idx: myIdx,
-          name: slot.name,
-          info: roomInfo(myRoom, myCode)
-        });
-        // Notify host to pause game while waiting for reconnect (guests only)
-        if (myIdx !== 0) {
+          broadcast(myRoom, {
+            type: 'player_disconnected',
+            idx: myIdx,
+            name: slot.name,
+            info: roomInfo(myRoom, myCode)
+          });
           broadcast(myRoom, {
             type: 'game_event',
             from: myIdx,
