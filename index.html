@@ -1481,11 +1481,9 @@ const Game = {
     this.towers = [];
     this.enemies = [];
     this.escorts = []; // boss escort units (mage/guard/warlock)
-    this._ruinedCells = []; // {x,y,timer} — cells blocked after boss destroys tower (5s)
     this.projectiles = [];
     this.particles = [];
     this.damageNums = [];
-    this._towerDestroyFX = [];
     this.screenShake = 0;
     this.roundEvent = {};
     this.spawnQueue = [];
@@ -2040,29 +2038,11 @@ const Game = {
       }
       if(en.slow < 1) en.slow = Math.min(1, en.slow + .01*fps60);
 
-      // Boss tower-destroy skill — from round 10, every 5s a boss destroys a random nearby tower
-      if(en.isBoss && this.round >= 10) {
-        en._destroyTimer = (en._destroyTimer || 300) - fps60;
-        if(en._destroyTimer <= 0) {
-          en._destroyTimer = 300;
-          const BOSS_ATTACK_R = 85;
-          const nearby = this.towers.filter(tw => Math.hypot(tw.x-en.x, tw.y-en.y) < BOSS_ATTACK_R);
-          if(nearby.length > 0) {
-            const victim = nearby[Math.floor(Math.random() * nearby.length)];
-            this.destroyTowerByBoss(victim);
-          }
-        }
-      }
+
     }
 
     // escort tick (only on host)
     if(this.isHostMP || !this.isMP) this._tickEscorts(fps60);
-
-    // ruined cells countdown
-    for(let i = this._ruinedCells.length - 1; i >= 0; i--) {
-      this._ruinedCells[i].timer -= fps60;
-      if(this._ruinedCells[i].timer <= 0) this._ruinedCells.splice(i, 1);
-    }
 
     // towers fire
     this.towers.forEach(tw=>{
@@ -2621,7 +2601,7 @@ const Game = {
       if(mx>0 && my>0) {
         const tooClose=this.towers.some(tw=>Math.hypot(tw.x-mx,tw.y-my)<22);
         const onPath=onAnyPath(mx,my,this.paths||[this.path],this.elitePaths,20);
-        const canPlace=!tooClose&&!onPath&&!this._isRuined(mx,my);
+        const canPlace=!tooClose&&!onPath;
         const iColor=canPlace?'#30ff60':'#ff3030';
         if(tData.range>0) {
           c.strokeStyle=canPlace?tData.color+'66':'#ff303066'; c.lineWidth=1.5; c.setLineDash([5,3]);
@@ -2660,49 +2640,6 @@ const Game = {
       c.beginPath(); c.arc(p.x,p.y,3*p.life,0,Math.PI*2); c.fill();
     });
     c.globalAlpha=1;
-
-    // ruined cells — blocked 5s after boss destroys tower
-    if(this._ruinedCells && this._ruinedCells.length) {
-      const now = performance.now() * 0.001;
-      this._ruinedCells.forEach(r => {
-        const prog = r.timer / 300; // 1→0 over 5s
-        // dark rubble base
-        c.globalAlpha = 0.55 * prog + 0.25;
-        c.fillStyle = '#1a0800';
-        c.beginPath(); c.arc(r.x, r.y, 14, 0, Math.PI*2); c.fill();
-        // pulsing red border
-        c.globalAlpha = (0.5 + 0.4 * Math.sin(now * 4)) * prog;
-        c.strokeStyle = '#cc2200'; c.lineWidth = 2;
-        c.beginPath(); c.arc(r.x, r.y, 14, 0, Math.PI*2); c.stroke();
-        // countdown arc (drains clockwise)
-        c.globalAlpha = 0.8 * prog;
-        c.strokeStyle = '#ff6600'; c.lineWidth = 3;
-        c.beginPath();
-        c.arc(r.x, r.y, 11, -Math.PI/2, -Math.PI/2 + Math.PI*2*prog);
-        c.stroke();
-        // X mark
-        c.globalAlpha = 0.7 * prog;
-        c.strokeStyle = '#ff3300'; c.lineWidth = 2;
-        c.beginPath(); c.moveTo(r.x-5,r.y-5); c.lineTo(r.x+5,r.y+5); c.stroke();
-        c.beginPath(); c.moveTo(r.x+5,r.y-5); c.lineTo(r.x-5,r.y+5); c.stroke();
-      });
-      c.globalAlpha = 1;
-    }
-
-    // tower destruction FX rings
-    if(this._towerDestroyFX) {
-      for(let i=this._towerDestroyFX.length-1;i>=0;i--) {
-        const fx=this._towerDestroyFX[i];
-        fx.r += 3; fx.life -= 0.05;
-        if(fx.life <= 0) { this._towerDestroyFX.splice(i,1); continue; }
-        c.globalAlpha=fx.life;
-        c.strokeStyle='#ff5500'; c.lineWidth=3;
-        c.beginPath(); c.arc(fx.x,fx.y,fx.r,0,Math.PI*2); c.stroke();
-        c.strokeStyle='#ffaa00'; c.lineWidth=1.5;
-        c.beginPath(); c.arc(fx.x,fx.y,fx.r*0.6,0,Math.PI*2); c.stroke();
-        c.globalAlpha=1;
-      }
-    }
 
     // close screen shake transform
     if((this.screenShake||0)>0.3) c.restore();
@@ -4003,7 +3940,7 @@ const Game = {
       if(myGold < tData.cost) { this.flashLowGold(); return; }
       const tooClose=this.towers.some(tw=>Math.hypot(tw.x-tx,tw.y-ty)<22);
       const onPath=onAnyPath(tx,ty,this.paths||[this.path],this.elitePaths,20);
-      if(tooClose||onPath||this._isRuined(tx,ty)) return;
+      if(tooClose||onPath) return;
       if(this.isGuestMP) {
         // Send as fractions so host can map to its own coordinate space
         MP.sendInput('place_tower', {x:tx, y:ty, xFrac:tx/this.W, yFrac:ty/this.H, typeId:this.selectedTower});
@@ -4378,30 +4315,6 @@ const Game = {
     // Vanish warlock that already used resurrection
     this.escorts.filter(es => es.type === 'warlock' && es.bossId === en._id).forEach(w => { w.vanishing=true; });
     return false;
-  },
-
-  destroyTowerByBoss(tw) {
-    const idx = this.towers.indexOf(tw);
-    if(idx < 0) return;
-    const {x, y} = tw;
-    this.towers.splice(idx, 1);
-    this._towersDirty=true;
-    // Explosion animation
-    this.spawnParticles(x, y, '#ff3300', 20);
-    this.spawnParticles(x, y, '#ff8800', 12);
-    this.spawnParticles(x, y, '#ffcc00', 8);
-    this.addShake(6);
-    // Draw destruction flash ring that expands and fades
-    this._towerDestroyFX = this._towerDestroyFX || [];
-    this._towerDestroyFX.push({x, y, r: 5, life: 1});
-    // Block this cell for 5s (300 frames)
-    this._ruinedCells.push({x, y, timer: 300});
-    if(this.selectedPlacedTower === tw) { this.selectedPlacedTower=null; document.getElementById('tower-panel').style.display='none'; }
-    if(this.isHostMP) MP.broadcastEvent({type:'boss_destroy_tower', x, y});
-  },
-
-  _isRuined(x, y) {
-    return this._ruinedCells.some(r => Math.hypot(r.x - x, r.y - y) < 22);
   },
 
   _showRoundBonus(bonus) {
@@ -5131,16 +5044,6 @@ const MP = {
         }
         break;
       }
-      case 'boss_destroy_tower': {
-        // Guest: play visual FX + block cell for 5s
-        Game.spawnParticles(event.x, event.y, '#ff3300', 20);
-        Game.spawnParticles(event.x, event.y, '#ff8800', 12);
-        Game.addShake(6);
-        if(!Game._towerDestroyFX) Game._towerDestroyFX=[];
-        Game._towerDestroyFX.push({x:event.x, y:event.y, r:5, life:1});
-        Game._ruinedCells.push({x:event.x, y:event.y, timer:300});
-        break;
-      }
       case 'guest_disconnected': {
         // Pause game and show overlay; host gets resume button when player reconnects
         Game.paused=true;
@@ -5403,7 +5306,6 @@ const MP = {
         const hx = data.xFrac!=null ? Math.round(data.xFrac*Game.W) : data.x;
         const hy = data.yFrac!=null ? Math.round(data.yFrac*Game.H) : data.y;
         if(Game.towers.some(tw=>Math.hypot(tw.x-hx,tw.y-hy)<22)) break;
-        if(Game._isRuined(hx,hy)) break;
         const paths=Game.paths||[Game.path];
         if(onAnyPath(hx,hy,paths,Game.elitePaths,20)) break;
         Game.playerGold[fromIdx]-=tData.cost;
