@@ -2447,17 +2447,13 @@ const Game = {
       this.elitePaths.forEach(ep => {
         c.save();
         c.lineJoin='round'; c.lineCap='round';
-        // Dark base
-        c.globalAlpha = 0.38;
-        c.strokeStyle = pc; c.lineWidth = 22;
-        c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
-        // Red tint — hint at danger
+        // Faint dark base — like slightly disturbed ground
         c.globalAlpha = 0.18;
-        c.strokeStyle = '#aa0000'; c.lineWidth = 18;
+        c.strokeStyle = pc; c.lineWidth = 20;
         c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
-        // Dashed center
-        c.globalAlpha = 0.22;
-        c.strokeStyle = '#330000'; c.lineWidth = 7; c.setLineDash([14, 10]);
+        // Very faint dashed center — barely visible texture
+        c.globalAlpha = 0.09;
+        c.strokeStyle = '#000000'; c.lineWidth = 7; c.setLineDash([14, 10]);
         c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
         c.setLineDash([]);
         c.globalAlpha = 1;
@@ -5144,16 +5140,25 @@ const MP = {
       spawnQueueLen: Game.spawnQueue.length,
       escorts: esb.slice(0,esArr.length),
     };
+    // Send towers immediately on any sync when dirty (place/sell/upgrade) — ~33ms confirmation
+    if(Game._towersDirty) {
+      state.towers=Game.towers.map(tw=>({
+        x:tw.x,y:tw.y,typeId:tw.typeId,level:tw.level||1,
+        angle:tw.angle||0,flash:tw.flash||0,goldTimer:tw.goldTimer||3600,
+        ownerIdx:tw.ownerIdx!=null?tw.ownerIdx:0
+      }));
+      Game._towersDirty=false;
+      Game._fullSyncTowerCounter=0;
+    }
     if(full) {
-      // ── Dirty-flag filtering: only send towers when changed ──
+      // Fallback: resend towers every ~10s even if not dirty (catch missed updates)
       Game._fullSyncTowerCounter=(Game._fullSyncTowerCounter||0)+1;
-      if(Game._towersDirty||Game._fullSyncTowerCounter>=30){
-        state.towers=Game.towers.map(tw=>({
+      if(Game._fullSyncTowerCounter>=30){
+        if(!state.towers) state.towers=Game.towers.map(tw=>({
           x:tw.x,y:tw.y,typeId:tw.typeId,level:tw.level||1,
           angle:tw.angle||0,flash:tw.flash||0,goldTimer:tw.goldTimer||3600,
           ownerIdx:tw.ownerIdx!=null?tw.ownerIdx:0
         }));
-        Game._towersDirty=false;
         Game._fullSyncTowerCounter=0;
       }
       state.gold=Game.gold;
