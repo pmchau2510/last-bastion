@@ -107,28 +107,24 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 .start-btn.s3{background:#7a5800}
 .start-btn:active{transform:scale(.98)}
 
-/* ===== GAME HUD ===== */
-#game-hud{position:absolute;top:0;left:0;width:100%;display:flex;flex-direction:column;pointer-events:none}
+/* ===== GAME HUD — floating corner pills ===== */
+#game-hud{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
 #game-hud *{pointer-events:auto}
-.hud-top{background:rgba(4,6,18,0.55);padding:3px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid rgba(40,55,90,0.35)}
-.hud-left{display:flex;align-items:center;gap:6px}
-.hud-round{background:rgba(26,31,53,0.7);border:1px solid rgba(42,48,80,0.8);border-radius:7px;padding:2px 8px;font-size:12px;font-weight:600;color:#c8bef5}
-.hud-round em{color:#5a5878;font-style:normal;font-weight:400}
+#hud-tl,#hud-tr{position:absolute;top:max(6px,env(safe-area-inset-top,6px));display:flex;align-items:flex-start;gap:4px;pointer-events:none}
+#hud-tl{left:8px;flex-direction:column}
+#hud-tr{right:8px;flex-direction:row;align-items:center}
+#hud-tl *,#hud-tr *{pointer-events:auto}
+.hud-pill{background:rgba(4,6,18,0.68);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(40,55,90,0.4);border-radius:9px;padding:5px 9px;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#c8bef5;white-space:nowrap}
 .hud-boss-warn{font-size:10px;color:#e05a2b;font-weight:600;animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
-.hud-weather-inline{display:flex;align-items:center;gap:3px;font-size:10px;color:#4a7aaa;background:rgba(10,14,30,0.5);border:1px solid rgba(30,45,70,0.5);border-radius:6px;padding:2px 7px}
-.w-bonus{font-size:9px;color:#9b5aee;background:rgba(26,16,64,0.8);padding:1px 5px;border-radius:4px;border:.5px solid #3a2060;margin-left:3px}
-.hud-res{display:flex;gap:6px}
-.hud-r{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:600}
-.hud-gold{color:#f5c842;display:flex;align-items:center;gap:3px}
+.w-bonus{font-size:9px;color:#9b5aee;background:rgba(26,16,64,0.8);padding:1px 5px;border-radius:4px;border:.5px solid #3a2060}
 .gc{display:inline-block;width:11px;height:11px;background:radial-gradient(circle at 38% 35%,#fff9c0,#f5c842 45%,#c87800);border-radius:50%;border:1.5px solid #a06000;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.5),inset 0 1px 1px rgba(255,255,180,.5)}
-.hud-crystal{color:#60c8ff}
-.hud-pause{background:rgba(10,14,30,0.6);border:1px solid rgba(42,48,80,0.6);border-radius:7px;padding:3px 7px;font-size:14px;color:#5a5878;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-width:38px;min-height:38px}
-.hud-start-wave{background:#2a6a10;border:1px solid #4a9a20;border-radius:7px;padding:3px 9px;font-family:'Exo 2',system-ui,sans-serif;font-size:12px;font-weight:600;color:#80e050;cursor:pointer;animation:pulseGreen 1.2s ease-in-out infinite}
+.hud-pause{background:rgba(10,14,30,0.6);border:1px solid rgba(42,48,80,0.6);border-radius:8px;padding:4px 8px;font-size:13px;color:#6a6a88;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-width:30px;min-height:30px}
+.hud-start-wave{background:#2a6a10;border:1px solid #4a9a20;border-radius:8px;padding:4px 10px;font-family:'Exo 2',system-ui,sans-serif;font-size:12px;font-weight:600;color:#80e050;cursor:pointer;animation:pulseGreen 1.2s ease-in-out infinite}
 .hud-start-wave.hidden{display:none}
 .hud-start-wave:active{transform:scale(.95)}
 @keyframes pulseGreen{0%,100%{box-shadow:0 0 0 0 #4a9a2066}60%{box-shadow:0 0 0 5px #4a9a2000}}
-#wave-ready-bar{display:flex;align-items:center;gap:5px;background:rgba(5,8,20,0.75);border:1px solid #1a2a50;border-radius:7px;padding:2px 7px;font-size:10px;margin-left:4px}
+#wave-ready-bar{display:flex;align-items:center;gap:5px;background:rgba(5,8,20,0.75);border:1px solid #1a2a50;border-radius:8px;padding:3px 8px;font-size:10px}
 #wave-ready-bar.hidden{display:none}
 .wpr-slot{display:flex;align-items:center;gap:3px;border-radius:5px;padding:2px 4px;cursor:pointer;transition:background .15s}
 .wpr-slot.is-me{border:1px solid #2a4070}
@@ -193,6 +189,8 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 .mbt-secondary{background:#1a1d30;color:#8a7aaa;border:1px solid #2a2d45}
 .mbt-win{background:#2a6a20;color:#80e060}
 .mbt-lose{background:#6a1010;color:#e87060}
+#mp-pw-input:focus{border-color:#5040a0;box-shadow:0 0 0 2px #3020607a}
+#mp-pw-input::placeholder{color:#3a4868}
 
 /* ===== PAUSE ===== */
 #pause-modal .modal-title{color:#c4a0ff}
@@ -310,25 +308,19 @@ canvas{display:block;touch-action:none;-webkit-tap-highlight-color:transparent}
 #game-hud.hidden,#game-bottom.hidden{display:none!important}
 .hud-boss-warn.hidden{display:none!important}
 #game-canvas{display:none}
-/* ===== Collapsible top HUD ===== */
-#hud-rows{overflow:hidden;max-height:60px;transition:max-height .28s ease,opacity .2s ease}
-#hud-rows.hud-collapsed{max-height:0;opacity:0;pointer-events:none}
-#hud-tab{align-self:flex-end;background:rgba(18,22,58,0.7);border:1px solid rgba(90,58,170,0.6);border-top:none;border-radius:0 0 8px 8px;padding:1px 10px 3px;font-size:11px;color:#c4a0ff;cursor:pointer;pointer-events:auto;user-select:none;margin-right:10px;letter-spacing:.06em;transition:opacity .2s;font-weight:600;text-shadow:0 0 8px #7b4fee88;backdrop-filter:blur(6px)}
-#hud-tab:active{opacity:.7}
 /* ===== Orientation lock (portrait) ===== */
 #rotate-msg{display:none;position:fixed;inset:0;z-index:9999;background:#07090f;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:30px}
 @media(orientation:portrait){#rotate-msg{display:flex}}
 
 /* ===== iOS safe area (notch / home bar) ===== */
 #game-bottom{padding-bottom:max(6px,env(safe-area-inset-bottom,6px))}
-.hud-top{padding-top:max(4px,env(safe-area-inset-top,0px))}
 
 /* ===== Prevent iOS overscroll / bounce ===== */
 body{position:fixed;width:100%;height:100%}
 #game-canvas{position:fixed;top:0;left:0}
 
 /* ===== WebKit backdrop-filter prefix ===== */
-.hud-top,#game-bottom,#hud-tab{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.hud-pill,#game-bottom{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 .chat-msg,.qc-btn{-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 
 /* ===== iOS momentum scroll ===== */
@@ -422,24 +414,29 @@ body{position:fixed;width:100%;height:100%}
 
 <!-- GAME HUD TOP -->
 <div id="game-hud" class="hidden">
-  <div id="hud-rows">
-    <div class="hud-top">
-      <div class="hud-left">
-        <div class="hud-round">Round <span id="hud-round">1</span><em>/20</em> <span id="hud-phase" style="margin-left:4px;font-size:11px;color:#5a8aff;font-weight:400"></span></div>
-        <div class="hud-boss-warn hidden" id="boss-warn">⚠ BOSS</div>
-        <div class="hud-weather-inline"><span id="w-icon">⛅</span><span id="w-name" style="font-size:10px;color:#4a7aaa"></span><span class="w-bonus hidden" id="w-bonus"></span></div>
-      </div>
-      <div class="hud-res">
-        <div class="hud-r hud-gold"><i class="gc"></i><span id="hud-gold">200</span></div>
-        <div class="hud-r hud-crystal">🛡 <span id="hud-hp">20</span> Mạng</div>
-      </div>
-      <button class="hud-start-wave hidden" id="start-wave-btn" onclick="Game.startWaveNow()">▶ Bắt đầu</button>
-      <div id="wave-ready-bar" class="hidden"></div>
-      <button class="hud-pause" onclick="Game.pause()">⏸</button>
-      <button class="hud-pause hidden" id="give-gold-btn" onclick="Game.showGiveDonateMenu()" style="margin-left:3px;font-size:10px" title="Cho vàng cho đồng đội">💰</button>
+  <!-- Top-left: Round + phase + weather -->
+  <div id="hud-tl">
+    <div class="hud-pill">
+      <span style="font-weight:700">R<span id="hud-round">1</span><em style="color:#5a5878;font-style:normal;font-weight:400">/20</em></span>
+      <span id="hud-phase" style="font-size:11px;color:#5a8aff;font-weight:400"></span>
+      <span class="hud-boss-warn hidden" id="boss-warn">⚠ BOSS</span>
+      <span id="w-icon" style="font-size:11px;margin-left:2px">⛅</span>
+      <span class="w-bonus hidden" id="w-bonus"></span>
+      <span id="w-name" style="display:none"></span>
     </div>
+    <div id="wave-ready-bar" class="hidden"></div>
   </div>
-  <button id="hud-tab" onclick="Game.toggleHUD()">▲ Thu</button>
+  <!-- Top-right: Gold + Lives + actions -->
+  <div id="hud-tr">
+    <div class="hud-pill">
+      <i class="gc"></i><span id="hud-gold" style="color:#f5c842">200</span>
+      <span style="color:#2a3468;margin:0 1px">|</span>
+      <span style="color:#60c8ff">🛡</span><span id="hud-hp" style="color:#60c8ff;font-weight:700">20</span>
+    </div>
+    <button class="hud-start-wave hidden" id="start-wave-btn" onclick="Game.startWaveNow()">▶ Bắt đầu</button>
+    <button class="hud-pause" onclick="Game.pause()">⏸</button>
+    <button class="hud-pause hidden" id="give-gold-btn" onclick="Game.showGiveDonateMenu()" style="font-size:10px" title="Cho vàng cho đồng đội">💰</button>
+  </div>
 </div>
 
 <!-- GAME HUD BOTTOM -->
@@ -511,6 +508,34 @@ body{position:fixed;width:100%;height:100%}
     <div class="modal-desc" style="margin-bottom:14px;font-size:12px">Mỗi nation có bộ tháp độc quyền riêng</div>
     <div id="nation-choices" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
     <button class="modal-btn mbt-primary" id="nation-confirm-btn" onclick="NationPicker.confirm()" style="width:100%">✓ Xác nhận</button>
+  </div>
+</div>
+
+<!-- PASSWORD MODAL (custom input — avoids fullscreen exit from window.prompt) -->
+<div class="modal-overlay hidden" id="mp-pw-modal" style="z-index:9999">
+  <div class="modal" style="max-width:320px;padding:24px">
+    <span class="modal-icon">🔒</span>
+    <div class="modal-title" style="font-size:18px;margin-bottom:8px">Nhập mật khẩu</div>
+    <div class="modal-desc" style="margin-bottom:14px;font-size:12px">Phòng này được bảo vệ bằng mật khẩu</div>
+    <input type="password" id="mp-pw-input" placeholder="Mật khẩu phòng..."
+      style="width:100%;box-sizing:border-box;background:#0a1020;border:1px solid #2a3860;border-radius:8px;color:#c8d8ff;padding:10px 12px;font-size:14px;margin-bottom:14px;outline:none">
+    <div style="display:flex;gap:10px">
+      <button class="modal-btn mbt-secondary" id="mp-pw-cancel" style="flex:1">Huỷ</button>
+      <button class="modal-btn mbt-primary" id="mp-pw-confirm" style="flex:1">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<!-- DISCONNECT OVERLAY — shown when guest disconnects mid-game -->
+<div id="disconnect-overlay" class="hidden" style="position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px">
+  <div style="background:#0d1828;border:1px solid #2a4060;border-radius:14px;padding:28px 36px;text-align:center;max-width:340px">
+    <div style="font-size:32px;margin-bottom:8px">📡</div>
+    <div id="dc-overlay-text" style="color:#c8d8ff;font-size:15px;font-weight:600;margin-bottom:6px">Đang chờ người chơi kết nối lại...</div>
+    <div id="dc-overlay-sub" style="color:#5878a0;font-size:12px;margin-bottom:20px">Game đang tạm dừng</div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button id="dc-resume-btn" class="hidden modal-btn mbt-win" onclick="MP.resumeFromDisconnect()" style="font-size:13px;padding:10px 20px">▶ Tiếp tục</button>
+      <button id="dc-skip-btn" class="modal-btn mbt-secondary" onclick="MP.skipDisconnectedPlayer()" style="font-size:13px;padding:10px 20px">Chơi không cần họ</button>
+    </div>
   </div>
 </div>
 
@@ -750,7 +775,7 @@ const TOWERS_DATA = [
 
 // Tower upgrade constants (5 levels)
 const TOWER_MAX_LEVEL = 5;
-const UPGRADE_COST_MULTS = [0, 0.8, 2.5, 7.0, 18.0]; // cost to go from lvl N to N+1 (index = current lvl)
+const UPGRADE_COST_MULTS = [0, 0.56, 1.75, 4.9, 12.6]; // cost to go from lvl N to N+1 (index = current lvl) — reduced 30%
 const UPGRADE_DMG_MULTS  = [1, 1.35, 1.9, 2.8, 4.2]; // max 4.2× (was 5.0) — cheap towers no longer one-shot bosses
 const UPGRADE_RANGE_MULTS= [1, 1.15, 1.35, 1.55, 1.8];
 const UPGRADE_SCALE      = [1, 1.1, 1.22, 1.35, 1.48];
@@ -770,26 +795,28 @@ const NATIONS_DATA = [
 ];
 
 const ENEMY_TYPES = [
-  { id:0, name:'Shade Crawler', color:'#c04820', radius:5,  hp:60,   spd:1.2, reward:8  },
-  { id:1, name:'Swarm Bat',     color:'#6020a0', radius:4,  hp:40,   spd:1.8, reward:6,  flies:true },
-  { id:2, name:'Stone Golem',   color:'#505a68', radius:7,  hp:180,  spd:.7,  reward:20 },
-  { id:3, name:'Healer Shaman', color:'#304a18', radius:5,  hp:80,   spd:1.0, reward:15, heals:true },
-  { id:4, name:'Phase Wraith',  color:'#203050', radius:5,  hp:100,  spd:1.3, reward:18, phases:true },
-  { id:5, name:'Berserker',     color:'#5a2810', radius:6,  hp:140,  spd:1.0, reward:22, berserker:true },
-  { id:6, name:'Behemoth',      color:'#384450', radius:9,  hp:400,  spd:.5,  reward:40, armored:true },
+  // spd ×0.7 (slower), reward ×1.5 (more gold)
+  { id:0, name:'Shade Crawler', color:'#c04820', radius:5,  hp:60,   spd:0.84, reward:12 },
+  { id:1, name:'Swarm Bat',     color:'#6020a0', radius:4,  hp:40,   spd:1.26, reward:9,  flies:true },
+  { id:2, name:'Stone Golem',   color:'#505a68', radius:7,  hp:180,  spd:0.49, reward:30 },
+  { id:3, name:'Healer Shaman', color:'#304a18', radius:5,  hp:80,   spd:0.70, reward:23, heals:true },
+  { id:4, name:'Phase Wraith',  color:'#203050', radius:5,  hp:100,  spd:0.91, reward:27, phases:true },
+  { id:5, name:'Berserker',     color:'#5a2810', radius:6,  hp:140,  spd:0.70, reward:33, berserker:true },
+  { id:6, name:'Behemoth',      color:'#384450', radius:9,  hp:400,  spd:0.35, reward:60, armored:true },
   // Aerial enemies — only anti-air towers can target these
-  { id:7, name:'Storm Wyvern', color:'#4080c0', radius:5,  hp:90,   spd:1.5, reward:18, aerial:true },
-  { id:8, name:'Siege Drake',  color:'#186040', radius:7,  hp:260,  spd:.85, reward:40, aerial:true }
+  { id:7, name:'Storm Wyvern', color:'#4080c0', radius:5,  hp:90,   spd:1.05, reward:27, aerial:true },
+  { id:8, name:'Siege Drake',  color:'#186040', radius:7,  hp:260,  spd:0.60, reward:60, aerial:true }
 ];
 
 const BOSS_TYPES = [
-  { id:10, name:'Scorpion King',     color:'#8a1030', radius:14, hp:900,  spd:.75, reward:120 },                    // R5  — ground
-  { id:11, name:'Venomfang Serpent', color:'#1a5530', radius:12, hp:2000, spd:1.1, reward:200, aerial:true },        // R10 — aerial
-  { id:12, name:'Goblin Warlord',    color:'#7a4010', radius:10, hp:1000, spd:1.0, reward:120 },                    // R10 — ground secondary
-  { id:13, name:'Stone Titan',       color:'#607080', radius:16, hp:3200, spd:.45, reward:280 },                    // R15 — ground
-  { id:14, name:'Storm Drake',       color:'#2060b0', radius:13, hp:2400, spd:.9,  reward:260, aerial:true },        // R15 — aerial
-  { id:15, name:'Eternal Dragon',    color:'#600030', radius:22, hp:8000, spd:.8,  reward:700, aerial:true },        // R20 — aerial (final)
-  { id:16, name:'Shadow Colossus',   color:'#200840', radius:17, hp:5000, spd:.6,  reward:500 },                    // R20 — ground
+  // spd ×0.525 (×0.7 normal ×0.75 boss), reward ×1.5
+  { id:10, name:'Scorpion King',     color:'#8a1030', radius:14, hp:900,  spd:0.39, reward:180 },                   // R5  — ground
+  { id:11, name:'Venomfang Serpent', color:'#1a5530', radius:12, hp:2000, spd:0.58, reward:300, aerial:true },       // R10 — aerial
+  { id:12, name:'Goblin Warlord',    color:'#7a4010', radius:10, hp:1000, spd:0.53, reward:180 },                   // R10 — ground secondary
+  { id:13, name:'Stone Titan',       color:'#607080', radius:16, hp:3200, spd:0.24, reward:420 },                   // R15 — ground
+  { id:14, name:'Storm Drake',       color:'#2060b0', radius:13, hp:2400, spd:0.47, reward:390, aerial:true },       // R15 — aerial
+  { id:15, name:'Eternal Dragon',    color:'#600030', radius:22, hp:8000, spd:0.42, reward:1050, aerial:true },      // R20 — aerial (final)
+  { id:16, name:'Shadow Colossus',   color:'#200840', radius:17, hp:5000, spd:0.32, reward:750 },                   // R20 — ground
 ];
 
 const WEATHERS = [
@@ -1082,12 +1109,6 @@ const MapRenderer = {
           }
         });
       }
-
-      // gate zone
-      const gx = W-38;
-      c.fillStyle='#f5c84212'; c.fillRect(gx,0,38,H);
-      c.strokeStyle='#f5c84240'; c.lineWidth=1;
-      c.beginPath(); c.moveTo(gx,0); c.lineTo(gx,H); c.stroke();
 
       // crystal
       const pulse = animated ? .85+Math.sin(now*2)*.15 : .9;
@@ -1415,10 +1436,6 @@ const Game = {
     document.getElementById('game-hud').classList.remove('hidden');
     document.getElementById('game-bottom').classList.remove('hidden');
     document.getElementById('game-canvas').style.display = 'block';
-    // Always expand HUD on game start
-    document.getElementById('hud-rows')?.classList.remove('hud-collapsed');
-    const hudTab = document.getElementById('hud-tab');
-    if(hudTab) hudTab.textContent = '▲ Thu';
     document.getElementById('bot-rows')?.classList.remove('bot-collapsed');
     const botTab = document.getElementById('bot-tab');
     if(botTab) botTab.textContent = '▼ Ẩn';
@@ -1450,7 +1467,7 @@ const Game = {
     this.roundEvent = {};
     this.spawnQueue = [];
     this.spawnTimer = 0;
-    const startGold = this.isMP ? [200,150,200,200][this.modeIdx] : [600,600,600,600][this.modeIdx];
+    const startGold = this.isMP ? 400 : [600,600,600,600][this.modeIdx];
     this.gold = startGold;
     this.playerGold = Array(4).fill(startGold);
     this.crystalHP = 100;
@@ -1474,6 +1491,13 @@ const Game = {
     this.challengeMod = null;
     this._particlePool = [];
     this._dmgPool = [];
+    this._netEnemyBuf = [];
+    this._netEscortBuf = [];
+    this._netProjBuf = [];
+    this._towersDirty = false;
+    this._fullSyncTowerCounter = 0;
+    this._challengeModSent = false;
+    this._lastSentWeather = -1;
   },
 
   resize() {
@@ -1486,8 +1510,7 @@ const Game = {
     this.cv.height = this.H * dpr;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // compute paths (multi-path support)
-    const hudEl = document.getElementById('hud-rows');
-    const topH = hudEl ? Math.max(48, hudEl.offsetHeight + 2) : 58;
+    const topH = 38; // floating corner pills, not in document flow
     const botH = 78;
     const mapH = this.H - topH - botH;
     const mapY = topH;
@@ -1839,7 +1862,7 @@ const Game = {
     this.lastTime = ts;
     if(!this.paused) this.update(dt);
     this.draw();
-    if(this.isHostMP && this.gamePhase !== 'done') {
+    if(this.isHostMP && this.gamePhase !== 'done' && !this.paused) {
       this._syncCounter = (this._syncCounter||0) + 1;
       this._fullSyncCounter = (this._fullSyncCounter||0) + 1;
       // Throttle sync rate when many enemies to avoid flooding guest WebSocket buffers
@@ -1895,8 +1918,12 @@ const Game = {
             const ePath = en.elite ? ((this.elitePaths && this.elitePaths[eliteI]) || this.elitePath || this.path) : ((this.paths&&this.paths[en.pathIdx||0])||this.path);
             if(ePath && ePath.length > 1) {
               en.t = Math.min(en.t + spd2 / ePath.length, 0.999);
-              const pt = this.ptOnPath(en.t, en.elite ? (100 + eliteI) : (en.pathIdx||0));
-              if(pt) { en.x = pt.x; en.y = pt.y; }
+              // Cache ptOnPath result — only recompute when t changes enough
+              if(en._cachedT==null || Math.abs(en.t-en._cachedT)>0.0005) {
+                const pt=this.ptOnPath(en.t, en.elite?(100+eliteI):(en.pathIdx||0));
+                if(pt) { en._cachedPt=pt; en._cachedT=en.t; }
+              }
+              if(en._cachedPt) { en.x=en._cachedPt.x; en.y=en._cachedPt.y; }
             }
           }
         }
@@ -2193,7 +2220,7 @@ const Game = {
       SFX.enemyDie(!!en.isBoss, en.typeId||0);
       if(en.isBoss) { this.addShake(6); this.spawnParticles(en.x,en.y,en.color,20); }
       else this.spawnParticles(en.x,en.y,en.color,8);
-      const baseReward = (en.reward || 10) + (en.isBoss ? 50 : 0);
+      const baseReward = (en.reward || 10) + (en.isBoss ? 150 : 0);
       const rewardMult = this.modeIdx === 1 ? 1.5 : this.modeIdx === 3 ? 2.0 : 1;
       const reward = Math.round(baseReward * rewardMult * 0.65);
       // each player earns the reward independently
@@ -2201,6 +2228,7 @@ const Game = {
       this.gold = this.playerGold[this.mpPlayerIdx];
       if(Math.random()<0.3) SFX.earnGold();
       this.updateHUD();
+      this.updateTowerPanel();
       const idx = this.enemies.indexOf(en);
       if(idx >= 0) this.enemies.splice(idx,1);
     }
@@ -2535,8 +2563,11 @@ const Game = {
     c.strokeStyle=`rgba(128,220,255,${pulse})`; c.lineWidth=1.5;
     c.beginPath(); c.moveTo(cx2,cy2-16*pulse); c.lineTo(cx2+10,cy2); c.lineTo(cx2,cy2+16*pulse); c.lineTo(cx2-10,cy2); c.closePath(); c.stroke();
 
-    // towers
-    this.towers.forEach(tw=>this.drawTower(c,tw));
+    // towers — shadow batch: non-flashing first, then flashing (fewer GPU state changes)
+    c.shadowBlur=0;
+    this.towers.forEach(tw=>{ if((tw.flash||0)<=0.1) this.drawTower(c,tw); });
+    this.towers.forEach(tw=>{ if((tw.flash||0)>0.1)  this.drawTower(c,tw); });
+    c.shadowBlur=0;
 
     // range ring around selected placed tower
     if(this.selectedPlacedTower) {
@@ -2582,10 +2613,15 @@ const Game = {
     }
 
     // projectiles
+    c.shadowBlur=0;
     this.projectiles.forEach(p=>this.drawProjectile(c,p));
+    c.shadowBlur=0;
 
-    // enemies
-    this.enemies.forEach(en=>this.drawEnemy(c,en));
+    // enemies — shadow batch: normal first, elite/boss after (grouped GPU shadow pass)
+    this.enemies.forEach(en=>{ if(!en.elite&&!en.isBoss) this.drawEnemy(c,en); });
+    c.shadowBlur=0;
+    this.enemies.forEach(en=>{ if(en.elite||en.isBoss) this.drawEnemy(c,en); });
+    c.shadowBlur=0;
 
     // escorts
     this._drawEscorts(c);
@@ -3942,12 +3978,14 @@ const Game = {
       const onPath=onAnyPath(tx,ty,this.paths||[this.path],this.elitePaths,20);
       if(tooClose||onPath||this._isRuined(tx,ty)) return;
       if(this.isGuestMP) {
-        MP.sendInput('place_tower', {x:tx, y:ty, typeId:this.selectedTower});
+        // Send as fractions so host can map to its own coordinate space
+        MP.sendInput('place_tower', {x:tx, y:ty, xFrac:tx/this.W, yFrac:ty/this.H, typeId:this.selectedTower});
         SFX.placeTower(this.selectedTower);
       } else {
         this.playerGold[this.mpPlayerIdx] = (this.playerGold[this.mpPlayerIdx]||0) - tData.cost;
         this.gold = this.playerGold[this.mpPlayerIdx];
         this.towers.push({x:tx,y:ty,typeId:this.selectedTower,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:this.mpPlayerIdx});
+        this._towersDirty=true;
         SFX.placeTower(this.selectedTower);
         this.spawnParticles(tx,ty,tData.color,6);
         this.updateHUD();
@@ -3969,9 +4007,32 @@ const Game = {
     if(ownerI===this.mpPlayerIdx) this.gold=this.playerGold[ownerI];
     const idx=this.towers.indexOf(tw);
     if(idx>=0) this.towers.splice(idx,1);
+    this._towersDirty=true;
     SFX.sellTower();
     this.spawnParticles(tw.x,tw.y,'#f5c842',8);
     this.updateHUD();
+  },
+
+  updateTowerPanel() {
+    const tw=this.selectedPlacedTower;
+    if(!tw) return;
+    const tData=TOWERS_DATA[tw.typeId];
+    const lvl=tw.level||1;
+    const isOwner=!this.isMP||(tw.ownerIdx==null)||(tw.ownerIdx===this.mpPlayerIdx);
+    const upgradeBtn=document.getElementById('tpan-upgrade-btn');
+    if(!upgradeBtn) return;
+    if(!isOwner) {
+      upgradeBtn.textContent='🔒 Tháp của P'+(tw.ownerIdx+1);
+      upgradeBtn.disabled=true;
+    } else if(lvl<TOWER_MAX_LEVEL) {
+      const upCost=Math.floor(tData.cost*UPGRADE_COST_MULTS[lvl]);
+      const myGold=this.isMP?this.playerGold[this.mpPlayerIdx]:this.gold;
+      upgradeBtn.innerHTML=`⬆ Cấp ${lvl+1} — <i class="gc"></i>${upCost}`;
+      upgradeBtn.disabled=(myGold<upCost);
+    } else {
+      upgradeBtn.textContent='✅ Cấp tối đa';
+      upgradeBtn.disabled=true;
+    }
   },
 
   showTowerPanel(tw, tapX, tapY) {
@@ -3991,22 +4052,10 @@ const Game = {
     document.getElementById('tpan-stats').innerHTML=
       `🗡 DMG: ${Math.round(tData.dmg*dmgMult)} &nbsp;|&nbsp; 🎯 Range: ${Math.round(tData.range*rangeMult)}<br>`+
       `⏱ Rate: ${rateStr} &nbsp;|&nbsp; 💰 Đã dùng: ${totalSpent}`;
-    const upgradeBtn=document.getElementById('tpan-upgrade-btn');
     const sellBtn=document.getElementById('tpan-sell-btn');
     sellBtn.innerHTML=`💰 Bán — nhận <i class="gc"></i>${sellVal}`;
     sellBtn.style.display=(!isOwner)?'none':'block';
-    if(!isOwner) {
-      upgradeBtn.textContent='🔒 Tháp của P'+(tw.ownerIdx+1);
-      upgradeBtn.disabled=true;
-    } else if(lvl<TOWER_MAX_LEVEL) {
-      const upCost=Math.floor(tData.cost*UPGRADE_COST_MULTS[lvl]);
-      const myGold=this.isMP?this.playerGold[this.mpPlayerIdx]:this.gold;
-      upgradeBtn.innerHTML=`⬆ Cấp ${lvl+1} — <i class="gc"></i>${upCost}`;
-      upgradeBtn.disabled=(myGold<upCost);
-    } else {
-      upgradeBtn.textContent='✅ Cấp tối đa';
-      upgradeBtn.disabled=true;
-    }
+    this.updateTowerPanel();
     const panel=document.getElementById('tower-panel');
     panel.style.display='block';
     const pw=panel.offsetWidth||180, ph=panel.offsetHeight||140;
@@ -4023,13 +4072,7 @@ const Game = {
     return this.mpPlayers[idx]?.nation ?? this.nationIdx ?? 0;
   },
 
-  toggleHUD() {
-    const rows = document.getElementById('hud-rows');
-    const tab = document.getElementById('hud-tab');
-    if(!rows||!tab) return;
-    const collapsed = rows.classList.toggle('hud-collapsed');
-    tab.textContent = collapsed ? '▼ HUD' : '▲ Thu';
-  },
+  toggleHUD() {},
 
   toggleBottomHUD() {
     const rows = document.getElementById('bot-rows');
@@ -4060,6 +4103,7 @@ const Game = {
     this.playerGold[this.mpPlayerIdx]=(this.playerGold[this.mpPlayerIdx]||0)-upCost;
     this.gold=this.playerGold[this.mpPlayerIdx];
     tw.level=(lvl+1);
+    this._towersDirty=true;
     SFX.placeTower(tw.typeId);
     this.spawnParticles(tw.x,tw.y,TOWERS_DATA[tw.typeId].color,10);
     this.updateHUD();
@@ -4307,6 +4351,7 @@ const Game = {
     if(idx < 0) return;
     const {x, y} = tw;
     this.towers.splice(idx, 1);
+    this._towersDirty=true;
     // Explosion animation
     this.spawnParticles(x, y, '#ff3300', 20);
     this.spawnParticles(x, y, '#ff8800', 12);
@@ -4627,6 +4672,19 @@ const MP = {
         break;
       case 'room_update':
         this.roomInfo = msg.info;
+        if(Game.isHostMP && Game._waitingForPlayer) {
+          // Check if the disconnected player has reconnected
+          const wp = Game._waitingForPlayer;
+          const pl = msg.info?.players?.[wp.idx];
+          if(pl && !pl.disconnected) {
+            const ov = document.getElementById('disconnect-overlay');
+            if(ov && !ov.classList.contains('hidden')) {
+              document.getElementById('dc-overlay-text').textContent=`✅ ${wp.name} đã kết nối lại!`;
+              document.getElementById('dc-overlay-sub').textContent='Bấm tiếp tục để resume game';
+              document.getElementById('dc-resume-btn').classList.remove('hidden');
+            }
+          }
+        }
         this.renderLobbyPlayers();
         this.updateLobbyStatus();
         break;
@@ -4885,12 +4943,37 @@ const MP = {
 
   joinFromList(code, hasPassword) {
     if(hasPassword) {
-      const pw = prompt('Phòng này có mật khẩu. Nhập mật khẩu để vào:');
-      if(pw==null) return;
-      this._joinWithCode(code, pw.trim());
+      this._showPwModal(code);
     } else {
       this._joinWithCode(code, '');
     }
+  },
+
+  _showPwModal(code) {
+    const modal = document.getElementById('mp-pw-modal');
+    const input = document.getElementById('mp-pw-input');
+    const confirm = document.getElementById('mp-pw-confirm');
+    const cancel = document.getElementById('mp-pw-cancel');
+    if(!modal) return;
+    input.value = '';
+    modal.classList.remove('hidden');
+    setTimeout(()=>input.focus(), 80);
+    const doConfirm = () => {
+      const pw = input.value.trim();
+      close();
+      this._joinWithCode(code, pw);
+    };
+    const close = () => {
+      modal.classList.add('hidden');
+      confirm.removeEventListener('click', doConfirm);
+      cancel.removeEventListener('click', doCancel);
+      input.removeEventListener('keydown', onKey);
+    };
+    const doCancel = () => close();
+    const onKey = (e) => { if(e.key==='Enter') doConfirm(); else if(e.key==='Escape') doCancel(); };
+    confirm.addEventListener('click', doConfirm);
+    cancel.addEventListener('click', doCancel);
+    input.addEventListener('keydown', onKey);
   },
 
   _joinWithCode(code, password) {
@@ -4926,6 +5009,39 @@ const MP = {
     }
   },
 
+  // ── Disconnect pause/resume ──────────────────────────────
+  showDisconnectOverlay(name) {
+    const ov=document.getElementById('disconnect-overlay');
+    if(!ov) return;
+    document.getElementById('dc-overlay-text').textContent=`⏳ Đang chờ ${name} kết nối lại...`;
+    document.getElementById('dc-overlay-sub').textContent='Game đang tạm dừng';
+    document.getElementById('dc-resume-btn').classList.add('hidden');
+    document.getElementById('dc-skip-btn').classList.remove('hidden');
+    // Only host sees skip button
+    if(!this.isHost) document.getElementById('dc-skip-btn').classList.add('hidden');
+    ov.classList.remove('hidden');
+  },
+
+  hideDisconnectOverlay() {
+    document.getElementById('disconnect-overlay')?.classList.add('hidden');
+    Game._waitingForPlayer=null;
+  },
+
+  resumeFromDisconnect() {
+    if(!this.isHost) return;
+    this.broadcastState(true);
+    this.broadcastEvent({type:'game_resume'});
+    Game.paused=false;
+    this.hideDisconnectOverlay();
+  },
+
+  skipDisconnectedPlayer() {
+    if(!this.isHost) return;
+    this.broadcastEvent({type:'game_resume'});
+    Game.paused=false;
+    this.hideDisconnectOverlay();
+  },
+
   // Apply events from host (game_over only in host-auth mode)
   applyRemoteEvent(fromIdx, event) {
     switch(event.type) {
@@ -4959,6 +5075,7 @@ const MP = {
         for(let gi=0; gi<Game.playerGold.length; gi++) Game.playerGold[gi]=(Game.playerGold[gi]||0)+bonus;
         Game.gold = Game.playerGold[Game.mpPlayerIdx];
         Game.updateHUD();
+        Game.updateTowerPanel();
         Game._showRoundBonus(bonus);
         break;
       }
@@ -4984,6 +5101,18 @@ const MP = {
         Game._ruinedCells.push({x:event.x, y:event.y, timer:300});
         break;
       }
+      case 'guest_disconnected': {
+        // Pause game and show overlay; host gets resume button when player reconnects
+        Game.paused=true;
+        Game._waitingForPlayer={idx:event.idx, name:event.name};
+        MP.showDisconnectOverlay(event.name);
+        break;
+      }
+      case 'game_resume': {
+        Game.paused=false;
+        MP.hideDisconnectOverlay();
+        break;
+      }
     }
   },
 
@@ -5000,51 +5129,82 @@ const MP = {
 
   // ── Build authoritative state snapshot ──────────────────
   getNetState(full=true) {
+    // ── Enemy pool: reuse objects to avoid GC pressure ──
+    const enArr = Game.enemies;
+    const eb = Game._netEnemyBuf;
+    if(eb.length > enArr.length) eb.length = enArr.length;
+    for(let i=0;i<enArr.length;i++){
+      const en=enArr[i]; let o=eb[i]; if(!o){o={};eb[i]=o;}
+      o._id=en._id; o.t=~~(en.t*10000)/10000;
+      o.x=~~en.x; o.y=~~en.y; o.hp=~~en.hp; o.maxHp=~~en.maxHp;
+      o.slow=en.slow||1; o.spd=en.spd; o.isBoss=en.isBoss||false;
+      o.color=en.color; o.typeId=en.typeId; o.id=en.id;
+      o.elite=en.elite||false; o.glowColor=en.glowColor||null; o.spawnId=en.spawnId||0;
+      o.radius=en.radius; o.reward=en.reward; o.heals=en.heals||false;
+      o.pathIdx=en.pathIdx||0; o.eliteIdx=en.eliteIdx||0; o.aerial=en.aerial||false;
+    }
+    // ── Projectile pool ──
+    const projCount=Math.min(Game.projectiles.length,30);
+    const pb=Game._netProjBuf;
+    if(pb.length>projCount) pb.length=projCount;
+    for(let i=0;i<projCount;i++){
+      const p=Game.projectiles[i]; let o=pb[i]; if(!o){o={};pb[i]=o;}
+      o.x=~~p.x; o.y=~~p.y;
+      o.tx=~~(p.targetEnemy?p.targetEnemy.x:(p.tx||0));
+      o.ty=~~(p.targetEnemy?p.targetEnemy.y:(p.ty||0));
+      o.typeId=p.typeId; o.angle=p.angle||0; o.nation=p.nation||0;
+      o.trail=p.trail.slice(-8).map(t=>({x:~~t.x,y:~~t.y}));
+    }
+    // ── Escort pool ──
+    const esArr=Game.escorts;
+    const esb=Game._netEscortBuf;
+    if(esb.length>esArr.length) esb.length=esArr.length;
+    for(let i=0;i<esArr.length;i++){
+      const es=esArr[i]; let o=esb[i]; if(!o){o={};esb[i]=o;}
+      o.type=es.type; o.bossId=es.bossId; o.x=~~es.x; o.y=~~es.y;
+      o.hp=~~(es.hp||0); o.maxHp=~~(es.maxHp||0); o.t=es.t||0;
+      o.life=es.life??1; o._id=es._id;
+    }
     const state = {
-      enemies: Game.enemies.map(en=>({
-        _id:en._id,
-        t:~~(en.t*10000)/10000,
-        x:~~en.x, y:~~en.y,
-        hp:~~en.hp, maxHp:~~en.maxHp,
-        slow:en.slow||1, spd:en.spd, isBoss:en.isBoss||false, color:en.color, typeId:en.typeId,
-        id:en.id, elite:en.elite||false, glowColor:en.glowColor||null, spawnId:en.spawnId||0,
-        radius:en.radius, reward:en.reward, heals:en.heals||false,
-        pathIdx:en.pathIdx||0, eliteIdx:en.eliteIdx||0, aerial:en.aerial||false
-      })),
-      projectiles: Game.projectiles.slice(0,30).map(p=>({
-        x:~~p.x, y:~~p.y,
-        tx:~~(p.targetEnemy?p.targetEnemy.x:(p.tx||0)),
-        ty:~~(p.targetEnemy?p.targetEnemy.y:(p.ty||0)),
-        typeId:p.typeId, angle:p.angle||0, nation:p.nation||0,
-        trail:p.trail.slice(-8).map(t=>({x:~~t.x,y:~~t.y}))
-      })),
+      enemies: eb.slice(0,enArr.length),
+      projectiles: pb.slice(0,projCount),
       crystalHP: Game.crystalHP,
       gamePhase: Game.gamePhase,
       spawnQueueLen: Game.spawnQueue.length,
-      escorts: Game.escorts.map(es=>({
-        type:es.type, bossId:es.bossId, x:~~es.x, y:~~es.y,
-        hp:~~(es.hp||0), maxHp:~~(es.maxHp||0), t:es.t||0,
-        life:es.life??1, _id:es._id
-      })),
+      escorts: esb.slice(0,esArr.length),
     };
     if(full) {
-      state.towers = Game.towers.map(tw=>({
-        x:tw.x, y:tw.y, typeId:tw.typeId, level:tw.level||1,
-        angle:tw.angle||0, flash:tw.flash||0, goldTimer:tw.goldTimer||3600,
-        ownerIdx:tw.ownerIdx!=null?tw.ownerIdx:0
-      }));
-      state.gold = Game.gold;
-      state.playerGold = [...Game.playerGold];
-      state.round = Game.round;
-      state.roundTimer = Game.roundTimer;
-      state.leakCount = Game.leakCount;
-      state.leakQuota = Game.leakQuota;
-      state.roundEvent = Game.roundEvent;
-      state.lifelinesUsed = [...Game.lifelinesUsed];
-      state.timeWarpActive = Game.timeWarpActive;
-      state.timeWarpTimer = Game.timeWarpTimer;
-      state.challengeMod = Game.challengeMod || null;
-      state.weather = Game.weather;
+      // ── Dirty-flag filtering: only send towers when changed ──
+      Game._fullSyncTowerCounter=(Game._fullSyncTowerCounter||0)+1;
+      if(Game._towersDirty||Game._fullSyncTowerCounter>=30){
+        state.towers=Game.towers.map(tw=>({
+          x:tw.x,y:tw.y,typeId:tw.typeId,level:tw.level||1,
+          angle:tw.angle||0,flash:tw.flash||0,goldTimer:tw.goldTimer||3600,
+          ownerIdx:tw.ownerIdx!=null?tw.ownerIdx:0
+        }));
+        Game._towersDirty=false;
+        Game._fullSyncTowerCounter=0;
+      }
+      state.gold=Game.gold;
+      state.playerGold=[...Game.playerGold];
+      state.round=Game.round;
+      state.roundTimer=Game.roundTimer;
+      state.leakCount=Game.leakCount;
+      state.leakQuota=Game.leakQuota;
+      state.roundEvent=Game.roundEvent;
+      state.lifelinesUsed=[...Game.lifelinesUsed];
+      state.timeWarpActive=Game.timeWarpActive;
+      state.timeWarpTimer=Game.timeWarpTimer;
+      // Only send weather when it changed
+      if(Game.weather!==Game._lastSentWeather){
+        state.weather=Game.weather;
+        Game._lastSentWeather=Game.weather;
+      }
+      // challengeMod is immutable — send once only
+      if(!Game._challengeModSent){
+        state.challengeMod=Game.challengeMod||null;
+        if(Game.challengeMod) Game._challengeModSent=true;
+      }
     }
     return state;
   },
@@ -5067,9 +5227,13 @@ const MP = {
       if(prev) { Object.assign(prev,se); return prev; }
       return {...se,flash:0,pathIdx:se.pathIdx||0};
     });
-    // sync visual projectiles so guest sees bullets
+    // sync visual projectiles so guest sees bullets — try to link targetEnemy for smooth tracking
     if(s.projectiles) {
-      Game.projectiles = s.projectiles.map(p=>({...p, trail:p.trail||[], targetEnemy:null}));
+      Game.projectiles = s.projectiles.map(p=>{
+        // Find closest enemy near the snapshot target position to restore tracking ref
+        const target = Game.enemies.find(en=>Math.hypot(en.x-p.tx,en.y-p.ty)<40) || null;
+        return {...p, trail:p.trail||[], targetEnemy:target};
+      });
     }
     // sync boss escorts (visual on guest, host is authoritative)
     if(s.escorts) {
@@ -5085,8 +5249,8 @@ const MP = {
         else { Game.selectedPlacedTower=null; document.getElementById('tower-panel').style.display='none'; }
       }
     }
-    if(s.playerGold) { Game.playerGold=s.playerGold; Game.gold=s.playerGold[Game.mpPlayerIdx]||0; }
-    else if(s.gold!=null) { Game.gold = s.gold; }
+    if(s.playerGold) { Game.playerGold=s.playerGold; Game.gold=s.playerGold[Game.mpPlayerIdx]||0; Game.updateTowerPanel(); }
+    else if(s.gold!=null) { Game.gold = s.gold; Game.updateTowerPanel(); }
     if(s.crystalHP < Game.crystalHP) {
       SFX.crystalHit();
       Game.addShake(4);
@@ -5195,12 +5359,17 @@ const MP = {
         const tData=TOWERS_DATA[data.typeId];
         const guestGold=Game.playerGold[fromIdx]||0;
         if(!tData||guestGold<tData.cost) break;
-        if(Game.towers.some(tw=>Math.hypot(tw.x-data.x,tw.y-data.y)<22)) break;
-        if(Game._isRuined(data.x,data.y)) break;
+        // Convert guest fraction coords to host coordinate space (different screen sizes)
+        const hx = data.xFrac!=null ? Math.round(data.xFrac*Game.W) : data.x;
+        const hy = data.yFrac!=null ? Math.round(data.yFrac*Game.H) : data.y;
+        if(Game.towers.some(tw=>Math.hypot(tw.x-hx,tw.y-hy)<22)) break;
+        if(Game._isRuined(hx,hy)) break;
         const paths=Game.paths||[Game.path];
-        if(onAnyPath(data.x,data.y,paths,Game.elitePaths,20)) break;
+        if(onAnyPath(hx,hy,paths,Game.elitePaths,20)) break;
         Game.playerGold[fromIdx]-=tData.cost;
-        Game.towers.push({x:data.x,y:data.y,typeId:data.typeId,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:fromIdx});
+        Game.towers.push({x:hx,y:hy,typeId:data.typeId,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:fromIdx});
+        Game._towersDirty=true;
+        Game.bgDirty=true;
         SFX.placeTower(data.typeId);
         Game.spawnParticles(data.x,data.y,tData.color,6);
         Game.updateHUD();
@@ -5215,6 +5384,7 @@ const MP = {
         const refund=Math.floor(spent*.6);
         Game.playerGold[fromIdx]=(Game.playerGold[fromIdx]||0)+refund;
         const i=Game.towers.indexOf(tw); if(i>=0) Game.towers.splice(i,1);
+        Game._towersDirty=true;
         SFX.sellTower();
         Game.spawnParticles(data.x,data.y,'#f5c842',8);
         Game.updateHUD();
@@ -5229,6 +5399,7 @@ const MP = {
         const guestGold=Game.playerGold[fromIdx]||0;
         if(guestGold<upCost) break;
         Game.playerGold[fromIdx]-=upCost; tw.level=lvl+1;
+        Game._towersDirty=true;
         SFX.placeTower(tw.typeId);
         Game.spawnParticles(tw.x,tw.y,TOWERS_DATA[tw.typeId].color,10);
         Game.updateHUD();

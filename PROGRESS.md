@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-25) — last updated (v9.3: MP balance, boss mechanics, team maps, gold buff)
+## Current State (2026-05-26) — last updated (v9.5: floating corner HUD, gate zone removed)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,61 @@
 ---
 
 ## Completed Features
+
+### v9.5 Sprint — Floating Corner HUD Redesign (2026-05-26)
+
+#### HUD Redesign — xóa thanh top, floating pills 2 góc
+- **Xóa hoàn toàn** thanh HUD trên (`#hud-rows`, `.hud-top`, `#hud-tab` "▲ Thu") — không còn thanh ngang chiếm không gian map
+- **Top-left pill** (`#hud-tl`): `R5/20` + phase indicator (`⚔️×12` hoặc timer chuẩn bị) + `⚠ BOSS` warn + weather icon + bonus; bên dưới là `#wave-ready-bar` (MP)
+- **Top-right pills** (`#hud-tr`): pill `💰 gold | 🛡 lives` + `▶ Bắt đầu` button + `⏸` pause + `💰` donate (MP only)
+- Style: glassmorphism — `rgba(4,6,18,0.68)` background + `backdrop-filter:blur(12px)` + border mờ
+- `topH` giảm từ ~48px → **38px** — map được thêm ~10px chiều cao
+- Xóa **yellow gate zone**: bỏ `fillRect` vàng bán trong suốt + `strokeStyle` vàng kẻ vạch dọc ở cạnh phải map (chỗ quái chui vào tinh thể)
+- `toggleHUD()` thành no-op (không còn thanh để thu gọn)
+
+---
+
+### v9.4 Sprint — MP Performance, Balance Buff, Bug Fixes, New Features (2026-05-26)
+
+#### Performance — fix-mp-lag (5 optimizations)
+1. **Object pool cho getNetState()** — Thay `Array.map()` bằng reuse buffer `_netEnemyBuf`, `_netProjBuf`, `_netEscortBuf`; overwrite props trực tiếp, trim khi thừa → loại bỏ ~3000 object allocations/giây, giảm GC pauses
+2. **Shadow batch rendering** — Tách draw loop enemies/towers thành 2 pass: normal (shadowBlur=0) trước, elite/boss/flashing sau (1 shadowBlur set); giảm từ O(n) GPU compositor flushes xuống O(2)/group
+3. **Dirty-flag full-sync filtering** — `_towersDirty`, `_challengeModSent`, `_lastSentWeather`: `state.towers` chỉ gửi khi có thay đổi (hoặc mỗi 30 full syncs), weather/challengeMod chỉ gửi khi cần → giảm payload kích thước đáng kể
+4. **Guest path prediction cache** — `_cachedT`/`_cachedPt` per enemy; skip `ptOnPath()` khi `|en.t - en._cachedT| <= 0.0005` → loại bỏ redundant arc-length calculations
+5. **Server raw relay** — `case 'state_sync'` relay raw Buffer trực tiếp (skip JSON parse + re-stringify) → giảm CPU overhead trên server
+
+#### Balance Buff (game-fixes-and-balance)
+- **Quái thường (ENEMY_TYPES)** — spd ×0.7 (chậm hơn 30%); reward ×1.5
+  - Shade Crawler: spd 1.2→**0.84**, reward 8→**12**
+  - Swarm Bat: spd 1.8→**1.26**, reward 6→**9**
+  - Stone Golem: spd 0.7→**0.49**, reward 20→**30**
+  - Healer Shaman: spd 1.0→**0.70**, reward 15→**23**
+  - Phase Wraith: spd 1.3→**0.91**, reward 18→**27**
+  - Berserker: spd 1.0→**0.70**, reward 22→**33**
+  - Behemoth: spd 0.5→**0.35**, reward 40→**60**
+  - Storm Wyvern: spd 1.5→**1.05**, reward 18→**27**
+  - Siege Drake: spd 0.85→**0.60**, reward 40→**60**
+- **Boss (BOSS_TYPES)** — spd ×0.75; reward ×1.5; flat bonus `+50→+150` trong `damageEnemy()`
+  - Scorpion King: spd→0.39, reward→180
+  - Venomfang Serpent: spd→0.58, reward→300
+  - Goblin Warlord: spd→0.53, reward→180
+  - Stone Titan: spd→0.24, reward→420
+  - Storm Drake: spd→0.47, reward→390
+  - Eternal Dragon: spd→0.42, reward→1050
+  - Shadow Colossus: spd→0.32, reward→750
+- **Upgrade cost −30%** — `UPGRADE_COST_MULTS = [0, 0.56, 1.75, 4.9, 12.6]` (was [0, 0.8, 2.5, 7.0, 18.0])
+- **MP starting gold flat 400** — tất cả mode MP đều bắt đầu 400 vàng (was [200, 150, 200, 200])
+
+#### Bug Fixes (game-fixes-and-balance)
+- **Upgrade button realtime** — Tách `updateTowerPanel()` riêng; gọi sau `damageEnemy()`, `applyNetState()` (playerGold update), và `round_bonus` event → nút upgrade hiện/ẩn ngay khi vàng thay đổi, không cần đóng mở panel
+- **Guest tower placement** — Root cause: `window.innerWidth` khác nhau giữa host/guest → tọa độ tower guest bị host validate sai. Fix: guest gửi `xFrac/yFrac` (0–1 normalized), host convert `Math.round(frac * Game.W)` → placement ổn định 100%
+- **Projectile visual desync** — Sau khi rebuild `Game.enemies` trong `applyNetState()`, tìm enemy gần nhất (radius 40px) cho mỗi projectile và gán `targetEnemy` → đạn bay theo đúng quái di chuyển thay vì bắn vào điểm cũ
+
+#### New Features (game-fixes-and-balance)
+- **Guest disconnect pause/resume** — Khi guest disconnect mid-game: game tự pause, hiện overlay `#disconnect-overlay` cho tất cả players; khi guest reconnect host thấy nút "▶ Tiếp tục"; host cũng có nút "Chơi không cần họ"; sau khi tiếp tục, host broadcast `game_resume` → cả 2 unpaused + synced
+- **Custom password modal** — Thay `window.prompt()` bằng `#mp-pw-modal` (HTML overlay z-index:9999): input type="password", nút Xác nhận/Huỷ, Enter confirm, ESC cancel → fullscreen không bị thoát khi nhập mật khẩu phòng
+
+---
 
 ### v9.3 Sprint — MP Balance, Boss Mechanics, Team Maps Redesign (2026-05-25)
 
@@ -554,6 +609,9 @@
 - **Host-authoritative**: host runs full game loop, broadcasts `state_sync` every 2 frames (enemies) / every 10 frames (full state including towers, gold, round)
 - Guests send `player_input` to host; host processes and re-syncs state
 - Guest loop: client-side enemy prediction between syncs; object pools for particles + damage numbers
+- **State sync optimized (v9.4)**: `_towersDirty` dirty flag — towers only sent when changed or every 30 full syncs; weather/challengeMod gated by change detection; server relays state_sync as raw Buffer (skip JSON overhead)
+- **Guest tower placement (v9.4)**: guest sends `xFrac/yFrac` (normalized 0–1), host converts to its own canvas coordinates — fixes coordinate mismatch on different screen sizes
+- **Guest disconnect pause (v9.4)**: guest disconnect triggers `game_event: {type:'guest_disconnected'}` → all clients pause; host can resume or skip after reconnect
 
 ### Paths
 - Maps define `pathFns: [fn1, fn2, ...]`
@@ -609,7 +667,7 @@
 ### Room Browser Architecture
 - `MP.showRoomBrowser()` connects WebSocket then calls `refreshRooms()` → sends `list_rooms`
 - Server `list_rooms` returns all non-started rooms; client renders with `handleRoomsList()`
-- `MP.joinFromList(code, hasPassword)` — prompts for password if needed, calls `_joinWithCode()`
+- `MP.joinFromList(code, hasPassword)` — shows `#mp-pw-modal` (v9.4 custom HTML, replaces `window.prompt()`) or calls `_joinWithCode()` directly
 - `MP.backFromBrowser()` closes WS (if not yet in lobby) and returns to main card
 
 ---

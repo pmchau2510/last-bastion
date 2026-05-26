@@ -221,10 +221,13 @@ wss.on('connection', ws => {
         break;
       }
 
-      // ── Host-auth: state snapshot → all guests ──────────────
+      // ── Host-auth: state snapshot → all guests (raw relay — skip re-parse/stringify) ──
       case 'state_sync': {
         if (!myRoom || myIdx !== 0) break;
-        broadcast(myRoom, { type: 'state_sync', state: msg.state }, ws);
+        myRoom.players.forEach((p, i) => {
+          if (i !== 0 && !p.disconnected && p.ws && p.ws.readyState === WebSocket.OPEN)
+            p.ws.send(raw);
+        });
         break;
       }
 
@@ -286,6 +289,14 @@ wss.on('connection', ws => {
           name: slot.name,
           info: roomInfo(myRoom, myCode)
         });
+        // Notify host to pause game while waiting for reconnect (guests only)
+        if (myIdx !== 0) {
+          broadcast(myRoom, {
+            type: 'game_event',
+            from: myIdx,
+            event: { type: 'guest_disconnected', idx: myIdx, name: slot.name }
+          });
+        }
       }
     } else {
       // Lobby disconnect: remove the slot
