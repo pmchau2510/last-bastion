@@ -4559,10 +4559,8 @@ function ptSegDist(px, py, ax, ay, bx, by) {
   return Math.hypot(px-(ax+t*dx), py-(ay+t*dy));
 }
 function onAnyPath(tx, ty, paths, elitePaths, threshold) {
-  // Only block elite paths once they have been revealed (R10+)
   const eliteArr = Array.isArray(elitePaths) ? elitePaths : (elitePaths ? [elitePaths] : []);
-  const activeElite = Game.eliteGateShown ? eliteArr : [];
-  const all = [...paths, ...activeElite];
+  const all = [...paths, ...eliteArr];
   return all.some(pp => {
     if(!pp||pp.length<2) return false;
     for(let i=0;i<pp.length-1;i++) {
