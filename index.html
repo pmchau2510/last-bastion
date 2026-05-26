@@ -4122,7 +4122,7 @@ const Game = {
 
   flashLowGold() {
     SFX.noGold();
-    const el=document.querySelector('.hud-gold');
+    const el=document.getElementById('hud-gold');
     if(!el) return;
     el.style.color='#e05a2b';
     setTimeout(()=>el.style.color='#f5c842',500);
