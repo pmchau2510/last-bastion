@@ -3966,13 +3966,11 @@ const Game = {
       const onPath=onAnyPath(tx,ty,this.paths||[this.path],this.elitePaths,20);
       if(tooClose||onPath) return;
       if(this.isGuestMP) {
-        // Send as fractions so host can map to its own coordinate space
+        // Send to host — tower arrives back via 'tower_placed' game_event (~5-20ms)
         MP.sendInput('place_tower', {x:tx, y:ty, xFrac:tx/this.W, yFrac:ty/this.H, typeId:this.selectedTower});
-        // Optimistic local update — state_sync from host will confirm/overwrite within ~0.2s
+        // Optimistic gold deduction + feedback (host confirms gold via full state_sync)
         this.playerGold[this.mpPlayerIdx] = (this.playerGold[this.mpPlayerIdx]||0) - tData.cost;
         this.gold = this.playerGold[this.mpPlayerIdx];
-        this.towers.push({x:tx,y:ty,typeId:this.selectedTower,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:this.mpPlayerIdx});
-        this._towersDirty=true;
         SFX.placeTower(this.selectedTower);
         this.spawnParticles(tx,ty,tData.color,6);
         this.updateHUD();
@@ -5081,6 +5079,25 @@ const MP = {
         MP.hideDisconnectOverlay();
         break;
       }
+      case 'tower_placed': {
+        // Host confirmed tower — add to guest's local array (host coordinates)
+        const exists = Game.towers.some(tw=>Math.hypot(tw.x-event.x,tw.y-event.y)<5);
+        if(!exists) {
+          Game.towers.push({x:event.x,y:event.y,typeId:event.typeId,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:event.ownerIdx});
+          Game.bgDirty=true;
+        }
+        break;
+      }
+      case 'tower_sold': {
+        const idx=Game.towers.findIndex(tw=>Math.hypot(tw.x-event.x,tw.y-event.y)<8);
+        if(idx>=0) { Game.towers.splice(idx,1); Game.bgDirty=true; }
+        break;
+      }
+      case 'tower_upgraded': {
+        const tw=Game.towers.find(t=>Math.hypot(t.x-event.x,t.y-event.y)<8);
+        if(tw) { tw.level=(tw.level||1)+1; Game.bgDirty=true; }
+        break;
+      }
     }
   },
 
@@ -5349,6 +5366,8 @@ const MP = {
         SFX.placeTower(data.typeId);
         Game.spawnParticles(data.x,data.y,tData.color,6);
         Game.updateHUD();
+        // Notify all guests immediately — don't wait for next state_sync cycle
+        MP.broadcastEvent({type:'tower_placed', x:hx, y:hy, typeId:data.typeId, ownerIdx:fromIdx});
         break;
       }
       case 'sell_tower': {
@@ -5364,6 +5383,7 @@ const MP = {
         SFX.sellTower();
         Game.spawnParticles(data.x,data.y,'#f5c842',8);
         Game.updateHUD();
+        MP.broadcastEvent({type:'tower_sold', x:tw.x, y:tw.y});
         break;
       }
       case 'upgrade_tower': {
@@ -5379,6 +5399,7 @@ const MP = {
         SFX.placeTower(tw.typeId);
         Game.spawnParticles(tw.x,tw.y,TOWERS_DATA[tw.typeId].color,10);
         Game.updateHUD();
+        MP.broadcastEvent({type:'tower_upgraded', x:tw.x, y:tw.y});
         break;
       }
       case 'give_gold': {
