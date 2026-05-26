@@ -2467,13 +2467,17 @@ const Game = {
       this.elitePaths.forEach(ep => {
         c.save();
         c.lineJoin='round'; c.lineCap='round';
-        // Faint dark base — like slightly disturbed ground
-        c.globalAlpha = 0.18;
-        c.strokeStyle = pc; c.lineWidth = 20;
+        // Dark base
+        c.globalAlpha = 0.38;
+        c.strokeStyle = pc; c.lineWidth = 22;
         c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
-        // Very faint dashed center — barely visible texture
-        c.globalAlpha = 0.09;
-        c.strokeStyle = '#000000'; c.lineWidth = 7; c.setLineDash([14, 10]);
+        // Red tint — hint at danger
+        c.globalAlpha = 0.18;
+        c.strokeStyle = '#aa0000'; c.lineWidth = 18;
+        c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
+        // Dashed center
+        c.globalAlpha = 0.22;
+        c.strokeStyle = '#330000'; c.lineWidth = 7; c.setLineDash([14, 10]);
         c.beginPath(); ep.forEach((p,i)=>i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y)); c.stroke();
         c.setLineDash([]);
         c.globalAlpha = 1;
