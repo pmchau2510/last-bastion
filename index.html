@@ -334,6 +334,7 @@ body{position:fixed;width:100%;height:100%}
 .hud-pause.hidden{display:none!important}
 .w-bonus.hidden{display:none!important}
 #lobby-guest-controls.hidden{display:none!important}
+#lobby-host-controls.hidden{display:none!important}
 
 /* ===== Multiplayer overlay ===== */
 /* justify-content removed: overflow at top is unreachable on mobile — use #mp-inner with margin:auto instead */
@@ -4002,7 +4003,14 @@ const Game = {
       if(this.isGuestMP) {
         // Send as fractions so host can map to its own coordinate space
         MP.sendInput('place_tower', {x:tx, y:ty, xFrac:tx/this.W, yFrac:ty/this.H, typeId:this.selectedTower});
+        // Optimistic local update — state_sync from host will confirm/overwrite within ~0.2s
+        this.playerGold[this.mpPlayerIdx] = (this.playerGold[this.mpPlayerIdx]||0) - tData.cost;
+        this.gold = this.playerGold[this.mpPlayerIdx];
+        this.towers.push({x:tx,y:ty,typeId:this.selectedTower,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:this.mpPlayerIdx});
+        this._towersDirty=true;
         SFX.placeTower(this.selectedTower);
+        this.spawnParticles(tx,ty,tData.color,6);
+        this.updateHUD();
       } else {
         this.playerGold[this.mpPlayerIdx] = (this.playerGold[this.mpPlayerIdx]||0) - tData.cost;
         this.gold = this.playerGold[this.mpPlayerIdx];
