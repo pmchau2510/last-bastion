@@ -4727,8 +4727,8 @@ const MP = {
     document.getElementById('mp-card-rooms').classList.add('hidden');
     document.getElementById('mp-card-lobby').classList.remove('hidden');
     document.getElementById('lobby-code-display').textContent = code;
-    document.getElementById('lobby-host-controls').classList.toggle('hidden', !this.isHost);
-    document.getElementById('lobby-guest-controls').classList.toggle('hidden', this.isHost);
+    document.getElementById('lobby-host-controls').style.display = this.isHost ? '' : 'none';
+    document.getElementById('lobby-guest-controls').style.display = this.isHost ? 'none' : '';
     this.myNation = 0;
     this.renderNationPicker();
     this.renderLobbyPlayers();
@@ -4779,6 +4779,7 @@ const MP = {
       const mo = MODES[this.roomInfo.mode||0];
       document.getElementById('lobby-status').textContent = `Map: ${m?.name} · Chế độ: ${mo?.name}`;
     }
+    this.updateLobbyStatus();
   },
 
   updateLobbyStatus() {
