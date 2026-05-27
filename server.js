@@ -223,9 +223,12 @@ wss.on('connection', ws => {
       // ── Host-auth: state snapshot → all guests (raw relay — skip re-parse/stringify) ──
       case 'state_sync': {
         if (!myRoom || myIdx !== 0) break;
+        // ws v8 receives text frames as Buffer; must convert to string before relaying
+        // so browsers receive a TEXT frame (not binary Blob) and JSON.parse succeeds
+        const rawStr = raw.toString('utf8');
         myRoom.players.forEach((p, i) => {
           if (i !== 0 && !p.disconnected && p.ws && p.ws.readyState === WebSocket.OPEN)
-            p.ws.send(raw);
+            p.ws.send(rawStr);
         });
         break;
       }
