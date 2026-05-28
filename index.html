@@ -758,20 +758,20 @@ const MAPS_DATA = [
 ];
 
 const TOWERS_DATA = [
-  { id:0, name:'Cung',       icon:'🏹', cost:50,  dmg:9,  range:80,  rate:800,  color:'#7acf40', desc:'Bắn nhanh, tầm xa — nâng cấp tăng tốc bắn mạnh' },
-  { id:1, name:'Đại Bác',   icon:'💣', cost:100, dmg:45, range:70,  rate:2000, color:'#c87828', desc:'AoE diện rộng, reload chậm' },
-  { id:2, name:'Băng',      icon:'❄️', cost:80,  dmg:8,  range:75,  rate:1200, color:'#5ab8f8', desc:'Làm chậm quái 75%, tầm trung' },
-  { id:3, name:'Sét',       icon:'⚡', cost:120, dmg:30, range:85,  rate:1500, color:'#c880ff', desc:'Chain sang 2 mục tiêu gần nhất' },
-  { id:4, name:'Lửa',       icon:'🔥', cost:90,  dmg:18, range:65,  rate:1000, color:'#ff6820', desc:'DoT, diệt đám đông hiệu quả' },
-  { id:5, name:'T.Nhiên',   icon:'🌿', cost:150, dmg:0,  range:0,   rate:0,    color:'#50c850', desc:'Tạo +8 vàng/round, không bắn' },
+  { id:0, name:'Cung',       icon:'🏹', cost:50,  dmg:9,  range:80,  rate:680,  color:'#7acf40', desc:'Bắn nhanh, tầm xa — nâng cấp tăng tốc bắn mạnh' },
+  { id:1, name:'Đại Bác',   icon:'💣', cost:100, dmg:45, range:70,  rate:1700, color:'#c87828', desc:'AoE diện rộng, reload chậm' },
+  { id:2, name:'Băng',      icon:'❄️', cost:80,  dmg:8,  range:75,  rate:1020, color:'#5ab8f8', desc:'Làm chậm quái 75%, tầm trung' },
+  { id:3, name:'Sét',       icon:'⚡', cost:120, dmg:30, range:85,  rate:1275, color:'#c880ff', desc:'Chain sang 2 mục tiêu gần nhất' },
+  { id:4, name:'Lửa',       icon:'🔥', cost:90,  dmg:22, range:65,  rate:850,  color:'#ff6820', desc:'Thiêu đốt: damage thêm 50% theo thời gian sau khi trúng' },
+  { id:5, name:'T.Nhiên',   icon:'🌿', cost:150, dmg:0,  range:0,   rate:0,    color:'#50c850', desc:'Tạo +12 vàng/round, không bắn' },
   // Nation-exclusive towers
-  { id:6, name:'Ballista',  icon:'🎯', cost:130, dmg:38, range:110, rate:2500, color:'#d08030', desc:'Tầm siêu xa, xuyên giáp (Ironhold)' },
-  { id:7, name:'Băng Đền',  icon:'🔮', cost:110, dmg:3,  range:85,  rate:1000, color:'#5ab8f8', desc:'Làm chậm AoE mọi quái trong tầm (Glacien)' },
-  { id:8, name:'Magma',     icon:'🌋', cost:100, dmg:25, range:65,  rate:900,  color:'#ff4400', desc:'Chuỗi lửa 3 mục tiêu (Emberon)' },
+  { id:6, name:'Ballista',  icon:'🎯', cost:130, dmg:38, range:110, rate:1700, color:'#d08030', desc:'Xuyên giáp ×1.8, trúng làm chậm 25% (Ironhold)' },
+  { id:7, name:'Băng Đền',  icon:'🔮', cost:110, dmg:3,  range:85,  rate:850,  color:'#5ab8f8', desc:'Làm chậm AoE mọi quái trong tầm (Glacien)' },
+  { id:8, name:'Magma',     icon:'🌋', cost:100, dmg:25, range:65,  rate:765,  color:'#ff4400', desc:'Chuỗi lửa 3 mục tiêu (Emberon)' },
   // Shared AoE tower
-  { id:9, name:'Đại Pháo',  icon:'🎆', cost:160, dmg:50, range:95,  rate:3200, color:'#e8d040', desc:'Nổ AoE bán kính 55px — sát thương tất cả quái, reload chậm' },
+  { id:9, name:'Đại Pháo',  icon:'🎆', cost:160, dmg:50, range:95,  rate:2720, color:'#e8d040', desc:'Nổ AoE bán kính 55px — sát thương tất cả quái, reload chậm' },
   // Anti-air tower — each nation gets one, only targets aerial enemies
-  { id:10, name:'Phòng Không', icon:'🦅', cost:140, dmg:35, range:160, rate:1100, color:'#60c0ff', desc:'Chỉ bắn quái bay trên trời — tầm siêu xa (mỗi quốc gia)', antiAir:true }
+  { id:10, name:'Phòng Không', icon:'🦅', cost:140, dmg:42, range:160, rate:935, color:'#60c0ff', desc:'Chỉ bắn quái bay trên trời — tầm siêu xa (mỗi quốc gia)', antiAir:true }
 ];
 
 // Tower upgrade constants (5 levels)
@@ -810,14 +810,14 @@ const ENEMY_TYPES = [
 ];
 
 const BOSS_TYPES = [
-  // spd ×0.525 (×0.7 normal ×0.75 boss), reward ×1.5
-  { id:10, name:'Scorpion King',     color:'#8a1030', radius:14, hp:900,  spd:0.39, reward:180 },                   // R5  — ground
-  { id:11, name:'Venomfang Serpent', color:'#1a5530', radius:12, hp:2000, spd:0.58, reward:300, aerial:true },       // R10 — aerial
-  { id:12, name:'Goblin Warlord',    color:'#7a4010', radius:10, hp:1000, spd:0.53, reward:180 },                   // R10 — ground secondary
-  { id:13, name:'Stone Titan',       color:'#607080', radius:16, hp:3200, spd:0.24, reward:420 },                   // R15 — ground
-  { id:14, name:'Storm Drake',       color:'#2060b0', radius:13, hp:2400, spd:0.47, reward:390, aerial:true },       // R15 — aerial
-  { id:15, name:'Eternal Dragon',    color:'#600030', radius:22, hp:8000, spd:0.42, reward:1050, aerial:true },      // R20 — aerial (final)
-  { id:16, name:'Shadow Colossus',   color:'#200840', radius:17, hp:5000, spd:0.32, reward:750 },                   // R20 — ground
+  // spd ×0.525 (×0.7 normal ×0.75 boss), reward ×1.5; HP reduced 25% total (v9.8)
+  { id:10, name:'Scorpion King',     color:'#8a1030', radius:14, hp:675,  spd:0.39, reward:180 },                   // R5  — ground
+  { id:11, name:'Venomfang Serpent', color:'#1a5530', radius:12, hp:1500, spd:0.58, reward:300, aerial:true },       // R10 — aerial
+  { id:12, name:'Goblin Warlord',    color:'#7a4010', radius:10, hp:750,  spd:0.53, reward:180 },                   // R10 — ground secondary
+  { id:13, name:'Stone Titan',       color:'#607080', radius:16, hp:2400, spd:0.24, reward:420 },                   // R15 — ground
+  { id:14, name:'Storm Drake',       color:'#2060b0', radius:13, hp:1800, spd:0.47, reward:390, aerial:true },       // R15 — aerial
+  { id:15, name:'Eternal Dragon',    color:'#600030', radius:22, hp:6000, spd:0.42, reward:1050, aerial:true },      // R20 — aerial (final)
+  { id:16, name:'Shadow Colossus',   color:'#200840', radius:17, hp:3750, spd:0.32, reward:750 },                   // R20 — ground
 ];
 
 const WEATHERS = [
@@ -1600,13 +1600,15 @@ const Game = {
   startRound() {
     this.round++;
     if(this.round > 20 && this.modeIdx !== 2) { this.win(); return; }
-    // T.Nhiên: pay +8 gold per tower to each owner at the start of every round
+    // T.Nhiên: pay +12 gold per tower to each owner at the start of every round
     this.towers.forEach(tw => {
       if(tw.typeId !== 5) return;
       const ownerI = tw.ownerIdx != null ? tw.ownerIdx : 0;
-      this.playerGold[ownerI] = (this.playerGold[ownerI]||0) + 8;
+      this.playerGold[ownerI] = (this.playerGold[ownerI]||0) + 12;
+      tw.goldTimer = (tw.goldTimer||0) + 12; // track total gold earned by this tower
+      this._towersDirty = true; // sync goldTimer to guests
       if(ownerI === this.mpPlayerIdx) { this.gold = this.playerGold[ownerI]; }
-      else if(!this.isMP) { this.gold += 8; }
+      else if(!this.isMP) { this.gold += 12; }
     });
     if(this.towers.some(tw=>tw.typeId===5)) { this.updateHUD(); SFX.earnGold?.(); }
     const data = ROUND_SPAWN[Math.min(this.round-1, 19)];
@@ -2038,7 +2040,12 @@ const Game = {
         if(nearby.length) { const t=nearby[Math.floor(Math.random()*nearby.length)]; t.hp=Math.min(t.maxHp, t.hp+5); }
       }
       if(en.slow < 1) en.slow = Math.min(1, en.slow + .01*fps60);
-
+      // burn DoT tick (fire tower)
+      if(en.burnFrames > 0) {
+        en.burnFrames = Math.max(0, en.burnFrames - fps60);
+        this.damageEnemy(en, en.burnDmgPerFrame * fps60);
+        if(Math.random() < 0.3) this.spawnParticles(en.x, en.y, '#ff4400', 1);
+      }
 
     }
 
@@ -2060,7 +2067,7 @@ const Game = {
           if(Math.random()<0.3) SFX.towerShoot(7);
           this.spawnParticles(tw.x,tw.y,'#5ab8f8',6);
         }
-        tw.cooldown=60;
+        tw.cooldown=51; // 15% faster than original 60
         return;
       }
       const tData = TOWERS_DATA[tw.typeId];
@@ -2099,17 +2106,6 @@ const Game = {
       const dmg = tData.dmg * rateMultiplier * dmgMult;
       tw.angle = Math.atan2(target.y - tw.y, target.x - tw.x);
       tw.flash = 1;
-      // Đại Pháo (type 9): instant AoE on target — no travelling projectile needed
-      if(tw.typeId === 9) {
-        const splash9 = this.enemies.filter(e=>!e.aerial&&Math.hypot(e.x-target.x,e.y-target.y)<55);
-        splash9.forEach(e=>this.damageEnemy(e,dmg));
-        this.spawnParticles(target.x,target.y,'#e8d040',20);
-        this.spawnParticles(target.x,target.y,'#ff8800',10);
-        this.addShake(3);
-        SFX.hit(1); // reuse cannon hit sound
-        tw.cooldown = tData.rate * rateMult / 16.7;
-        return;
-      }
       this.projectiles.push({
         x:tw.x, y:tw.y, tx:target.x, ty:target.y,
         angle: tw.angle,
@@ -2132,7 +2128,7 @@ const Game = {
       if(!target || !this.enemies.includes(target)) { this.projectiles.splice(i,1); continue; }
       const dx = target.x - p.x, dy = target.y - p.y;
       const dist = Math.hypot(dx,dy);
-      const spd = p.typeId===1?4:p.typeId===0||p.typeId===6?7:p.typeId===4||p.typeId===8?5:p.typeId===10?9:6;
+      const spd = p.typeId===9?14:p.typeId===1?4:p.typeId===0||p.typeId===6?7:p.typeId===4||p.typeId===8?5:p.typeId===10?9:6;
       if(dist < spd+2) {
         // hit sound (throttled: 1 per 3 frames per type)
         if(!this._hitCooldown) this._hitCooldown={};
@@ -2155,16 +2151,25 @@ const Game = {
           this.damageEnemy(target,p.dmg);
           this.spawnParticles(target.x,target.y,'#c880ff',8);
           p.chainTargets.forEach(ct=>{ if(this.enemies.includes(ct)) { this.damageEnemy(ct,p.dmg*.5); this.spawnParticles(ct.x,ct.y,'#c880ff',4); } });
-        } else if(p.typeId === 4) { // fire DoT
+        } else if(p.typeId === 4) { // fire — damage + burn DoT (50% extra over 3s)
           this.damageEnemy(target, p.dmg);
-          this.spawnParticles(target.x,target.y,'#ff6820',6);
-        } else if(p.typeId === 6) { // ballista — armor pierce bonus
+          target.burnFrames = 180; // 3 seconds at 60fps
+          target.burnDmgPerFrame = p.dmg * 0.5 / 180;
+          this.spawnParticles(target.x,target.y,'#ff6820',8);
+        } else if(p.typeId === 6) { // ballista — armor pierce + slow on impact
           this.damageEnemy(target, p.dmg * (target.armored ? 1.8 : 1));
+          if(target.slow > 0.75) target.slow = 0.75; // heavy bolt: 25% slow on impact
           this.spawnParticles(target.x,target.y,'#d08030',6);
         } else if(p.typeId === 8) { // magma — chain fire 3 targets
           this.damageEnemy(target,p.dmg);
           this.spawnParticles(target.x,target.y,'#ff4400',8);
           p.chainTargets.forEach(ct=>{ if(this.enemies.includes(ct)) { this.damageEnemy(ct,p.dmg*.6); this.spawnParticles(ct.x,ct.y,'#ff6820',4); } });
+        } else if(p.typeId === 9) { // Đại Pháo — AoE explosion on impact
+          const splash9 = this.enemies.filter(e=>!e.aerial&&Math.hypot(e.x-target.x,e.y-target.y)<55);
+          splash9.forEach(e=>this.damageEnemy(e,p.dmg));
+          this.spawnParticles(target.x,target.y,'#e8d040',20);
+          this.spawnParticles(target.x,target.y,'#ff8800',12);
+          this.addShake(3);
         } else {
           this.damageEnemy(target, p.dmg);
           this.spawnParticles(target.x,target.y,TOWERS_DATA[p.typeId]?.color||'#aaa',5);
@@ -3329,6 +3334,21 @@ const Game = {
         c.shadowBlur=0;
         break;
       }
+      case 9: { // Đại Pháo — glowing mortar shell
+        p.trail.forEach((pt,i)=>{
+          const a=i/p.trail.length;
+          c.globalAlpha=a*.5; c.fillStyle=a>.5?'#e8d040':'#ff8800';
+          c.beginPath(); c.arc(pt.x,pt.y,(1-a)*5+1,0,Math.PI*2); c.fill();
+        });
+        c.globalAlpha=1;
+        c.shadowColor='#e8d040'; c.shadowBlur=12;
+        const g9=c.createRadialGradient(p.x,p.y,0,p.x,p.y,8);
+        g9.addColorStop(0,'#ffffff'); g9.addColorStop(0.4,'#e8d040'); g9.addColorStop(1,'#ff6600');
+        c.fillStyle=g9;
+        c.beginPath(); c.arc(p.x,p.y,7,0,Math.PI*2); c.fill();
+        c.shadowBlur=0; c.globalAlpha=1;
+        break;
+      }
       default: { // Nature (won't have projectile but fallback)
         c.fillStyle='#50c850';
         c.beginPath(); c.arc(p.x,p.y,3,0,Math.PI*2); c.fill();
@@ -3978,7 +3998,7 @@ const Game = {
       } else {
         this.playerGold[this.mpPlayerIdx] = (this.playerGold[this.mpPlayerIdx]||0) - tData.cost;
         this.gold = this.playerGold[this.mpPlayerIdx];
-        this.towers.push({x:tx,y:ty,typeId:this.selectedTower,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:this.mpPlayerIdx});
+        this.towers.push({x:tx,y:ty,typeId:this.selectedTower,cooldown:0,goldTimer:0,angle:0,flash:0,level:1,ownerIdx:this.mpPlayerIdx});
         this._towersDirty=true;
         SFX.placeTower(this.selectedTower);
         this.spawnParticles(tx,ty,tData.color,6);
@@ -4043,9 +4063,10 @@ const Game = {
     const rateMult9 = UPGRADE_RATE_MULTS[lvl-1] * (tw.typeId===0 ? UPGRADE_ARCHER_RATE[lvl-1] : 1);
     const effectiveRate = tData.rate ? Math.round(tData.rate * rateMult9) : null;
     const rateStr = effectiveRate ? `${effectiveRate}ms${lvl>1?' ⚡':''}` : '-';
+    const natureGoldLine = tw.typeId===5 ? `<br>🌿 Đã tạo: <span style="color:#f5c842">${tw.goldTimer||0} vàng</span>` : '';
     document.getElementById('tpan-stats').innerHTML=
       `🗡 DMG: ${Math.round(tData.dmg*dmgMult)} &nbsp;|&nbsp; 🎯 Range: ${Math.round(tData.range*rangeMult)}<br>`+
-      `⏱ Rate: ${rateStr} &nbsp;|&nbsp; 💰 Đã dùng: ${totalSpent}`;
+      `⏱ Rate: ${rateStr} &nbsp;|&nbsp; 💰 Đã dùng: ${totalSpent}`+natureGoldLine;
     const sellBtn=document.getElementById('tpan-sell-btn');
     sellBtn.innerHTML=`💰 Bán — nhận <i class="gc"></i>${sellVal}`;
     sellBtn.style.display=(!isOwner)?'none':'block';
@@ -5088,7 +5109,7 @@ const MP = {
         const gy = event.yFrac != null ? Math.round(event.yFrac * Game.H) : event.y;
         const exists = Game.towers.some(tw=>Math.hypot(tw.x-gx,tw.y-gy)<5);
         if(!exists) {
-          Game.towers.push({x:gx,y:gy,typeId:event.typeId,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:event.ownerIdx});
+          Game.towers.push({x:gx,y:gy,typeId:event.typeId,cooldown:0,goldTimer:0,angle:0,flash:0,level:1,ownerIdx:event.ownerIdx});
           Game.bgDirty=true;
         }
         break;
@@ -5174,7 +5195,7 @@ const MP = {
       state.towers=Game.towers.map(tw=>({
         x:tw.x,y:tw.y,xFrac:tw.x/Game.W,yFrac:tw.y/Game.H,
         typeId:tw.typeId,level:tw.level||1,
-        angle:tw.angle||0,flash:tw.flash||0,goldTimer:tw.goldTimer||3600,
+        angle:tw.angle||0,flash:tw.flash||0,goldTimer:tw.goldTimer||0,
         ownerIdx:tw.ownerIdx!=null?tw.ownerIdx:0
       }));
       Game._towersDirty=false;
@@ -5187,7 +5208,7 @@ const MP = {
         if(!state.towers) state.towers=Game.towers.map(tw=>({
           x:tw.x,y:tw.y,xFrac:tw.x/Game.W,yFrac:tw.y/Game.H,
           typeId:tw.typeId,level:tw.level||1,
-          angle:tw.angle||0,flash:tw.flash||0,goldTimer:tw.goldTimer||3600,
+          angle:tw.angle||0,flash:tw.flash||0,goldTimer:tw.goldTimer||0,
           ownerIdx:tw.ownerIdx!=null?tw.ownerIdx:0
         }));
         Game._fullSyncTowerCounter=0;
@@ -5379,7 +5400,7 @@ const MP = {
         const paths=Game.paths||[Game.path];
         if(onAnyPath(hx,hy,paths,Game.elitePaths,20)) break;
         Game.playerGold[fromIdx]-=tData.cost;
-        Game.towers.push({x:hx,y:hy,typeId:data.typeId,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:fromIdx});
+        Game.towers.push({x:hx,y:hy,typeId:data.typeId,cooldown:0,goldTimer:0,angle:0,flash:0,level:1,ownerIdx:fromIdx});
         Game._towersDirty=true;
         Game.bgDirty=true;
         SFX.placeTower(data.typeId);
