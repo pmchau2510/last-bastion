@@ -1664,9 +1664,10 @@ const Game = {
         this.elitePaths.forEach((elitePath, epIdx) => {
           const primaryBoss = {...BOSS_TYPES[Math.min(idxList[0], BOSS_TYPES.length-1)]};
           const eliteBossX = this.isMP ? 3 : 2;
-          primaryBoss.hp = primaryBoss.hp * hpM * eliteBossX * mpBossHpX;
+          primaryBoss.hp = primaryBoss.hp * hpM * eliteBossX * 0.8 * mpBossHpX;
           primaryBoss.maxHp = primaryBoss.hp;
           primaryBoss.t = 0; primaryBoss.spd = primaryBoss.spd * spdM * 0.9; primaryBoss.slow = 1;
+          primaryBoss.aerial = false; // elite path is always ground — clear aerial flag from base boss type
           primaryBoss.pathIdx = 100 + epIdx; primaryBoss.elite = true; primaryBoss.eliteIdx = epIdx;
           primaryBoss.color = eed.color; primaryBoss.glowColor = eed.glowColor;
           primaryBoss.radius = (eed.radius || 9) + 5;
