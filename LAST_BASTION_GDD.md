@@ -1,6 +1,6 @@
-# LAST BASTION — Game Design Document v9.5
+# LAST BASTION — Game Design Document v9.8
 
-> **Cập nhật:** 2026-05-26  
+> **Cập nhật:** 2026-05-28  
 > **Stack:** Single HTML file · Canvas API · Web Audio API · Node.js WebSocket (multiplayer)
 
 ---
@@ -147,9 +147,9 @@ Tower grid: **7 cột** (`grid-template-columns: repeat(7, 1fr)`).
 
 | ID | Tên | Nation | Giá | DMG | Range | Rate | Hiệu ứng đặc biệt |
 |----|-----|--------|-----|-----|-------|------|-------------------|
-| 6 | Ballista | Ironhold | 130 | 38 | 110 | 2500ms | Tầm siêu xa, +80% DMG với quái áo giáp |
-| 7 | Băng Đền | Glacien | 110 | 3 | 85 | 1000ms | AoE passive: làm chậm 70% TẤT CẢ quái đất trong tầm |
-| 8 | Magma | Emberon | 100 | 25 | 65 | 900ms | Chain lửa đến 3 mục tiêu, chain nhận 60% DMG |
+| 6 | Ballista | Ironhold | 130 | 38 | 110 | **1700ms** | Xuyên giáp ×1.8, **trúng làm chậm 25%** (phân biệt với Cung) |
+| 7 | Băng Đền | Glacien | 110 | 3 | 85 | **850ms** | AoE passive: làm chậm 70% TẤT CẢ quái đất trong tầm |
+| 8 | Magma | Emberon | 100 | 25 | 65 | **765ms** | Chain lửa đến 3 mục tiêu, chain nhận 60% DMG |
 
 ### 7.3 Đạn / Projectile đặc trưng theo Nation
 
@@ -167,17 +167,19 @@ Tower grid: **7 cột** (`grid-template-columns: repeat(7, 1fr)`).
 
 | # | Tên | Icon | Giá | DMG | Range | Rate | Ghi chú |
 |---|-----|------|-----|-----|-------|------|---------|
-| 0 | Cung | 🏹 | 50 | 9 | 80 | 800ms | Đơn mục tiêu — tốc bắn tăng mạnh khi nâng cấp |
-| 1 | Đại Bác | 💣 | 100 | 45 | 70 | 2000ms | AoE radius 40 — Ironhold, Emberon |
-| 2 | Băng | ❄️ | 80 | 8 | 75 | 1200ms | Làm chậm quái 75% — Glacien |
-| 3 | Sét | ⚡ | 120 | 30 | 85 | 1500ms | Chain 2 mục tiêu — Ironhold, Glacien |
-| 4 | Lửa | 🔥 | 90 | 18 | 65 | 1000ms | DoT, diệt đám đông — Emberon |
-| 5 | T.Nhiên | 🌿 | 150 | — | — | — | **+8 vàng/round** cho chủ tháp — mọi nation |
-| 6 | Ballista | 🎯 | 130 | 38 | 110 | 2500ms | Xuyên giáp — **Ironhold độc quyền** |
-| 7 | Băng Đền | 🔮 | 110 | 3 | 85 | 1000ms | AoE slow — **Glacien độc quyền** |
-| 8 | Magma | 🌋 | 100 | 25 | 65 | 900ms | Chain lửa — **Emberon độc quyền** |
-| 9 | Đại Pháo | 🎆 | 160 | 50 | 95 | 3200ms | AoE radius 55px full damage — mọi nation |
-| 10 | Phòng Không | 🦅 | 140 | 35 | 160 | 1100ms | **Chỉ bắn quái bay** — tầm siêu xa — mọi nation |
+| 0 | Cung | 🏹 | 50 | 9 | 80 | **680ms** | Đơn mục tiêu — tốc bắn tăng mạnh khi nâng cấp |
+| 1 | Đại Bác | 💣 | 100 | 45 | 70 | **1700ms** | AoE radius 40px (60% DMG phụ) — Ironhold, Emberon |
+| 2 | Băng | ❄️ | 80 | 8 | 75 | **1020ms** | Làm chậm quái 75% — Glacien |
+| 3 | Sét | ⚡ | 120 | 30 | 85 | **1275ms** | Chain 2 mục tiêu (50% DMG) — Ironhold, Glacien |
+| 4 | Lửa | 🔥 | 90 | **22** | 65 | **850ms** | **Burn DoT: +50% DMG thêm trong 3 giây sau khi trúng** — Emberon |
+| 5 | T.Nhiên | 🌿 | 150 | — | — | — | **+12 vàng/round** cho chủ tháp; panel hiển thị tổng vàng đã tạo |
+| 6 | Ballista | 🎯 | 130 | 38 | 110 | **1700ms** | Xuyên giáp ×1.8; **slow 25%** khi trúng — **Ironhold độc quyền** |
+| 7 | Băng Đền | 🔮 | 110 | 3 | 85 | **850ms** | AoE slow 70% toàn bộ quái đất trong tầm — **Glacien độc quyền** |
+| 8 | Magma | 🌋 | 100 | 25 | 65 | **765ms** | Chain lửa 3 mục tiêu (60% DMG) — **Emberon độc quyền** |
+| 9 | Đại Pháo | 🎆 | 160 | 50 | 95 | **2720ms** | Projectile spd=14, nổ AoE 55px full damage khi chạm — mọi nation |
+| 10 | Phòng Không | 🦅 | 140 | **42** | 160 | **935ms** | **Chỉ bắn quái bay** — tầm siêu xa — mọi nation |
+
+> **v9.8:** Tất cả tốc bắn +15% (rate ×0.85). Ballista thêm buff riêng −32% thêm. Đại Pháo chuyển từ instant AoE sang projectile để có visual feedback rõ ràng (guest thấy đạn bay).
 
 ### 8.2 Quy tắc bắn: Mặt đất vs Trên không
 
@@ -193,10 +195,12 @@ Tower grid: **7 cột** (`grid-template-columns: repeat(7, 1fr)`).
 
 ### 8.3 T.Nhiên — Cơ chế sinh vàng per-round
 
-Tháp T.Nhiên **không bắn**. Thay vào đó, đầu mỗi round (`startRound()`), mỗi tháp T.Nhiên cộng **+8 vàng** vào pool của người đã đặt tháp đó.
+Tháp T.Nhiên **không bắn**. Thay vào đó, đầu mỗi round (`startRound()`), mỗi tháp T.Nhiên cộng **+12 vàng** vào pool của người đã đặt tháp đó.
 
-- **Ví dụ:** 3 tháp T.Nhiên → +24 vàng ngay khi round bắt đầu.
+- **Ví dụ:** 3 tháp T.Nhiên → +36 vàng ngay khi round bắt đầu.
 - Trong MP: chỉ chủ tháp nhận vàng (không chia sẻ).
+- **Tracking:** `tw.goldTimer` đếm tổng vàng đã tạo; hiện trong tower panel: `🌿 Đã tạo: X vàng`.
+- MP sync: `_towersDirty=true` sau mỗi round → `goldTimer` sync về guest qua `state_sync`.
 - Kèm âm thanh `earnGold` khi có ít nhất 1 tháp T.Nhiên.
 
 > Trước v8.0: T.Nhiên sinh vàng theo timer 60 giây — không nhất quán với thời gian chuẩn bị khác nhau giữa các mode.
@@ -214,6 +218,17 @@ Tháp T.Nhiên **không bắn**. Thay vào đó, đầu mỗi round (`startRound
 > v9.4: `UPGRADE_COST_MULTS = [0, 0.56, 1.75, 4.9, 12.6]` — giảm 30% so với v9.3 (`[0, 0.8, 2.5, 7.0, 18.0]`). Kill reward ×0.65 (từ v9.3). Kill reward tăng 50% và boss flat bonus +150 từ v9.4 bù cho reward thấp hơn.
 
 **Sell refund:** 60% tổng chi phí. Được phép bán ở **mọi chế độ** kể từ v9.0.
+
+### 8.4b Trụ Lửa — Burn DoT (v9.8)
+
+Khi đạn Lửa trúng mục tiêu:
+1. Gây `dmg` ngay lập tức (base 22)
+2. Áp dụng `burnFrames = 180` (3 giây) và `burnDmgPerFrame = dmg×0.5/180`
+3. Mỗi frame trong host update loop: nếu `en.burnFrames > 0` → tick `burnDmgPerFrame × fps60` damage + particle đỏ ngẫu nhiên (30% chance)
+4. Bắn trúng lại → reset `burnFrames = 180` (refresh burn)
+
+**Effective DPS so với trước:** ~22/0.85 + 11 = ~37 DPS (trước: 18/1.0 = 18 DPS, tăng ~2×)  
+**MP:** `burnFrames/burnDmgPerFrame` không serialized — được preserve qua `Object.assign` trên guest (không bị overwrite). Burn chỉ tick trên host (authoritative).
 
 ### 8.5 Tower Placement — Kiểm tra va chạm đường đi
 
@@ -287,14 +302,16 @@ Solo maps 0–2 có **1 cổng elite**. Team maps 3–5 có **2 cổng elite**. 
 
 ### 9.4 Boss (round 5, 10, 15, 20)
 
-| Round | Boss | HP | Tốc | Thưởng |
-|-------|------|----|-----|--------|
-| 5 | 1× Scorpion King | 900 | 0.39 | 180 |
-| 10 | 2× Venomfang Serpent + Goblin Warlord (70% HP) | 2000 / 1000 | 0.58 / 0.53 | 300 / 180 |
-| 15 | 2× Stone Titan + Storm Drake (70% HP) | 3200 / 2400 | 0.24 / 0.47 | 420 / 390 |
-| 20 | 3× Eternal Dragon + Shadow Colossus + Stone Titan (70% HP) | 8000 / 5000 / 3200 | 0.42 / 0.32 / 0.24 | 1050 / 750 / 420 |
+| Round | Boss | HP (base) | Tốc | Thưởng |
+|-------|------|-----------|-----|--------|
+| 5 | 1× Scorpion King | **675** | 0.39 | 180 |
+| 10 | 2× Venomfang Serpent + Goblin Warlord (70% HP) | **1500 / 750** | 0.58 / 0.53 | 300 / 180 |
+| 15 | 2× Stone Titan + Storm Drake (70% HP) | **2400 / 1800** | 0.24 / 0.47 | 420 / 390 |
+| 20 | 3× Eternal Dragon + Shadow Colossus + Stone Titan (70% HP) | **6000 / 3750 / 2400** | 0.42 / 0.32 / 0.24 | 1050 / 750 / 420 |
 
-> v9.4: spd ×0.75 (boss chậm hơn quái thường 25% thêm); reward ×1.5; boss kill flat bonus +150 (từ +50). HP giữ nguyên từ v9.3.
+> v9.4: spd ×0.75; reward ×1.5; boss kill flat bonus +150.  
+> **v9.7:** Elite gate boss `aerial=false` (fix bug đi thẳng); HP elite gate boss ×0.8.  
+> **v9.8:** Tất cả boss base HP giảm 25% (×0.75). Elite gate boss tổng cộng ×0.6 so với v9.4.
 
 **MP HP scaling (v9.3):**
 - Tất cả quái: HP ×1.5 trong MP
