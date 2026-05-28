@@ -1,4 +1,4 @@
-# LAST BASTION — Game Design Document v9.8
+# LAST BASTION — Game Design Document v9.9
 
 > **Cập nhật:** 2026-05-28  
 > **Stack:** Single HTML file · Canvas API · Web Audio API · Node.js WebSocket (multiplayer)
@@ -172,7 +172,7 @@ Tower grid: **7 cột** (`grid-template-columns: repeat(7, 1fr)`).
 | 2 | Băng | ❄️ | 80 | 8 | 75 | **1020ms** | Làm chậm quái 75% — Glacien |
 | 3 | Sét | ⚡ | 120 | 30 | 85 | **1275ms** | Chain 2 mục tiêu (50% DMG) — Ironhold, Glacien |
 | 4 | Lửa | 🔥 | 90 | **22** | 65 | **850ms** | **Burn DoT: +50% DMG thêm trong 3 giây sau khi trúng** — Emberon |
-| 5 | T.Nhiên | 🌿 | 150 | — | — | — | **+12 vàng/round** cho chủ tháp; panel hiển thị tổng vàng đã tạo |
+| 5 | T.Nhiên | 🌿 | 150 | — | — | — | **+12/16/20/24/28 vàng/round** (theo cấp Lv1→5); panel hiển thị +X/vòng + tổng vàng đã tạo |
 | 6 | Ballista | 🎯 | 130 | 38 | 110 | **1700ms** | Xuyên giáp ×1.8; **slow 25%** khi trúng — **Ironhold độc quyền** |
 | 7 | Băng Đền | 🔮 | 110 | 3 | 85 | **850ms** | AoE slow 70% toàn bộ quái đất trong tầm — **Glacien độc quyền** |
 | 8 | Magma | 🌋 | 100 | 25 | 65 | **765ms** | Chain lửa 3 mục tiêu (60% DMG) — **Emberon độc quyền** |
@@ -195,15 +195,26 @@ Tower grid: **7 cột** (`grid-template-columns: repeat(7, 1fr)`).
 
 ### 8.3 T.Nhiên — Cơ chế sinh vàng per-round
 
-Tháp T.Nhiên **không bắn**. Thay vào đó, đầu mỗi round (`startRound()`), mỗi tháp T.Nhiên cộng **+12 vàng** vào pool của người đã đặt tháp đó.
+Tháp T.Nhiên **không bắn**. Thay vào đó, đầu mỗi round (`startRound()`), mỗi tháp T.Nhiên cộng vàng vào pool của người đã đặt tháp đó. Lượng vàng tăng theo cấp độ tháp:
 
-- **Ví dụ:** 3 tháp T.Nhiên → +36 vàng ngay khi round bắt đầu.
+| Cấp | Vàng/round |
+|-----|-----------|
+| Lv1 | 12 |
+| Lv2 | 16 |
+| Lv3 | 20 |
+| Lv4 | 24 |
+| Lv5 | 28 |
+
+**Công thức:** `goldPerRound = 12 + (level - 1) × 4`
+
+- **Ví dụ:** 3 tháp T.Nhiên Lv3 → +60 vàng ngay khi round bắt đầu.
 - Trong MP: chỉ chủ tháp nhận vàng (không chia sẻ).
-- **Tracking:** `tw.goldTimer` đếm tổng vàng đã tạo; hiện trong tower panel: `🌿 Đã tạo: X vàng`.
+- **Tracking:** `tw.goldTimer` đếm tổng vàng đã tạo; hiện trong tower panel: `🌿 +X/vòng | Đã tạo: Y vàng`.
 - MP sync: `_towersDirty=true` sau mỗi round → `goldTimer` sync về guest qua `state_sync`.
 - Kèm âm thanh `earnGold` khi có ít nhất 1 tháp T.Nhiên.
 
-> Trước v8.0: T.Nhiên sinh vàng theo timer 60 giây — không nhất quán với thời gian chuẩn bị khác nhau giữa các mode.
+> Trước v8.0: T.Nhiên sinh vàng theo timer 60 giây — không nhất quán với thời gian chuẩn bị khác nhau giữa các mode.  
+> v9.9: Nâng cấp giờ có ý nghĩa gameplay thật — mỗi cấp +4 vàng/round thay vì chỉ tăng visual size.
 
 ### 8.4 Nâng cấp tháp (5 cấp, chi phí lũy tiến)
 
@@ -624,6 +635,7 @@ Menu
 | Phiên bản | Ngày | Thay đổi chính |
 |-----------|------|---------------|
 | v9.5 | 2026-05-26 | HUD redesign: xóa thanh top, floating corner pills 2 góc (tl: round/phase/weather, tr: gold/lives/start/pause); topH 48→38px; xóa yellow gate zone line ở cạnh phải map |
+| v9.9 | 2026-05-28 | T.Nhiên upgrade scaling: mỗi cấp +4 vàng/round (Lv1=12 → Lv5=28); tower panel hiển thị "+X/vòng" |
 | v9.4 | 2026-05-26 | Balance buff: enemy spd ×0.7, reward ×1.5; boss spd ×0.75, reward ×1.5, flat bonus +150; UPGRADE_COST_MULTS −30% [0,0.56,1.75,4.9,12.6]; MP gold flat 400; perf: object pool getNetState, shadow batch render, dirty-flag sync (towers/weather/mod), guest path cache, server raw relay; fix: upgrade button realtime, guest tower xFrac/yFrac coord norm, projectile targetEnemy desync; new: guest disconnect pause/resume overlay, custom HTML password modal |
 | v9.3 | 2026-05-25 | MP HP scaling (×1.5/×3/×9/×8/×3); UPGRADE_COST_MULTS geometric [0,0.8,2.5,7.0,18.0]; kill reward ×0.65; boss tower-destroy skill R10+; boss escort (mage/guard/warlock); tower auto-hide; Time Warp ẩn guest; elite path ghost hint; team maps 3/4/5 (4+2 gates); multi-elite-path arch; tutorial removed; solo gold 600; R19 disconnect fix; room cleanup; floating damage removed; floating pill HUD (topH dynamic); mute button removed |
 | v9.2 | 2026-05-24 | Challenge mode điều kiện ẩn (CHALLENGE_MODS ×5); enemy HP exponential curve; boss per gate; elite gate boss R10+; projectile sync guest; announcements trên cả host+guest; mode reward bonuses; Endless post-R20 real scaling |
