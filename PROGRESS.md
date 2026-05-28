@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-28) — last updated (MP critical bug fixes: state_sync relay, lobby ready btn, room cleanup)
+## Current State (2026-05-28) — last updated (tower placement offset fix, elite boss path fix)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,26 @@
 ---
 
 ## Completed Features
+
+### v9.7 Sprint — Coordinate Fix + Elite Boss Fix (2026-05-28)
+
+#### Bug Fix: Tháp bị lệch vị trí khi đặt (commit `f2e2863`)
+- **Root cause**: Mọi tower event (`tower_placed`, `tower_sold`, `tower_upgraded`) và `state_sync` gửi tọa độ pixel host-space (`x`, `y`). Guest dùng thẳng tọa độ đó trên canvas của mình (kích thước màn khác) → tower lệch hoàn toàn so với chỗ click
+- **Fix**: Thêm `xFrac = x/Game.W`, `yFrac = y/Game.H` vào tất cả các channel:
+  - `tower_placed` broadcast từ host: kèm `xFrac/yFrac`
+  - `state_sync` towers array trong `getNetState()`: kèm `xFrac/yFrac`
+  - Guest gửi `sell_tower`/`upgrade_tower` lên host: kèm `xFrac/yFrac`
+  - Host broadcast `tower_sold`/`tower_upgraded`: kèm `xFrac/yFrac`
+  - `applyNetState(s.towers)`: convert `Math.round(xFrac * Game.W)` → guest-space
+  - `applyRemoteEvent` cho `tower_placed/sold/upgraded`: dùng fraction để convert
+- **An toàn MP**: Tất cả guests (P2, P3...) nhận cùng `xFrac` và convert về screen-space riêng → đúng trên mọi kích thước màn hình
+
+#### Bug Fix: Boss cổng đặc biệt đi thẳng thay vì theo đường (commit `a3aa2e3`)
+- **Root cause**: Elite gate boss được clone từ `BOSS_TYPES`. Nếu round đó dùng boss có `aerial: true` (Venomfang Serpent, Storm Drake) thì boss kế thừa `aerial=true` → movement code chỉ làm `en.x += spd` (đi thẳng ngang) thay vì follow elite path
+- **Fix**: Thêm `primaryBoss.aerial = false` sau khi clone — elite path luôn là ground path
+- **Balance**: Giảm HP elite gate boss 20% (`eliteBossX * 0.8`) — escort HP cũng giảm theo
+
+---
 
 ### v9.6 Sprint — MP Critical Bug Fixes (2026-05-28)
 
