@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-28) — last updated (tower placement offset fix, elite boss path fix)
+## Current State (2026-05-28) — last updated (v9.8: tower balance, boss HP reduction, fire DoT, Ballista rework)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,54 @@
 ---
 
 ## Completed Features
+
+### v9.8 Sprint — Tower Balance + Boss HP Reduction (2026-05-28)
+
+#### Tất cả tốc bắn tăng +15% (rate × 0.85):
+- Cung: 800→680ms | Đại Bác: 2000→1700ms | Băng: 1200→1020ms | Sét: 1500→1275ms
+- Lửa: 1000→850ms | Băng Đền: hardcoded 60→51 ticks | Magma: 900→765ms
+- Đại Pháo: 3200→2720ms | Phòng Không: 1100→935ms
+
+#### Trụ Lửa rework — implement DoT thật (commit `3d39426`)
+- **dmg**: 18 → 22
+- **Burn effect**: Trúng đạn → enemy bị `burnFrames=180` (3s), nhận thêm `dmg×0.5` tổng cộng trong 3s
+- **Tick**: Host update loop tính burn mỗi frame: `burnDmgPerFrame * fps60` — particle đỏ ngẫu nhiên
+- **Effective DPS**: ~22/0.85s + 11/s burn = ~37 DPS (was 18 DPS) — tăng ~2×
+- **An toàn MP**: `burnFrames/burnDmgPerFrame` không serialized → preserved qua `Object.assign` trên guest; host authoritative cho damage
+
+#### Trụ Ballista rework (commit `3d39426`)
+- **Rate**: 2500 → 1700ms (thêm buff riêng ngoài 15% global)
+- **Slow on impact**: Trúng đạn → `target.slow = 0.75` (25% slow) — phân biệt hẳn với Cung (pure DPS)
+- **Vai trò mới**: Xuyên giáp + control, Cung là spam DPS
+
+#### Trụ T.Nhiên buff (commit `3d39426`)
+- **Gold**: 8 → 12 vàng/round mỗi trụ
+- **Track earned**: `tw.goldTimer` repurposed từ unused 3600 → counter tăng 12 mỗi round
+- **Tower panel**: hiện "🌿 Đã tạo: X vàng" khi click vào trụ T.Nhiên
+- **Sync MP**: `_towersDirty=true` sau mỗi round → goldTimer sync về guest qua state_sync
+
+#### Trụ Phòng Không buff (commit `3d39426`)
+- **dmg**: 35 → 42 (+20%)
+
+#### Trụ Đại Pháo visual fix (commit `3d39426`)
+- **Trước**: Instant AoE — không có projectile, guest không thấy visual feedback
+- **Sau**: Projectile tốc độ cao (spd=14) bay đến mục tiêu, nổ AoE 55px khi chạm
+- **Render**: Case 9 trong `drawProjectile` — glowing mortar shell (gradient vàng→cam) + trail
+
+#### Boss HP giảm 25% tất cả (commit `3d39426`)
+| Boss | HP cũ | HP mới |
+|------|-------|--------|
+| Scorpion King | 900 | 675 |
+| Venomfang Serpent | 2000 | 1500 |
+| Goblin Warlord | 1000 | 750 |
+| Stone Titan | 3200 | 2400 |
+| Storm Drake | 2400 | 1800 |
+| Eternal Dragon | 8000 | 6000 |
+| Shadow Colossus | 5000 | 3750 |
+
+*(Elite gate boss đã giảm thêm ×0.8 từ v9.7, tổng cộng ×0.6 so với v9.4)*
+
+---
 
 ### v9.7 Sprint — Coordinate Fix + Elite Boss Fix (2026-05-28)
 
