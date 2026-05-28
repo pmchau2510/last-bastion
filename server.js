@@ -302,8 +302,9 @@ wss.on('connection', ws => {
         }
       }
     } else {
-      // Lobby disconnect: remove the slot
-      myRoom.players.splice(myIdx, 1);
+      // Lobby disconnect: remove the slot (find by ws ref, not stale myIdx)
+      const realIdx = myRoom.players.findIndex(p => p.ws === ws);
+      if (realIdx >= 0) myRoom.players.splice(realIdx, 1);
       if (myRoom.players.length === 0) {
         rooms.delete(myCode);
       } else {
@@ -311,7 +312,7 @@ wss.on('connection', ws => {
           if (!p.disconnected && p.ws && p.ws.readyState === WebSocket.OPEN)
             p.ws.send(JSON.stringify({
               type: 'room_update',
-              leftIdx: myIdx,
+              leftIdx: realIdx,
               info: roomInfo(myRoom, myCode)
             }));
         });
