@@ -4092,7 +4092,7 @@ const Game = {
     const upCost=Math.floor(baseCost*UPGRADE_COST_MULTS[lvl]);
     const myGold=this.isMP?this.playerGold[this.mpPlayerIdx]:this.gold;
     if(myGold<upCost) { this.flashLowGold(); return; }
-    if(this.isGuestMP) { MP.sendInput('upgrade_tower', {x:tw.x, y:tw.y}); SFX.placeTower(tw.typeId); this.closeTowerPanel(); return; }
+    if(this.isGuestMP) { MP.sendInput('upgrade_tower', {x:tw.x, y:tw.y, xFrac:tw.x/this.W, yFrac:tw.y/this.H}); SFX.placeTower(tw.typeId); this.closeTowerPanel(); return; }
     this.playerGold[this.mpPlayerIdx]=(this.playerGold[this.mpPlayerIdx]||0)-upCost;
     this.gold=this.playerGold[this.mpPlayerIdx];
     tw.level=(lvl+1);
@@ -4109,7 +4109,7 @@ const Game = {
     // ownership check
     if(this.isMP && tw.ownerIdx!=null && tw.ownerIdx!==this.mpPlayerIdx) return;
     this.closeTowerPanel();
-    if(this.isGuestMP) { MP.sendInput('sell_tower', {x:tw.x, y:tw.y}); SFX.sellTower(); return; }
+    if(this.isGuestMP) { MP.sendInput('sell_tower', {x:tw.x, y:tw.y, xFrac:tw.x/this.W, yFrac:tw.y/this.H}); SFX.sellTower(); return; }
     this.sellTower(tw);
   },
 
@@ -5082,21 +5082,29 @@ const MP = {
         break;
       }
       case 'tower_placed': {
-        // Host confirmed tower — add to guest's local array (host coordinates)
-        const exists = Game.towers.some(tw=>Math.hypot(tw.x-event.x,tw.y-event.y)<5);
+        // Convert host-space coords to guest-space using fractions (different screen sizes)
+        const gx = event.xFrac != null ? Math.round(event.xFrac * Game.W) : event.x;
+        const gy = event.yFrac != null ? Math.round(event.yFrac * Game.H) : event.y;
+        const exists = Game.towers.some(tw=>Math.hypot(tw.x-gx,tw.y-gy)<5);
         if(!exists) {
-          Game.towers.push({x:event.x,y:event.y,typeId:event.typeId,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:event.ownerIdx});
+          Game.towers.push({x:gx,y:gy,typeId:event.typeId,cooldown:0,goldTimer:3600,angle:0,flash:0,level:1,ownerIdx:event.ownerIdx});
           Game.bgDirty=true;
         }
         break;
       }
       case 'tower_sold': {
-        const idx=Game.towers.findIndex(tw=>Math.hypot(tw.x-event.x,tw.y-event.y)<8);
+        // Convert host-space coords to guest-space for lookup
+        const sx=event.xFrac!=null?Math.round(event.xFrac*Game.W):event.x;
+        const sy=event.yFrac!=null?Math.round(event.yFrac*Game.H):event.y;
+        const idx=Game.towers.findIndex(tw=>Math.hypot(tw.x-sx,tw.y-sy)<8);
         if(idx>=0) { Game.towers.splice(idx,1); Game.bgDirty=true; }
         break;
       }
       case 'tower_upgraded': {
-        const tw=Game.towers.find(t=>Math.hypot(t.x-event.x,t.y-event.y)<8);
+        // Convert host-space coords to guest-space for lookup
+        const ux=event.xFrac!=null?Math.round(event.xFrac*Game.W):event.x;
+        const uy=event.yFrac!=null?Math.round(event.yFrac*Game.H):event.y;
+        const tw=Game.towers.find(t=>Math.hypot(t.x-ux,t.y-uy)<8);
         if(tw) { tw.level=(tw.level||1)+1; Game.bgDirty=true; }
         break;
       }
@@ -5163,7 +5171,8 @@ const MP = {
     // Send towers immediately on any sync when dirty (place/sell/upgrade) — ~33ms confirmation
     if(Game._towersDirty) {
       state.towers=Game.towers.map(tw=>({
-        x:tw.x,y:tw.y,typeId:tw.typeId,level:tw.level||1,
+        x:tw.x,y:tw.y,xFrac:tw.x/Game.W,yFrac:tw.y/Game.H,
+        typeId:tw.typeId,level:tw.level||1,
         angle:tw.angle||0,flash:tw.flash||0,goldTimer:tw.goldTimer||3600,
         ownerIdx:tw.ownerIdx!=null?tw.ownerIdx:0
       }));
@@ -5175,7 +5184,8 @@ const MP = {
       Game._fullSyncTowerCounter=(Game._fullSyncTowerCounter||0)+1;
       if(Game._fullSyncTowerCounter>=30){
         if(!state.towers) state.towers=Game.towers.map(tw=>({
-          x:tw.x,y:tw.y,typeId:tw.typeId,level:tw.level||1,
+          x:tw.x,y:tw.y,xFrac:tw.x/Game.W,yFrac:tw.y/Game.H,
+          typeId:tw.typeId,level:tw.level||1,
           angle:tw.angle||0,flash:tw.flash||0,goldTimer:tw.goldTimer||3600,
           ownerIdx:tw.ownerIdx!=null?tw.ownerIdx:0
         }));
@@ -5236,7 +5246,13 @@ const MP = {
       Game.escorts = s.escorts.map(es=>({...es}));
     }
     if(s.towers) {
-      Game.towers = s.towers.map(tw=>({...tw,cooldown:0,ownerIdx:tw.ownerIdx||0}));
+      // Convert host-space coords to guest-space using fractions (different screen sizes)
+      Game.towers = s.towers.map(tw=>({
+        ...tw,
+        x: tw.xFrac != null ? Math.round(tw.xFrac * Game.W) : tw.x,
+        y: tw.yFrac != null ? Math.round(tw.yFrac * Game.H) : tw.y,
+        cooldown:0, ownerIdx:tw.ownerIdx||0
+      }));
       // Re-sync selected tower reference to prevent panel flicker after towers rebuild
       if(Game.selectedPlacedTower) {
         const ox=Game.selectedPlacedTower.x, oy=Game.selectedPlacedTower.y;
@@ -5369,11 +5385,15 @@ const MP = {
         Game.spawnParticles(data.x,data.y,tData.color,6);
         Game.updateHUD();
         // Notify all guests immediately — don't wait for next state_sync cycle
-        MP.broadcastEvent({type:'tower_placed', x:hx, y:hy, typeId:data.typeId, ownerIdx:fromIdx});
+        // Include xFrac/yFrac so guests can convert to their own screen coordinates
+        MP.broadcastEvent({type:'tower_placed', x:hx, y:hy, xFrac:hx/Game.W, yFrac:hy/Game.H, typeId:data.typeId, ownerIdx:fromIdx});
         break;
       }
       case 'sell_tower': {
-        const tw=Game.towers.find(t=>Math.hypot(t.x-data.x,t.y-data.y)<8);
+        // Convert guest fraction coords to host space for lookup
+        const sx=data.xFrac!=null?Math.round(data.xFrac*Game.W):data.x;
+        const sy=data.yFrac!=null?Math.round(data.yFrac*Game.H):data.y;
+        const tw=Game.towers.find(t=>Math.hypot(t.x-sx,t.y-sy)<8);
         if(!tw) break;
         if(tw.ownerIdx!=null&&tw.ownerIdx!==fromIdx) break; // ownership check
         const bCost=TOWERS_DATA[tw.typeId].cost, lvl=tw.level||1;
@@ -5383,13 +5403,16 @@ const MP = {
         const i=Game.towers.indexOf(tw); if(i>=0) Game.towers.splice(i,1);
         Game._towersDirty=true;
         SFX.sellTower();
-        Game.spawnParticles(data.x,data.y,'#f5c842',8);
+        Game.spawnParticles(sx,sy,'#f5c842',8);
         Game.updateHUD();
-        MP.broadcastEvent({type:'tower_sold', x:tw.x, y:tw.y});
+        MP.broadcastEvent({type:'tower_sold', x:tw.x, y:tw.y, xFrac:tw.x/Game.W, yFrac:tw.y/Game.H});
         break;
       }
       case 'upgrade_tower': {
-        const tw=Game.towers.find(t=>Math.hypot(t.x-data.x,t.y-data.y)<8);
+        // Convert guest fraction coords to host space for lookup
+        const ux=data.xFrac!=null?Math.round(data.xFrac*Game.W):data.x;
+        const uy=data.yFrac!=null?Math.round(data.yFrac*Game.H):data.y;
+        const tw=Game.towers.find(t=>Math.hypot(t.x-ux,t.y-uy)<8);
         if(!tw) break;
         if(tw.ownerIdx!=null&&tw.ownerIdx!==fromIdx) break; // ownership check
         const lvl=tw.level||1; if(lvl>=TOWER_MAX_LEVEL) break;
@@ -5401,7 +5424,7 @@ const MP = {
         SFX.placeTower(tw.typeId);
         Game.spawnParticles(tw.x,tw.y,TOWERS_DATA[tw.typeId].color,10);
         Game.updateHUD();
-        MP.broadcastEvent({type:'tower_upgraded', x:tw.x, y:tw.y});
+        MP.broadcastEvent({type:'tower_upgraded', x:tw.x, y:tw.y, xFrac:tw.x/Game.W, yFrac:tw.y/Game.H});
         break;
       }
       case 'give_gold': {
