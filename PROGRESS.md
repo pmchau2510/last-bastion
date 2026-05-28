@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-26) — last updated (v9.5: floating corner HUD, gate zone removed)
+## Current State (2026-05-28) — last updated (MP critical bug fixes: state_sync relay, lobby ready btn, room cleanup)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,24 @@
 ---
 
 ## Completed Features
+
+### v9.6 Sprint — MP Critical Bug Fixes (2026-05-28)
+
+#### Bug Fix: Guest không thấy quái / state_sync bị drop hoàn toàn (commit `bdb3fb1`)
+- **Root cause**: ws v8 nhận tất cả WebSocket messages (kể cả TEXT frame) dưới dạng `Buffer`. Server relay `p.ws.send(raw)` với `raw` là Buffer → ws gửi **BINARY frame**. Browser nhận Blob, `JSON.parse(Blob)` → `"[object Blob]"` → SyntaxError → `catch { return; }` drop toàn bộ `state_sync` silently
+- **Hậu quả**: Mọi thứ chỉ đến qua `state_sync` (enemies, crystal HP, game phase, towers từ dirty sync) đều **vô hình trên guest**. Chỉ `game_event` (dùng `broadcast` với `JSON.stringify` → TEXT frame) hoạt động
+- **Fix**: `raw.toString('utf8')` trước khi relay → ws gửi TEXT frame → browser JSON.parse thành công
+- **Ảnh hưởng**: Giải thích tại sao guest không thấy quái ra, không thấy damage crystal HP, phase không chuyển sang 'wave'
+
+#### Bug Fix: Guest không thấy nút Sẵn sàng trong lobby (commit `1eba722`)
+- **Root cause**: `#lobby-guest-controls` có `class="hidden"` trong HTML; CSS `#lobby-guest-controls.hidden{display:none!important}` ghi đè `style.display=''` do `!important`
+- **Fix**: Thêm `classList.remove('hidden')` trước khi set `style.display` trong `showLobby()`
+
+#### Bug Fix: Phòng không xóa khi trống với 3+ người (commit `1eba722`)
+- **Root cause**: `myIdx` snapshot lúc join, không update khi mảng co lại. P1 (idx=1) leave → `splice(1,1)` đúng. P2 (idx=2, nay ở index 1) leave → `splice(2,1)` = no-op → P2 thành zombie entry. Host leave → `players.length === 1` (zombie) → room không bị xóa
+- **Fix**: Dùng `findIndex(p => p.ws === ws)` để tìm real index theo WebSocket reference; dùng `realIdx` trong cả `splice` lẫn `leftIdx` trong `room_update`
+
+---
 
 ### v9.5 Sprint — Floating Corner HUD Redesign (2026-05-26)
 
@@ -33,7 +51,7 @@
 2. **Shadow batch rendering** — Tách draw loop enemies/towers thành 2 pass: normal (shadowBlur=0) trước, elite/boss/flashing sau (1 shadowBlur set); giảm từ O(n) GPU compositor flushes xuống O(2)/group
 3. **Dirty-flag full-sync filtering** — `_towersDirty`, `_challengeModSent`, `_lastSentWeather`: `state.towers` chỉ gửi khi có thay đổi (hoặc mỗi 30 full syncs), weather/challengeMod chỉ gửi khi cần → giảm payload kích thước đáng kể
 4. **Guest path prediction cache** — `_cachedT`/`_cachedPt` per enemy; skip `ptOnPath()` khi `|en.t - en._cachedT| <= 0.0005` → loại bỏ redundant arc-length calculations
-5. **Server raw relay** — `case 'state_sync'` relay raw Buffer trực tiếp (skip JSON parse + re-stringify) → giảm CPU overhead trên server
+5. **Server raw relay** — `case 'state_sync'` relay raw Buffer trực tiếp (skip JSON parse + re-stringify) → giảm CPU overhead trên server ⚠️ *Bug: ws v8 gửi Buffer thành BINARY frame — fixed v9.6 bằng `raw.toString('utf8')`*
 
 #### Balance Buff (game-fixes-and-balance)
 - **Quái thường (ENEMY_TYPES)** — spd ×0.7 (chậm hơn 30%); reward ×1.5
