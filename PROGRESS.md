@@ -4,7 +4,7 @@
 
 ---
 
-## Current State (2026-05-28) — last updated (v9.8: tower balance, boss HP reduction, fire DoT, Ballista rework)
+## Current State (2026-05-28) — last updated (v9.9: T.Nhiên upgrade scaling)
 
 **Branch:** `main`  
 **Server:** `node server.js` → `http://localhost:3000`
@@ -12,6 +12,16 @@
 ---
 
 ## Completed Features
+
+### v9.9 Sprint — T.Nhiên Upgrade Scaling (2026-05-28)
+
+#### Trụ T.Nhiên — upgrade có ý nghĩa gameplay
+- **Trước**: Nâng cấp chỉ tăng visual size (UPGRADE_SCALE ×1.0→1.48), gold/round cố định 12
+- **Sau**: Mỗi cấp +4 vàng/round — Lv1=12, Lv2=16, Lv3=20, Lv4=24, Lv5=28
+- **Tower panel**: Hiển thị "+X/vòng" để người chơi thấy lợi ích trước khi nâng cấp
+- **ROI**: Upgrade cost Lv1→2 = ~900 vàng, payoff = 4 vàng/round — thu hồi sau 225 vòng/game → khuyến khích đặt nhiều trụ hơn là nâng cấp
+
+---
 
 ### v9.8 Sprint — Tower Balance + Boss HP Reduction (2026-05-28)
 
@@ -33,8 +43,8 @@
 - **Vai trò mới**: Xuyên giáp + control, Cung là spam DPS
 
 #### Trụ T.Nhiên buff (commit `3d39426`)
-- **Gold**: 8 → 12 vàng/round mỗi trụ
-- **Track earned**: `tw.goldTimer` repurposed từ unused 3600 → counter tăng 12 mỗi round
+- **Gold**: 8 → 12 vàng/round mỗi trụ (base Lv1; nâng cấp scaling thêm ở v9.9)
+- **Track earned**: `tw.goldTimer` repurposed từ unused 3600 → counter tăng theo gold mỗi round
 - **Tower panel**: hiện "🌿 Đã tạo: X vàng" khi click vào trụ T.Nhiên
 - **Sync MP**: `_towersDirty=true` sau mỗi round → goldTimer sync về guest qua state_sync
 

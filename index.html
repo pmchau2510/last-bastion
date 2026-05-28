@@ -1600,15 +1600,16 @@ const Game = {
   startRound() {
     this.round++;
     if(this.round > 20 && this.modeIdx !== 2) { this.win(); return; }
-    // T.Nhiên: pay +12 gold per tower to each owner at the start of every round
+    // T.Nhiên: pay gold per tower per round, scaled by level (Lv1=12, Lv2=16, Lv3=20, Lv4=24, Lv5=28)
     this.towers.forEach(tw => {
       if(tw.typeId !== 5) return;
       const ownerI = tw.ownerIdx != null ? tw.ownerIdx : 0;
-      this.playerGold[ownerI] = (this.playerGold[ownerI]||0) + 12;
-      tw.goldTimer = (tw.goldTimer||0) + 12; // track total gold earned by this tower
+      const natureGold = 12 + ((tw.level||1) - 1) * 4;
+      this.playerGold[ownerI] = (this.playerGold[ownerI]||0) + natureGold;
+      tw.goldTimer = (tw.goldTimer||0) + natureGold; // track total gold earned by this tower
       this._towersDirty = true; // sync goldTimer to guests
       if(ownerI === this.mpPlayerIdx) { this.gold = this.playerGold[ownerI]; }
-      else if(!this.isMP) { this.gold += 12; }
+      else if(!this.isMP) { this.gold += natureGold; }
     });
     if(this.towers.some(tw=>tw.typeId===5)) { this.updateHUD(); SFX.earnGold?.(); }
     const data = ROUND_SPAWN[Math.min(this.round-1, 19)];
@@ -4063,7 +4064,8 @@ const Game = {
     const rateMult9 = UPGRADE_RATE_MULTS[lvl-1] * (tw.typeId===0 ? UPGRADE_ARCHER_RATE[lvl-1] : 1);
     const effectiveRate = tData.rate ? Math.round(tData.rate * rateMult9) : null;
     const rateStr = effectiveRate ? `${effectiveRate}ms${lvl>1?' ⚡':''}` : '-';
-    const natureGoldLine = tw.typeId===5 ? `<br>🌿 Đã tạo: <span style="color:#f5c842">${tw.goldTimer||0} vàng</span>` : '';
+    const natureGoldPerRound = 12 + (lvl - 1) * 4;
+    const natureGoldLine = tw.typeId===5 ? `<br>🌿 +${natureGoldPerRound}/vòng &nbsp;|&nbsp; Đã tạo: <span style="color:#f5c842">${tw.goldTimer||0} vàng</span>` : '';
     document.getElementById('tpan-stats').innerHTML=
       `🗡 DMG: ${Math.round(tData.dmg*dmgMult)} &nbsp;|&nbsp; 🎯 Range: ${Math.round(tData.range*rangeMult)}<br>`+
       `⏱ Rate: ${rateStr} &nbsp;|&nbsp; 💰 Đã dùng: ${totalSpent}`+natureGoldLine;
